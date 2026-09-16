@@ -910,6 +910,137 @@ h2.reveal-kicker{margin-top:0}
 .oc-title{display:flex;align-items:center;gap:4px}
 .oc-title .oc-level{font-size:9px;color:#efd496;font-weight:700}
 .oc-info{font-size:20px;line-height:20px;font-weight:400}
+/* =========================================================================
+   [전투 HUD 정비 2026-09-16] 에너지·스킬을 전장 오버레이로, 하단 로그 줄 제거.
+   - 2026-09-05 확정("스킬 버튼을 전투 화면 오른쪽에 배치해 전투를 보면서 바로 사용")
+     으로 되돌리면서 에너지도 같은 방식으로 올린다. 전장 좌우 아래 모서리는 적이
+     도달하지 않는 자리라(핵 방어 전환 이후) 가려도 판정에 영향이 없다.
+   - 확보한 높이는 전장이 아니라 주문서 카드와 보드로 보낸다. 전투 영역이 1fr이라
+     그냥 두면 남는 높이를 전장이 먹으므로 두 값을 명시적으로 올린다.
+   - 생성기 버튼과 그 안의 처치 점수 진행도는 건드리지 않는다(2026-09-05 확정).
+   ========================================================================= */
+
+/* --- 1. 화면 그리드: 하단 로그 행 제거 (4행 → 3행) --- */
+#screen-game.active{grid-template-rows:48px minmax(140px,1fr) auto}
+@media(max-height:650px){#screen-game.active{grid-template-rows:44px minmax(120px,1fr) auto}}
+
+/* --- 2. 전장 오버레이 공통 --- */
+#combat-wrap>#energy-status-row,#combat-wrap>#skill-row{position:absolute;z-index:4;pointer-events:auto}
+
+/* 에너지 — 좌하단. 읽기 전용이라 조작을 막는다. */
+#combat-wrap>#energy-status-row{left:5px;bottom:7px;flex:none;width:auto;height:auto;min-height:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  padding:4px 7px;border-radius:9px;border:1px solid #c8ad7066;background:#0d1a18c9;
+  backdrop-filter:blur(2px);pointer-events:none}
+#combat-wrap>#energy-status-row .energy-status-label{font-size:9px;line-height:1.1;color:#b7c6ae;letter-spacing:0}
+#combat-wrap>#energy-status-row #energy-display{font-size:17px;line-height:1.15;color:#ffe6a6}
+
+/* 스킬 — 우하단 세로 2개. 전투 중 유일한 능동 입력이라 엄지 영역을 지킨다. */
+#combat-wrap>#skill-row{right:5px;bottom:7px;display:flex;flex-direction:column;
+  grid-template-columns:none;width:auto;height:auto;flex:none;margin:0;gap:6px;transform:none}
+#combat-wrap>#skill-row .skill-btn{width:44px;height:44px;min-height:44px;padding:0;
+  border-radius:11px;border:1px solid var(--skill-accent,#c8ad70);background:#0d1a18cc;
+  backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;overflow:hidden}
+/* [버그] .skill-btn .sk-icon{display:none}(v0914_9)이 살아 있어 아이콘이 렌더되지 않았다.
+   v0914_9는 이름+비용 텍스트를 쓰던 시절이라 숨긴 것이고, 지금은 아이콘이 유일한 식별자다. */
+#combat-wrap>#skill-row .sk-icon{display:block!important;font-size:21px;line-height:1;
+  color:var(--skill-accent,#f5ddb0);text-shadow:0 1px 2px #000a}
+#combat-wrap>#skill-row .sk-level{position:absolute;right:3px;bottom:2px;font:700 9px system-ui;
+  color:#e9e8d7;text-shadow:0 1px 1px #000}
+#combat-wrap>#skill-row .sk-cd{left:0;top:auto;bottom:0;height:0;width:100%!important;
+  background:#0009;transition:height .1s linear}
+#combat-wrap>#skill-row .skill-btn[data-state="ready"]{box-shadow:0 0 10px var(--skill-accent,#c8ad70)}
+#combat-wrap>#skill-row .skill-btn:disabled{opacity:.5}
+
+/* --- 3. 상태 줄: 게이지와 대기만 남아 얇아진다 --- */
+#order-status-row{height:20px;min-height:20px;margin:0 0 5px;gap:8px;flex-wrap:nowrap}
+
+/* --- 4. 확보한 높이를 주문서 카드와 보드로 --- */
+.order-card{height:100px}
+#board{grid-template-rows:repeat(var(--board-rows,2),clamp(40px,12.4vw,52px))}
+/* 짧은 화면에서는 확대분을 되돌린다 — 전장 높이를 줄이지 않는 것이 우선이다.
+   기준을 700px로 잡아야 iPhone SE(667)가 걸린다(기존 650 기준은 SE를 놓쳤다). */
+@media(max-height:700px){.order-card{height:86px}#board{grid-template-rows:repeat(var(--board-rows,2),38px)}
+  #order-status-row{height:18px;min-height:18px;margin-bottom:4px}}
+
+/* --- 5. 종료를 도구 메뉴로. 전투 중에만 뜨고, 데이터 초기화와 자리를 공유한다. --- */
+#quit-run{position:fixed;top:109px;bottom:auto;left:auto;font-size:15px}
+.tool-button[hidden]{display:none!important}
+
+/* =========================================================================
+   [로비 정비 2026-09-16] 브랜드 로고 줄 제거, 마일스톤을 배너 컨텐츠로,
+   소리 버튼을 도구 메뉴로. 로고는 매번 볼 필요가 없는 정보라 자리를 비우고,
+   마일스톤은 소리·설정과 나란히 있으면 옵션으로 읽혀 모험 안으로 들인다.
+   ========================================================================= */
+
+/* --- 1. 재화 줄이 화면 맨 위로. 오른쪽에 ⚙ 자리를 비운다. --- */
+.wallet{padding-top:calc(9px + env(safe-area-inset-top));padding-right:56px}
+#tools-toggle{position:absolute;top:calc(11px + env(safe-area-inset-top));right:12px}
+
+/* --- 2. 소리 버튼은 도구 메뉴 세 번째 칸 --- */
+#sound-toggle{position:fixed;top:154px;bottom:auto;left:auto;height:38px!important;
+  min-height:0;min-width:0;padding:0!important;display:grid;place-items:center}
+#sound-toggle.muted{opacity:.45}
+#sound-toggle svg{width:19px;height:19px}
+
+/* --- 3. 마일스톤 스트립 — 배너 오른쪽 위. 아이콘이 아니라 진행이 보이는 카드다. --- */
+#open-milestones.milestone-strip{position:absolute;left:20px;right:20px;bottom:82px;top:auto;z-index:2;
+  width:auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 9px;
+  padding:7px 11px 8px;border:1px solid #6f7f68;border-radius:9px;background:#0e2220d9;
+  backdrop-filter:blur(3px);color:#e7ead7;text-align:left;cursor:pointer;box-shadow:0 3px 10px #0006}
+.milestone-strip .ms-head{display:flex;align-items:center;gap:5px;position:relative}
+.milestone-strip .ms-head b{font-size:10px;font-weight:800;letter-spacing:.02em;color:#bcc9ab;white-space:nowrap}
+.milestone-strip .ms-head [data-ui-icon]{width:13px;height:13px;flex:none;color:#d8c085}
+.milestone-strip .ms-head [data-ui-icon] svg{width:13px;height:13px;display:block}
+.milestone-strip .ms-head .notify-dot{position:static;width:7px;height:7px;border-width:0;flex:none}
+.milestone-strip .ms-body{display:contents}
+.milestone-strip .ms-body b{grid-column:2;font-size:12px;font-weight:800;color:#f6e6bb;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.milestone-strip .ms-body small{grid-column:3;justify-self:end;font-size:11px;font-weight:700;
+  color:#a9baa4;line-height:1.2;white-space:nowrap}
+.milestone-strip .ms-track{grid-column:1/-1;display:block;height:3px;margin-top:1px;
+  border-radius:2px;background:#ffffff22;overflow:hidden}
+.milestone-strip .ms-track i{display:block;height:100%;background:#d8c085;border-radius:2px}
+.milestone-strip.ready{border-color:#f0cf87;background:#1d3324e8}
+.milestone-strip.ready .ms-body small{color:#8fe0a6}
+.milestone-strip.ready .ms-track i{background:#8fe0a6}
+
+/* --- 4. 출전 부대 카드에 레벨 (이름 아래 줄로 고정해 카드 높이를 맞춘다) --- */
+.lobby-party-member .member-label{display:grid;grid-template-columns:auto 1fr;align-items:center;
+  gap:0 4px;justify-items:start}
+.lobby-party-member .member-label b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lobby-party-member .member-label em{grid-column:1/-1;justify-self:center;font-style:normal;
+  font-size:10px;font-weight:700;color:#9fb39a;line-height:1.3}
+
+@media(max-width:360px){
+  .milestone-strip{width:min(58%,178px);padding:7px 8px 8px}
+  .milestone-strip .ms-body b{font-size:12px}
+}
+
+/* =========================================================================
+   [소환 결과 정비 2026-09-16] 버튼 높이 버그·위계 반전 수정, 등급 범례 추가.
+   - [버그] "전체 공개"가 폭 계산에서 두 줄로 감겨 68px, "다음 공개"는 48px이었다.
+     padding·min-height·font-size는 동일했으므로 디자인이 아니라 줄바꿈 문제다.
+   - 스킵 버튼이 주 버튼보다 커 보이면 소환 연출(가장 큰 보상 순간)을 건너뛰게
+     유도한다. 크기·색·폭을 모두 주 버튼 우위로 되돌린다.
+   ========================================================================= */
+.reveal-actions{display:grid;grid-template-columns:auto 1fr;align-items:stretch;gap:9px}
+.reveal-actions button{flex:none;width:auto;min-width:0;white-space:nowrap;
+  min-height:52px;height:52px;padding:0 16px;border-radius:10px;font-weight:800}
+#reveal-skip{grid-column:1;font-size:12px;opacity:.85}
+#reveal-close{grid-column:2;font-size:16px}
+.reveal-actions button[hidden]{display:none}
+
+/* 제목 — 자간 0.15em은 한글에서 글자가 흩어져 보인다 */
+.reveal-kicker,h2.reveal-kicker{font-size:15px;letter-spacing:.02em;margin:0 0 12px}
+
+/* 빛 색상 ↔ 등급 범례. 안내문이 실제로 기능하려면 해독표가 있어야 한다. */
+.pull-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin:0 0 7px;
+  font-size:10px;font-weight:700;color:#b9c6ae}
+.pull-legend span{display:inline-flex;align-items:center;gap:4px}
+.pull-legend i{width:8px;height:8px;border-radius:50%;box-shadow:0 0 5px currentColor}
+.pull-hint{font-size:11px;color:#9aa89a;margin:0 0 12px}
+
 </style>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317393c%22%2F%3E%3Cpath%20d%3D%22M38%206%2013%2035h17l-4%2023%2026-34H34z%22%20fill%3D%22%23f7cd7e%22%2F%3E%3C%2Fsvg%3E">
 </head>
@@ -917,12 +1048,11 @@ h2.reveal-kicker{margin-top:0}
 <div id="app">
   <div id="save-status" role="alert"></div>
   <div id="screen-lobby" class="screen">
-    <header class="lobby-top"><div class="brand-lockup"><span class="brand-glyph">S</span><div><h1>SLAGMA</h1><span>용광로의 수호자</span></div></div><div class="lobby-top-tools"><button id="open-milestones" class="icon-button" aria-label="마일스톤"><span data-ui-icon="milestone"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button><button id="sound-toggle" class="icon-button" aria-label="효과음" aria-pressed="false"></button></div></header>
     <div class="wallet"><div class="wallet-energy"><span data-ui-icon="energy"></span><strong id="stamina-value"></strong><button id="stamina-charge-btn" class="wallet-add" aria-label="행동력 5 충전">+</button><small id="stamina-timer"></small><small id="stamina-charge-count" hidden></small></div><div class="wallet-gold"><span data-ui-icon="gold"></span><strong id="gold-value"></strong></div><div class="wallet-starfire"><span data-ui-icon="starfire"></span><strong id="starfire-value">0</strong></div></div>
     <div id="lobby-notice" role="status" aria-live="polite"></div>
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
-        <div class="journey-scene"><div class="journey-caption"><span>모험</span><h2>꺼지지 않는 불씨</h2></div><div class="forge-beacon" aria-hidden="true"></div><div id="stage-list"></div></div>
+        <div class="journey-scene"><div class="journey-caption"><span>모험</span><h2>꺼지지 않는 불씨</h2></div><div class="forge-beacon" aria-hidden="true"></div><button id="open-milestones" class="milestone-strip" aria-label="마일스톤 미션"><span class="ms-head"><span data-ui-icon="milestone"></span><b>마일스톤</b><i id="milestone-home-dot" class="notify-dot" hidden></i></span><span id="milestone-strip-body" class="ms-body"></span></button><div id="stage-list"></div></div>
         <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-label">장착 스킬</span><span id="home-skill-summary" class="hs-skill-icons"></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_7</span></div></div>
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow">GUARDIANS</span><h2>수호자</h2></div><span class="character-count" id="character-count">0 / 24 보유</span></div><div id="growth-list"></div></section>
@@ -963,16 +1093,16 @@ h2.reveal-kicker{margin-top:0}
     </div>
     <div id="combat-wrap">
       <canvas id="combat-canvas" width="440" height="480"></canvas>
+      <div id="energy-status-row" aria-label="보유 에너지"><span class="energy-status-label">에너지</span><strong id="energy-display">0</strong></div>
+      <div id="skill-row" aria-label="전투 스킬"></div>
     </div>
     <div id="board-wrap">
       <div id="order-status-row" aria-label="주문서 상태">
-        <div id="energy-status-row" aria-label="보유 에너지"><span class="energy-status-label">에너지</span><strong id="energy-display">0</strong></div>
         <div id="order-gauge-wrap" class="order-gauge-wrap" title="주문서 생성 게이지">
           <div class="order-gauge-track"><div class="order-gauge-fill" id="order-gauge-bar"></div></div>
           <div class="order-gauge-label" id="order-gauge-label">0/10</div>
         </div>
         <div id="order-stock" class="order-stock" title="보유 주문서">대기 <span id="order-stock-count">0</span></div>
-        <div id="skill-row" aria-label="전투 스킬"></div>
       </div>
       <div id="order-sheet-panel"></div>
       <div id="board"></div>
@@ -983,7 +1113,6 @@ h2.reveal-kicker{margin-top:0}
         </button>
       </div>
     </div>
-    <div id="run-footer" style="display:flex;align-items:center;gap:3px;padding-right:8px"><div id="action-log" style="flex:1;min-width:0"></div><button id="quit-run">종료</button></div>
     <div id="order-detail" hidden role="dialog" aria-modal="true" aria-label="주문서 상세"><div class="order-detail-card"><div id="order-detail-content"></div><div class="order-detail-actions"><button id="order-detail-discard">🗑 이 주문서 폐기</button><button id="order-detail-close">닫기</button></div></div></div>
     <div id="tutorial-layer" hidden aria-live="polite">
       <div id="tutorial-card" role="dialog" aria-modal="false" aria-labelledby="tutorial-title">
@@ -1011,6 +1140,8 @@ h2.reveal-kicker{margin-top:0}
   </div>
 
   <button id="tools-toggle" title="설정 및 도구" aria-label="도구 메뉴 열기">⚙</button>
+  <button id="sound-toggle" class="tool-button" aria-label="효과음" aria-pressed="false"></button>
+  <button id="quit-run" class="tool-button" title="전투 종료" hidden>⏻</button>
   <button id="manual-toggle" class="tool-button" title="게임 설명서">❓</button>
 
   <button id="reset-data-btn" class="tool-button" title="데이터 초기화">↻</button>
@@ -1714,8 +1845,12 @@ function shuffle(arr){
   for(let i=a.length-1;i>0;i--){ const j=randInt(0,i); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
+// [2026-09-16] 전투 하단 로그 줄을 없앴다(인철 확정). 표시 대상이 사라져도 호출부를
+// 전부 고치지 않도록 여기서 흡수하며, 마지막 문구는 디버깅용으로 남긴다.
 function logAction(msg){
+  logAction.last = msg;
   const el = $('#action-log');
+  if(!el) return;
   el.textContent = msg;
   restartCssAnimation(el, 'fx-log');
 }
@@ -3768,7 +3903,7 @@ const GAME_MANUAL = {
     { title: '② 머지 보드 — 피스 만들고 합치기', body: [
       '화면 하단 "생성기" 버튼을 누르면 에너지 1을 써서 무작위 색깔의 1티어 피스가 보드 빈 칸에 놓인다. 꾹 누르고 있으면 0.3초 간격으로 계속 생성된다(보드가 꽉 차거나 에너지가 없으면 멈춘다).',
       '에너지는 처치 점수로 받는다 — 일반 적 3점, 중간보스 200점이며 점수가 100점 쌓일 때마다 에너지 5를 받는다. 시작할 때 에너지 10을 들고 시작한다.',
-      '보유 에너지는 생성기 왼쪽 에너지 표시에서 확인한다. 에너지를 받으면 그 줄 전체가 한 번 빛난다.',
+      '보유 에너지는 전장 왼쪽 아래 표시에서 확인한다. 에너지를 받으면 표시가 한 번 빛난다.',
       '생성기 버튼 안쪽이 다음 지급까지의 진행도로 채워진다. 에너지가 떨어지면 버튼이 비활성화되고, 점수가 100점을 넘기면 다시 켜진다.',
       '같은 색 + 같은 티어 피스 두 개를 드래그해서 겹치면 합쳐지며 티어가 1 올라간다(최대 T4).',
       '가끔(기본 5% 확률) "크리티컬 머지"가 떠서 원래보다 티어가 한 단계 더 올라간다.',
@@ -3795,7 +3930,7 @@ const GAME_MANUAL = {
       '지정색은 미사일과 스탯 조합마다 정해져 있고 5색이 고르게 쓰인다. 주문서 카드의 색 점을 보면 어떤 피스가 필요한지 알 수 있다.',
     ]},
     { title: '④ 스킬 — 직접 발동', body: [
-      '로비에서 장착한 스킬 2종은 전투 화면 버튼으로 나온다. 주문서와 무관하게 직접 누를 수 있다.',
+      '로비에서 장착한 스킬 2종은 전장 오른쪽 아래 버튼으로 나온다. 주문서와 무관하게 직접 누를 수 있다. 쿨타임 동안은 버튼이 어두운 막으로 덮이고, 준비되면 테두리가 밝게 빛난다.',
       '스킬은 에너지를 소모하지 않는다. 사용에 성공하면 개별 쿨타임이 시작되며 전투가 멈추거나 느려지면 쿨타임도 같은 기준을 따른다.',
       '공격할 적이 없으면 공격 스킬을, 핵 HP가 가득 차면 회복 스킬을 사용할 수 없다.',
       '스킬 레벨을 올리면 장착 공격·방어·체력이 증가하고, 성급을 올리면 액티브 효과만 강해진다. 쿨타임은 성장하지 않는다.',
@@ -3811,7 +3946,7 @@ const GAME_MANUAL = {
     ]},
     { title: '⑥ 적과 WAVE', body: [
       '적 타입 3종: 근접(기본형), 원거리(사거리 밖에서 원거리 공격, 체력은 낮음), 탱커(체력·공격력 모두 높음).',
-      '전투 화면 왼쪽 위에는 미사일별 누적 강화 레벨이 표시된다(아직 소환하지 않은 미사일은 —). 피해 숫자는 미사일 이름과 같은 색으로 떠서 어떤 공격이 피해를 줬는지 구분할 수 있다.',
+      '미사일별 누적 강화 레벨은 전장의 수호자 머리 위에 이름과 함께 표시된다(아직 소환하지 않은 슬롯은 미사일 이름만 흐리게 보인다). 피해 숫자는 미사일 이름과 같은 색으로 떠서 어떤 공격이 피해를 줬는지 구분할 수 있다.',
       '한 일반 WAVE는 보통 12초간 진행되며, 시작 시점에 0/1/2초로 나눠서 스폰된다. 대부분이 처치돼 생존 개체가 10% 이하로 줄면 다음 WAVE로 조기 전환된다.',
       '1~3WAVE에는 각각 8·12·16마리가 등장한다. 근접 적을 먼저 만나고, 원거리와 탱커가 차례로 추가된다.',
       '마지막 WAVE를 제외한 4의 배수 WAVE에는 중간보스가 등장하고, 각 스테이지의 마지막 WAVE에는 최종보스가 등장한다. 중간보스는 큰 점수와 주문서 2장을 준다.',
@@ -4203,7 +4338,9 @@ class Game {
       if(ready && !this.skillReadyState[key]) restartCssAnimation(btn,'fx-ready');
       this.skillReadyState[key]=ready;
       const fill = btn.querySelector('.sk-cd');
-      if(fill) fill.style.width = (clamp(left/(this.skillSystem.entry(key)?.cooldownSec||def.cooldownSec||1),0,1)*100).toFixed(0)+'%';
+      // [2026-09-16] 스킬 버튼이 전장 우하단 정사각 오버레이가 되면서 가로 바 대신
+      // 세로로 줄어드는 가림막을 쓴다. 남은 쿨타임 비율이 그대로 높이다.
+      if(fill) fill.style.height = (clamp(left/(this.skillSystem.entry(key)?.cooldownSec||def.cooldownSec||1),0,1)*100).toFixed(0)+'%';
       const cost = btn.querySelector('.sk-cost');
       if(cost) cost.textContent=state==='cooldown'?`${left.toFixed(1)}초`:state==='target'?reason:'사용 가능';
     });
@@ -5034,9 +5171,37 @@ const SkillLobbyUI={
 const MilestoneUI={
   init(campaign){$('#open-milestones').onclick=()=>this.open(campaign);$('#close-milestones').onclick=()=>this.close();},
   open(campaign){this.render(campaign);$('#milestone-panel').hidden=false;},close(){$('#milestone-panel').hidden=true;},
+  // 배너 위 요약 스트립. 받을 게 있으면 그것을, 없으면 가장 가까운 목표를 보여준다.
+  // 마일스톤을 상단 아이콘(옵션처럼 보였다)에서 모험 컨텐츠로 옮기기 위한 표시다.
+  strip(state){
+    const ready=MILESTONE_TABLE.filter(row=>MilestoneSystem.claimable(state,row));
+    if(ready.length){
+      const totals={};
+      ready.forEach(row=>{const st=MilestoneSystem.status(state,row);totals[row.currencyId]=(totals[row.currencyId]||0)+st.total;});
+      const reward=Object.entries(totals).map(([id,n])=>`${CurrencyTable[id].name} +${n.toLocaleString('ko-KR')}`).join(' · ');
+      return {ready:true,text:`받을 보상 ${ready.length}개`,sub:reward,pct:100};
+    }
+    let best=null;
+    MILESTONE_TABLE.forEach(row=>{
+      const st=MilestoneSystem.status(state,row),pct=st.need>0?st.current/st.need:0;
+      if(!best||pct>best.pct)best={row,st,pct};
+    });
+    if(!best)return {ready:false,text:'진행 중인 목표 없음',sub:'',pct:0};
+    return {ready:false,text:best.row.name,
+      sub:`${best.st.current.toLocaleString('ko-KR')} / ${best.st.need.toLocaleString('ko-KR')}`,
+      pct:Math.min(100,best.pct*100)};
+  },
+  renderStrip(campaign){
+    const el=$('#milestone-strip-body'),state=campaign.state;
+    if(!el||!state)return;
+    const s=this.strip(state);
+    $('#open-milestones').classList.toggle('ready',s.ready);
+    el.innerHTML=`<b>${s.text}</b><small>${s.sub}</small><span class="ms-track"><i style="width:${s.pct.toFixed(0)}%"></i></span>`;
+  },
   render(campaign){
     const state=campaign.state;if(!state)return;const count=MilestoneSystem.claimableCount(state);
     $('#milestone-home-dot').hidden=!count;
+    this.renderStrip(campaign);
     $('#milestone-list').innerHTML=MILESTONE_TABLE.map(row=>{const st=MilestoneSystem.status(state,row),cur=CurrencyTable[row.currencyId].name,pct=Math.min(100,st.current/st.need*100),fmt=n=>n.toLocaleString('ko-KR');return `<article class="milestone-card${st.ready?' claimable':''}"><span class="milestone-icon">${row.icon}</span><div class="milestone-copy"><b>${row.name}<em class="milestone-tier">${fmt(st.tier+1)}단계</em></b><small>${row.description} · ${fmt(st.current)} / ${fmt(st.need)}</small><div class="milestone-progress"><i style="width:${pct}%"></i></div><div class="milestone-reward">${cur} +${fmt(st.ready?st.total:st.reward)}${st.count>1?` · ${st.count}단계 한꺼번에`:''}</div></div><button data-claim-milestone="${row.id}" ${st.ready?'':'disabled'}>${st.ready?'받기':'진행 중'}</button></article>`;}).join('');
     $$('[data-claim-milestone]').forEach(button=>button.onclick=()=>MilestoneSystem.claim(campaign,button.dataset.claimMilestone));
   },
@@ -5072,7 +5237,7 @@ const CampaignView={
     $('#stage-list').innerHTML=`<div class="stage-card chosen" aria-label="스테이지 ${st.id} ${st.name}"><span class="stage-number">${String(st.id).padStart(2,'0')}</span><span><b>${st.name}</b><small>${st.waves} 웨이브 · 다음 지역 도전</small></span><span class="stage-mark">+${CampaignEconomy.stageTotalGold(st).toLocaleString('ko-KR')}<small>클리어 골드</small></span></div>`;
   },
   partySummary(party){
-    $('#lobby-party-summary').innerHTML=party.members.map(m=>`<button class="lobby-party-member" data-home-hero="${m.characterId}" aria-label="${m.name} 레벨 ${m.level} 상세">${GameArt.portrait(m.characterId)}<span class="member-label">${GameArt.module(m.specialtyMissileId,'module-mini')}<b>${m.name}</b></span></button>`).join('');
+    $('#lobby-party-summary').innerHTML=party.members.map(m=>`<button class="lobby-party-member" data-home-hero="${m.characterId}" aria-label="${m.name} 레벨 ${m.level} 상세">${GameArt.portrait(m.characterId)}<span class="member-label">${GameArt.module(m.specialtyMissileId,'module-mini')}<b>${m.name}</b><em>Lv.${m.level}</em></span></button>`).join('');
     $$('[data-home-hero]').forEach(b=>b.onclick=()=>CharacterLobbyUI.open(Campaign,b.dataset.homeHero,b));
   },
   brief(st,party){
@@ -5119,7 +5284,10 @@ const GachaLobbyUI={
     this.revealFocus=document.activeElement;
     const results=res.results||[];
     this.batch={results,flipped:results.map(()=>false),phase:'cards'};this.flipLockUntil=0;
-    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">불씨 소환 · ${results.length}개</h2><div class="pull-grid">${results.map((r,i)=>`<div class="pull-slot tier-${this.tierOf(r)}" style="--hint:${this.hintColor(r)};--front:${this.frontColor(r)}"><button class="pull-card" data-pull-index="${i}" aria-label="${i+1}번째 카드 공개"><span class="pull-back"><i></i></span><span class="pull-front">${this.art(r)}<b>${r.name}</b>${this.badge(r)}</span></button></div>`).join('')}</div><p class="pull-hint">빛의 색이 등급을 알려줍니다. 카드를 눌러 한 장씩 공개하세요.</p>`;
+    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">불씨 소환 · ${results.length}개</h2><div class="pull-grid">${results.map((r,i)=>`<div class="pull-slot tier-${this.tierOf(r)}" style="--hint:${this.hintColor(r)};--front:${this.frontColor(r)}"><button class="pull-card" data-pull-index="${i}" aria-label="${i+1}번째 카드 공개"><span class="pull-back"><i></i></span><span class="pull-front">${this.art(r)}<b>${r.name}</b>${this.badge(r)}</span></button></div>`).join('')}</div><div class="pull-legend" aria-label="빛 색상별 등급">${
+      RARITY_KEYS.map(id=>`<span><i style="background:${RarityTable[id].color}"></i>${RarityTable[id].name}</span>`).join('')
+    }<span><i style="background:${PALETTE.skill}"></i>스킬</span></div>
+    <p class="pull-hint">카드를 눌러 한 장씩 공개하세요.</p>`;
     $$('#reveal-content [data-pull-index]').forEach(b=>b.onclick=()=>this.flip(Number(b.dataset.pullIndex)));
     $('#recruit-modal .reveal-dialog').classList.add('pull-mode');
     $('#reveal-skip').hidden=false;
@@ -5353,6 +5521,7 @@ const Campaign = {
     $('#stamina-charge-btn').onclick=()=>this.chargeStamina();
     $('#back-lobby').onclick=()=>this.showLobby();
     $('#quit-run').onclick=()=>{
+      $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙';
       if(!RunHost.running)return;
       RunHost.holdStop();
       if(confirm('전투를 종료할까요? 통과한 WAVE의 골드는 지급되며 행동력은 환급되지 않습니다.'))RunHost.defeat();
@@ -5509,6 +5678,9 @@ window.addEventListener('DOMContentLoaded', ()=>{
     const open=app.classList.toggle('tools-open');
     $('#tools-toggle').textContent=open?'×':'⚙';
     $('#tools-toggle').setAttribute('aria-label',open?'도구 메뉴 닫기':'도구 메뉴 열기');
+    // 전투 중에는 종료만, 로비에서는 데이터 초기화만 낸다 — 전투 중 초기화는 사고다.
+    $('#quit-run').hidden = !RunHost.running;
+    $('#reset-data-btn').hidden = RunHost.running;
   });
 
   // [2026-09-07] 화면 크기가 바뀌면 표시 배율만 다시 계산한다. 판정 좌표(CONFIG.field)는
