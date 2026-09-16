@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>슬래그마 · 용광로의 수호자</title>
 <meta name="theme-color" content="#12282b">
-<meta name="slagma-build" content="v0916_10">
+<meta name="slagma-build" content="v0916_12">
 
 <style>
 /* ===== base.css ===== */
@@ -397,14 +397,6 @@
   .lobby-tabs{display:flex;gap:6px;background:#090c11;padding:5px;border-radius:12px;}
   .lobby-tabs button{flex:1;border:0;border-radius:8px;padding:11px;color:var(--dim);background:transparent;cursor:pointer;font-weight:700;}
   .lobby-tabs button[aria-selected="true"]{background:#2c2d3b;color:var(--text);}
-  #stage-list{display:grid;gap:10px;}
-  .stage-card{width:100%;text-align:left;padding:14px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(115deg,#242632,#151920);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:13px;}
-  .stage-card.chosen{border-color:var(--ember);box-shadow:inset 3px 0 var(--ember);}
-  .stage-card:disabled{opacity:.4;cursor:not-allowed;}
-  .stage-number{font:700 25px "Orbitron",sans-serif;color:var(--ember);}
-  .stage-card b{display:block;font-size:14px;margin-bottom:5px;}
-  .stage-card small{display:block;color:var(--dim);font-size:10px;line-height:1.7;}
-  .stage-mark{margin-left:auto;color:var(--toxic);font-size:13px;}
   .primary,.secondary{width:100%;padding:14px;border:0;border-radius:10px;cursor:pointer;font-size:14px;font-weight:800;}
   .primary{background:linear-gradient(115deg,var(--ember),#ffa56e);color:#281002;}
   .primary:disabled{background:#333b46;color:var(--dim);cursor:not-allowed;}
@@ -601,17 +593,19 @@ button:focus-visible{outline:3px solid #80e7e0;outline-offset:3px}
 .journey-caption{position:absolute;z-index:1;top:24px;left:24px;text-shadow:0 2px 10px #031013}
 .journey-caption>span{font-size:11px;font-weight:800;letter-spacing:.22em;color:#e7c780}
 .journey-caption h2{font-size:23px;letter-spacing:-.04em;margin:5px 0;color:#fff0d6}
+/* [2026-09-16] 별도 스테이지 카드를 없애고 지역·웨이브·보상을 이 캡션 한 곳에서 읽는다.
+   "모험 / 꺼지지 않는 불씨"는 매번 같은 고정 문구라 화면 최상단을 낭비하고 있었다. */
+.journey-meta{margin:0;font-size:12px;font-weight:700;color:#d9e2cd;text-shadow:0 2px 8px #031013}
+.journey-meta b{color:#f2c36e}
 .forge-beacon{position:absolute;width:82px;height:82px;top:40%;left:calc(50% - 41px);background:radial-gradient(#fff2b929,#ffb8450c 50%,transparent 70%);border-radius:50%;animation:forgePulse 3s ease-in-out infinite;pointer-events:none}
 @keyframes forgePulse{50%{transform:scale(1.5);opacity:.5}}
-#stage-list{position:absolute;bottom:4px;left:20px;right:20px;z-index:1}
-.stage-card.chosen{display:flex;align-items:center;gap:12px;border:1px solid #e5b3658c;border-top-color:#e3bb75;border-bottom:3px solid #12292c;border-radius:14px;background:linear-gradient(115deg,#254543f5,#143334f2);padding:13px 14px;box-shadow:0 5px 14px #00191bb5}
-.stage-number{display:grid;place-items:center;border:1px solid #cba76a;border-radius:12px;background:linear-gradient(#4f6860,#2b4848);color:#f9deb0;width:46px;height:48px;font:900 24px Georgia,serif;flex:none}
-.stage-card b{font-size:18px;line-height:1.3;color:#ffedc9}.stage-card small{font-size:11px;color:#abc5bd;display:block;margin-top:6px}
-.stage-mark{margin-left:auto;display:flex;flex-direction:column;color:#f2c36e;font-size:13px;text-align:right;font-weight:800}.stage-mark small{font-size:10px;color:#d1c4a1}
 .home-controls{flex:none;padding:10px 20px 14px;position:relative}
 .lobby-party-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;border:0;padding:0;margin:0 0 13px;background:none}
 .lobby-party-member{position:relative;min-width:0;padding:0;display:block;border:1px solid #8b8c69;border-radius:12px;background:#29484a;overflow:hidden;box-shadow:0 3px 0 #071d22}
-.lobby-party-member .hero-art{height:auto;aspect-ratio:1.05}
+/* [2026-09-16] 초상은 4x2 아틀라스를 background-size:400% 200%로 깐다. 이 퍼센트는
+   요소 박스 기준이라 박스가 정사각이 아니면 그림이 잘리는 게 아니라 늘어난다.
+   셀이 정확히 정사각(1774x887)이므로 박스 비율 = 왜곡률이다. 초상 박스는 전부 1:1로 둔다. */
+.lobby-party-member .hero-art{height:auto;aspect-ratio:1}
 .lobby-party-member .member-label{position:absolute;bottom:0;left:0;right:0;padding:9px 2px 5px;background:linear-gradient(transparent,#061c23 50%);display:flex;align-items:center;justify-content:center;gap:3px}
 .lobby-party-member b{font-size:11px;color:#fff3d6}.lobby-party-member .module-mini{width:22px;height:22px}
 #prepare-btn{width:100%;display:flex;justify-content:center;align-items:center;gap:13px;min-height:61px;margin:0;font-size:20px}
@@ -638,7 +632,7 @@ button:focus-visible{outline:3px solid #80e7e0;outline-offset:3px}
 .formation-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
 .formation-slot{display:block;position:relative;overflow:hidden;padding:0;border:1px solid #839276;border-radius:10px;background:#142f32;min-width:0;text-align:center;box-shadow:0 2px 0 #081f24}
 .formation-slot.active{border-color:#ffe0a1;box-shadow:0 0 0 1px #ffe0a1}
-.formation-slot .hero-art{height:auto;aspect-ratio:1.04}.formation-slot b{display:block;font-size:11px;margin:4px 0 2px}.formation-slot em{font-size:10px;font-style:normal;display:block;margin:0 0 6px;color:#cfbf94}
+.formation-slot .hero-art{height:auto;aspect-ratio:1}.formation-slot b{display:block;font-size:11px;margin:4px 0 2px}.formation-slot em{font-size:10px;font-style:normal;display:block;margin:0 0 6px;color:#cfbf94}
 .formation-module{position:absolute;width:26px;height:26px;right:0;top:0;filter:drop-shadow(0 1px 2px #000)}
 .formation-total{display:flex;gap:5px;justify-content:space-around;padding-top:10px;border-top:0;margin-top:2px;font-size:10px;color:#c2d2bc}.formation-total b{color:#f7dfb1}
 .status-legend{font-size:10px;line-height:1.5;color:#9cb9ad;margin-top:8px;padding-top:8px;border-top:1px solid #486156}
@@ -681,7 +675,7 @@ button:focus-visible{outline:3px solid #80e7e0;outline-offset:3px}
 .reveal-dialog{position:relative;width:min(330px,100%);text-align:center}.reveal-dialog::before{content:"";position:absolute;inset:20px -50px 70px;background:conic-gradient(from 0deg,transparent,#ffd37a16,transparent,#ffd37a20,transparent,#ffd37a13,transparent);border-radius:50%;animation:revealGlow 16s linear infinite;pointer-events:none}
 @keyframes revealGlow{to{transform:rotate(360deg)}}
 #reveal-content{position:relative;animation:revealCard .6s cubic-bezier(.16,1,.3,1)}@keyframes revealCard{from{opacity:0;transform:translateY(35px) scale(.78)}to{opacity:1;transform:none}}
-.reveal-kicker{display:block;font-size:13px;letter-spacing:.15em;color:#f2d093;font-weight:800;margin-bottom:20px}.reveal-portrait{width:200px;height:218px;padding:5px;background:linear-gradient(140deg,var(--rarity-color),#334749);border:1px solid #f4df9b;border-radius:18px;margin:0 auto;box-shadow:0 0 45px color-mix(in srgb,var(--rarity-color) 30%,transparent)}.reveal-portrait .hero-art{border-radius:12px}.reveal-dialog h2{font-size:28px;color:#ffe4b8;margin:18px 0 7px}.reveal-dialog p{color:#cdd9be;font-size:13px;line-height:1.6}.reveal-dialog .primary{width:100%;margin-top:20px}.reveal-dialog .rarity-chip{font-size:12px}
+.reveal-kicker{display:block;font-size:13px;letter-spacing:.15em;color:#f2d093;font-weight:800;margin-bottom:20px}.reveal-portrait{width:200px;height:200px;padding:5px;background:linear-gradient(140deg,var(--rarity-color),#334749);border:1px solid #f4df9b;border-radius:18px;margin:0 auto;box-shadow:0 0 45px color-mix(in srgb,var(--rarity-color) 30%,transparent)}.reveal-portrait .hero-art{border-radius:12px}.reveal-dialog h2{font-size:28px;color:#ffe4b8;margin:18px 0 7px}.reveal-dialog p{color:#cdd9be;font-size:13px;line-height:1.6}.reveal-dialog .primary{width:100%;margin-top:20px}.reveal-dialog .rarity-chip{font-size:12px}
 
 /* ===== play.css ===== */
 /* Preparation and combat use a compact, touch-first layout. */
@@ -694,7 +688,7 @@ button:focus-visible{outline:3px solid #80e7e0;outline-offset:3px}
 #screen-start::before{display:none}.prepare-heading{display:flex;align-items:center;gap:13px;margin:0 0 17px}.prepare-heading h1{color:#f5dfb9!important;-webkit-text-fill-color:initial;background:none!important;font-family:inherit!important;font-size:23px!important;padding:0!important;margin:0!important}.prepare-heading #back-lobby{margin:0;width:42px}
 #stage-brief{padding:0;border:1px solid #8e8961;border-radius:16px;background:#1e3b3c;overflow:hidden;font-size:12px;margin:0 0 21px}
 .brief-scene{padding:23px 18px 17px;background:linear-gradient(90deg,#081d23e6,#12343844),var(--forge-lobby) center 25%/cover;min-height:139px}.brief-kicker{font-size:11px;color:#f0c477;font-weight:800;letter-spacing:.1em}.brief-scene h2{font-size:24px;line-height:1.2;margin:8px 0 13px;color:#ffe9bf}.brief-scene>div{display:flex;gap:8px;font-size:11px}.brief-scene>div span{padding:5px 8px;border:1px solid #77958066;background:#17363ccb;border-radius:6px;color:#d7dfbb}
-.brief-party{display:flex;gap:7px;padding:12px;align-items:center}.brief-party>span{position:relative;display:block;flex:0 0 43px;height:48px;border:1px solid #b0a574;border-radius:8px;overflow:hidden}.brief-party>span b{position:absolute;bottom:0;left:0;right:0;padding:2px;background:#071c21bb;font-size:9px;text-align:center}.brief-party>div{margin-left:auto;color:#a9c1ae;font-size:10px;line-height:1.8}.brief-party>div b{color:#f1daad}
+.brief-party{display:flex;gap:7px;padding:12px;align-items:center}.brief-party>span{position:relative;display:block;flex:0 0 43px;height:43px;border:1px solid #b0a574;border-radius:8px;overflow:hidden}.brief-party>span b{position:absolute;bottom:0;left:0;right:0;padding:2px;background:#071c21bb;font-size:9px;text-align:center}.brief-party>div{margin-left:auto;color:#a9c1ae;font-size:10px;line-height:1.8}.brief-party>div b{color:#f1daad}
 .skill-select-heading{display:flex;align-items:center;justify-content:space-between}.skill-select-heading h2{font-size:17px;margin:0}.skill-select-heading span{font-size:12px;color:#b2cbb9}.skill-select-heading b{color:#f5cf82;font-family:inherit!important}
 #screen-start .sub{font-size:12px;color:#afc9bb;margin:8px 0 14px;line-height:1.5}
 .skill-pick-list{display:grid;grid-template-columns:1fr 1fr;gap:11px}.skill-pick-card{display:flex;flex-direction:column;text-align:left;padding:13px 11px;min-height:148px;border:1px solid #567870;border-bottom:3px solid #0a232a;border-radius:14px;background:linear-gradient(150deg,#294847,#193339);margin:0;box-shadow:0 3px 0 #071b20}
@@ -714,11 +708,11 @@ button:focus-visible{outline:3px solid #80e7e0;outline-offset:3px}
 .result-emblem{width:110px;height:100px;flex:none;margin:10px auto 6px;filter:drop-shadow(0 0 20px #91f2d43b)}#result-title{font:900 34px system-ui;margin:4px 0 9px;letter-spacing:-.04em;color:#f6d994;text-shadow:0 3px 0 #354137}#result-title.defeat{color:#dfb8a2}#result-sub{font-size:12px!important;color:#b7ceb9!important}
 #result-reward{width:100%;border:1px solid #bca66e;border-bottom:3px solid #7a724c;border-radius:17px;background:linear-gradient(#385048bb,#1b393ced);padding:17px 18px;margin:20px 0;order:1;color:#b5cbb8}#result-reward>span{font-size:12px}#result-reward>strong{display:block;font:900 33px system-ui;color:#ffe09b;margin:5px 0 15px}.reward-breakdown{display:flex;justify-content:space-around;font-size:10px;border-top:1px solid #80916b55;padding-top:12px}.reward-breakdown b{display:block;font-size:14px;color:#e2d0a5;margin-top:4px}#result-reward p{font-size:12px;color:#d7dcbc;margin:15px 0 0}#result-reward small{display:block;font-size:9px;color:#8faf9b;margin-top:7px}
 #result-stats{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;order:2}.result-stat{padding:10px 3px;border:1px solid #486957;border-radius:10px;background:#173238;display:flex;flex-direction:column;gap:5px}.result-stat strong{font:800 15px system-ui;color:#efe0b7}.result-stat span{font-size:10px;color:#9fbdad}#retry-btn{order:3;margin-top:20px;min-height:55px;width:100%;font-family:inherit;font-size:16px}
-@media(max-height:760px){.lobby-top{min-height:59px;padding-top:6px}.brand-lockup h1{font-size:22px}.wallet{padding-bottom:14px}.journey-scene{min-height:180px}.journey-caption{top:18px}.journey-caption h2{font-size:20px}.home-controls{padding-top:6px;padding-bottom:9px}.lobby-party-member .hero-art{aspect-ratio:1.15}.home-footnote{margin-top:7px}.home-controls .section-label{margin-bottom:3px}.lobby-party-summary{margin-bottom:10px}#prepare-btn{min-height:52px;padding:10px}#lobby-nav button{min-height:54px}#hud{min-height:57px;padding-top:7px;padding-bottom:7px}#energy-status-row{height:25px;min-height:25px}#energy-display{font-size:21px}#order-status-row{height:20px;min-height:20px;margin-bottom:4px}#generator-btn{min-height:41px;padding:6px 12px}#screen-start{padding-top:13px}.brief-scene{min-height:110px;padding-top:15px}.brief-party{padding:8px}#stage-brief{margin-bottom:15px}.skill-pick-card{min-height:133px;padding:10px}.skill-pick-card h3{font-size:13px}.skill-pick-icon{width:33px;height:33px;font-size:21px}#start-btn{margin-top:16px;min-height:51px}.character-modal-hero{height:180px}.character-modal-hero .hero-art{height:205px;width:205px}.character-modal-body{padding-bottom:15px}.gacha-stage{height:230px}}
-@media(max-width:365px){.wallet{padding-left:12px;padding-right:12px;gap:8px}.wallet strong{font-size:14px}.brand-lockup h1{font-size:20px}.home-controls{padding-left:13px;padding-right:13px}#stage-list{left:13px;right:13px}.stage-card.chosen{gap:8px;padding:10px}.stage-card b{font-size:16px}.stage-mark{font-size:12px}.character-page-head h2{font-size:22px}#lobby-characters,#lobby-gacha{padding-left:11px;padding-right:11px}.formation-panel{padding:10px}.formation-grid{gap:5px}.formation-total{font-size:9px}.character-filter{font-size:10px}.character-filter .sprite-art{width:18px;height:18px}.character-roster{gap:9px 6px}.character-roster b{font-size:12px}.character-dialog{width:calc(100vw - 12px)}#character-modal{padding:6px}.character-modal-body{padding-left:15px;padding-right:15px}.brief-party>span{flex-basis:36px;height:42px}.skill-pick-meta span{font-size:9px}}
+@media(max-height:760px){.lobby-top{min-height:59px;padding-top:6px}.brand-lockup h1{font-size:22px}.wallet{padding-bottom:14px}.journey-scene{min-height:180px}.journey-caption{top:18px}.journey-caption h2{font-size:20px}.home-controls{padding-top:6px;padding-bottom:9px}.home-footnote{margin-top:7px}.home-controls .section-label{margin-bottom:3px}.lobby-party-summary{margin-bottom:10px}#prepare-btn{min-height:52px;padding:10px}#lobby-nav button{min-height:54px}#hud{min-height:57px;padding-top:7px;padding-bottom:7px}#energy-status-row{height:25px;min-height:25px}#energy-display{font-size:21px}#order-status-row{height:20px;min-height:20px;margin-bottom:4px}#generator-btn{min-height:41px;padding:6px 12px}#screen-start{padding-top:13px}.brief-scene{min-height:110px;padding-top:15px}.brief-party{padding:8px}#stage-brief{margin-bottom:15px}.skill-pick-card{min-height:133px;padding:10px}.skill-pick-card h3{font-size:13px}.skill-pick-icon{width:33px;height:33px;font-size:21px}#start-btn{margin-top:16px;min-height:51px}.character-modal-hero{height:180px}.character-modal-hero .hero-art{height:205px;width:205px}.character-modal-body{padding-bottom:15px}.gacha-stage{height:230px}}
+@media(max-width:365px){.wallet{padding-left:12px;padding-right:12px;gap:8px}.wallet strong{font-size:14px}.brand-lockup h1{font-size:20px}.home-controls{padding-left:13px;padding-right:13px}.character-page-head h2{font-size:22px}#lobby-characters,#lobby-gacha{padding-left:11px;padding-right:11px}.formation-panel{padding:10px}.formation-grid{gap:5px}.formation-total{font-size:9px}.character-filter{font-size:10px}.character-filter .sprite-art{width:18px;height:18px}.character-roster{gap:9px 6px}.character-roster b{font-size:12px}.character-dialog{width:calc(100vw - 12px)}#character-modal{padding:6px}.character-modal-body{padding-left:15px;padding-right:15px}.brief-party>span{flex-basis:36px;height:36px}.skill-pick-meta span{font-size:9px}}
 @media(min-width:700px){#app{border-left:1px solid #7a725133;border-right:1px solid #7a725133}.character-dialog{margin-bottom:20px}#character-modal{align-items:center}.journey-scene{min-height:215px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
-@media(max-height:650px){.journey-scene{min-height:155px}.journey-caption{top:13px}.journey-caption h2{font-size:19px}.lobby-top{min-height:55px}.lobby-party-member .hero-art{aspect-ratio:1.3}.home-controls{padding-bottom:7px}.home-footnote{font-size:8px}#lobby-nav button{min-height:49px}.gacha-stage{height:205px}.gacha-chest{width:160px;height:160px;left:calc(50% - 80px);top:15px}}
+@media(max-height:650px){.journey-scene{min-height:155px}.journey-caption{top:13px}.journey-caption h2{font-size:19px}.lobby-top{min-height:55px}.home-controls{padding-bottom:7px}.home-footnote{font-size:8px}#lobby-nav button{min-height:49px}.gacha-stage{height:205px}.gacha-chest{width:160px;height:160px;left:calc(50% - 80px);top:15px}}
 
 /* ===== battle.css ===== */
 /* Combat owns the remaining viewport; controls have one explicit height budget.
@@ -775,8 +769,7 @@ button{transition:background .12s,transform .12s;letter-spacing:0}
 #app .secondary,.icon-button{border-radius:4px;background:#334135;border:1px solid #65735b;box-shadow:none}
 .lobby-top,.wallet{background:#1d2923}.brand-glyph{background:none;color:#ccb67d;border:0;box-shadow:none;border-radius:0}.brand-lockup h1{font-size:25px;letter-spacing:.07em}.brand-lockup div>span{letter-spacing:.04em;color:#b2bea5}
 .wallet{gap:8px;padding-bottom:13px}.wallet>div{border:0;border-radius:3px;box-shadow:none;background:#142219}.wallet .wallet-add{background:#3c4b39;border:0;border-radius:3px;font-size:20px}
-#lobby-scroll,#lobby-home,#screen-lobby{background:#1d2a22}.journey-scene{background-image:linear-gradient(transparent 65%,#1d2a22),var(--forge-lobby)}.journey-caption>span{letter-spacing:.06em}.journey-caption h2{font-size:25px}.forge-beacon{display:none}
-.stage-card.chosen{border:0;border-left:3px solid #c3ab74;border-radius:0;background:#19271fe8;box-shadow:none;padding:12px}.stage-number{border:0;border-radius:0;background:none;font-size:28px}.stage-card b{font-size:18px}.stage-card small{color:#b2bda3}
+#lobby-scroll,#lobby-home,#screen-lobby{background:#1d2a22}.journey-scene{background-image:linear-gradient(#0d1f22d6,#0d1f2255 16%,transparent 32%,transparent 65%,#1d2a22),var(--forge-lobby)}/* 위쪽 스크림: 캡션(지역·웨이브·보상)과 마일스톤 pill이 배너 밝은 부분 위에 올라간다 */.journey-caption>span{letter-spacing:.06em}.journey-caption h2{font-size:25px}.forge-beacon{display:none}
 .home-controls{background:#1d2a22}.home-footnote{display:none}.lobby-party-member{border:1px solid #697355;border-radius:3px;box-shadow:none;background:#27352a}.lobby-party-member .hero-art{background-color:#24352c}.lobby-party-member strong{font-size:12px}
 #lobby-nav{background:#19261f;border-top:1px solid #485740;box-shadow:none}#lobby-nav button{border-radius:0;background:none;box-shadow:none;color:#a5b397}#lobby-nav button[aria-current=page]{background:#2e3c2b;color:#e2cd98;box-shadow:inset 0 2px #c5ae77}#lobby-nav button[aria-current=page]::after{display:none}
 .formation-panel{background:none;border:0;border-bottom:1px solid #526047;border-radius:0;box-shadow:none;padding-left:0;padding-right:0}.formation-slot,.formation-slot.active{border-radius:3px;box-shadow:none}.character-filter,.character-filter.active{border-radius:3px;box-shadow:none}.character-filter.active{background:#4c5d40;border-color:#a5b085}
@@ -884,13 +877,22 @@ h2.reveal-kicker{margin-top:0}
   background:#ff5d5d;border:1.5px solid #142219;pointer-events:none}
 .notify-dot[hidden]{display:none}
 
-/* --- 6. 장착 스킬 아이콘화 (마일스톤이 빠진 자리) --- */
+/* --- 6. 장착 스킬 줄 — 이름과 편성 능력치까지 두 줄로 (마일스톤이 빠진 자리) --- */
+/* [2026-09-16] 아이콘 2개만 놓기엔 줄이 너무 길었다. 같은 높이에 스킬 이름과
+   편성 수호자의 평균 공격력·총 체력을 넣어 출전 전에 볼 값을 한 줄에서 끝낸다. */
 .home-shortcuts{grid-template-columns:1fr}
-.home-shortcuts button{display:flex;align-items:center;justify-content:space-between;padding:9px 14px}
-.hs-label{font-size:12px;color:#eadab2;font-weight:800}
-.hs-skill-icons{display:flex;gap:6px}
-.hs-skill-icon{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--skill-accent);
-  border-radius:7px;color:var(--skill-accent);background:#142a22;font-size:14px}
+.home-shortcuts button{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:9px 14px}
+.hs-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.hs-label{font-size:12px;color:#eadab2;font-weight:800;flex:none}
+.hs-skill-icons{display:flex;gap:6px;min-width:0;justify-content:flex-end;flex-wrap:nowrap}
+.hs-skill-icon{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;
+  border:1px solid var(--skill-accent);border-radius:999px;color:var(--skill-accent);
+  background:#142a22;font-size:13px;min-width:0}
+.hs-skill-icon em{font-style:normal;font-size:11px;font-weight:700;color:#e6ecd9;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-stats{border-top:1px solid #ffffff14;padding-top:6px;font-size:11px;color:#a9b89f;font-weight:700}
+/* [버그] .home-shortcuts b{display:block}(v0916_2)가 살아 있어 수치가 라벨 아래 줄로 떨어졌다. */
+.hs-stats b{display:inline;color:#f4e3b8;font-size:12px;margin-left:3px}
 
 /* --- 7. 인플레이 스킬 버튼 · 에너지 표시를 주문서 게이지 줄로 이동 --- */
 #order-status-row{height:auto;min-height:34px;flex-wrap:nowrap}
@@ -1002,27 +1004,22 @@ h2.reveal-kicker{margin-top:0}
 #sound-toggle.muted{opacity:.45}
 #sound-toggle svg{width:19px;height:19px}
 
-/* --- 3. 마일스톤 스트립 — 배너 오른쪽 위. 아이콘이 아니라 진행이 보이는 카드다. --- */
-#open-milestones.milestone-strip{position:absolute;left:20px;right:20px;bottom:82px;top:auto;z-index:2;
-  width:auto;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 9px;
-  padding:7px 11px 8px;border:1px solid #6f7f68;border-radius:9px;background:#0e2220d9;
-  backdrop-filter:blur(3px);color:#e7ead7;text-align:left;cursor:pointer;box-shadow:0 3px 10px #0006}
-.milestone-strip .ms-head{display:flex;align-items:center;gap:5px;position:relative}
-.milestone-strip .ms-head b{font-size:10px;font-weight:800;letter-spacing:.02em;color:#bcc9ab;white-space:nowrap}
-.milestone-strip .ms-head [data-ui-icon]{width:13px;height:13px;flex:none;color:#d8c085}
-.milestone-strip .ms-head [data-ui-icon] svg{width:13px;height:13px;display:block}
-.milestone-strip .ms-head .notify-dot{position:static;width:7px;height:7px;border-width:0;flex:none}
-.milestone-strip .ms-body{display:contents}
-.milestone-strip .ms-body b{grid-column:2;font-size:12px;font-weight:800;color:#f6e6bb;line-height:1.2;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.milestone-strip .ms-body small{grid-column:3;justify-self:end;font-size:11px;font-weight:700;
-  color:#a9baa4;line-height:1.2;white-space:nowrap}
-.milestone-strip .ms-track{grid-column:1/-1;display:block;height:3px;margin-top:1px;
-  border-radius:2px;background:#ffffff22;overflow:hidden}
-.milestone-strip .ms-track i{display:block;height:100%;background:#d8c085;border-radius:2px}
-.milestone-strip.ready{border-color:#f0cf87;background:#1d3324e8}
-.milestone-strip.ready .ms-body small{color:#8fe0a6}
-.milestone-strip.ready .ms-track i{background:#8fe0a6}
+/* --- 3. 마일스톤 — 배너 오른쪽 위의 작은 pill 버튼. --- */
+/* [2026-09-16 정정] 가로로 긴 스트립은 배경 배너의 일부로 읽혀 누를 수 있는 줄 몰랐다.
+   목표 이름과 진행(4 / 5)은 그대로 두고 게이지만 버리면, 같은 정보가 버튼 모양에 들어간다. */
+#open-milestones.milestone-pill{position:absolute;right:14px;left:auto;top:14px;bottom:auto;z-index:2;
+  width:auto;max-width:62%;display:flex;align-items:center;gap:6px;
+  padding:6px 10px;border:1px solid #d8c08599;border-radius:999px;background:#0e2220e0;
+  backdrop-filter:blur(3px);color:#e7ead7;text-align:left;cursor:pointer;box-shadow:0 3px 10px #0007}
+.milestone-pill [data-ui-icon]{width:12px;height:12px;flex:none;color:#d8c085}
+.milestone-pill [data-ui-icon] svg{width:12px;height:12px;display:block}
+.milestone-pill .ms-body{display:flex;align-items:baseline;gap:6px;min-width:0}
+.milestone-pill .ms-body b{font-size:11px;font-weight:800;color:#f6e6bb;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.milestone-pill .ms-body small{font-size:10px;font-weight:700;color:#bcc9ab;white-space:nowrap}
+.milestone-pill .notify-dot{position:static;width:6px;height:6px;border-width:0;flex:none}
+.milestone-pill.ready{border-color:#f0cf87;background:#1d3324ee}
+.milestone-pill.ready .ms-body small{color:#8fe0a6}
 
 /* --- 4. 출전 부대 카드에 레벨 (이름 아래 줄로 고정해 카드 높이를 맞춘다) --- */
 .lobby-party-member .member-label{display:grid;grid-template-columns:auto 1fr;align-items:center;
@@ -1032,8 +1029,8 @@ h2.reveal-kicker{margin-top:0}
   font-size:10px;font-weight:700;color:#9fb39a;line-height:1.3}
 
 @media(max-width:360px){
-  .milestone-strip{width:min(58%,178px);padding:7px 8px 8px}
-  .milestone-strip .ms-body b{font-size:12px}
+  .milestone-pill{max-width:58%;padding:5px 9px}
+  .milestone-pill .ms-body b{font-size:10px}
 }
 
 /* =========================================================================
@@ -1073,8 +1070,8 @@ h2.reveal-kicker{margin-top:0}
     <div id="lobby-notice" role="status" aria-live="polite"></div>
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
-        <div class="journey-scene"><div class="journey-caption"><span>모험</span><h2>꺼지지 않는 불씨</h2></div><div class="forge-beacon" aria-hidden="true"></div><button id="open-milestones" class="milestone-strip" aria-label="마일스톤 미션"><span class="ms-head"><span data-ui-icon="milestone"></span><b>마일스톤</b><i id="milestone-home-dot" class="notify-dot" hidden></i></span><span id="milestone-strip-body" class="ms-body"></span></button><div id="stage-list"></div></div>
-        <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-label">장착 스킬</span><span id="home-skill-summary" class="hs-skill-icons"></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_10</span></div></div>
+        <div class="journey-scene"><div class="journey-caption"><span id="stage-eyebrow">모험</span><h2 id="stage-name">꺼지지 않는 불씨</h2><p id="stage-meta" class="journey-meta"></p></div><div class="forge-beacon" aria-hidden="true"></div><button id="open-milestones" class="milestone-pill" aria-label="마일스톤 미션"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button></div>
+        <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label">장착 스킬</span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span>평균 공격력 <b id="home-party-atk">0</b></span><span>총 체력 <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_12</span></div></div>
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow">GUARDIANS</span><h2>수호자</h2></div><span class="character-count" id="character-count">0 / 24 보유</span></div><div id="growth-list"></div></section>
       <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow">TACTICAL SKILLS</span><h2>전투 스킬</h2></div><span class="character-count" id="skill-count">0 / 4 보유</span></div><div id="skill-lobby-content"></div></section>
@@ -5180,7 +5177,7 @@ const SkillLobbyUI={
     $$('[data-skill-open]').forEach(button=>button.onclick=()=>this.open(campaign,button.dataset.skillOpen,button));
     const ready=SKILL_KEYS.some(key=>{const x=inv.skills[key];return SkillGrowthSystem.allowed(x,'levelUp')&&SkillGrowthSystem.costs(x).length>0&&WalletSystem.canPay(campaign.state,SkillGrowthSystem.costs(x))||SkillGrowthSystem.allowed(x,'rankUp')&&x.shards>=SkillGrowthSystem.shardCost(x);});
     $('#skill-nav-dot').hidden=!ready;
-    $('#home-skill-summary').innerHTML=equipped.map(key=>{const m=SKILL_DEFS[key];return `<span class="hs-skill-icon" style="--skill-accent:${m.color}" title="${CONFIG.skills[key].name}">${m.icon}</span>`;}).join('');
+    $('#home-skill-summary').innerHTML=equipped.map(key=>{const m=SKILL_DEFS[key];return `<span class="hs-skill-icon" style="--skill-accent:${m.color}">${m.icon}<em>${CONFIG.skills[key].name}</em></span>`;}).join('');
     if(this.selectedKey&&!$('#skill-modal').hidden)this.renderModal(campaign,this.selectedKey);
   },
   open(campaign,key,focus){this.selectedKey=key;this.lastFocus=focus||document.activeElement;this.renderModal(campaign,key);$('#skill-modal').hidden=false;$('#skill-modal').setAttribute('aria-hidden','false');},
@@ -5204,7 +5201,7 @@ const MilestoneUI={
       const totals={};
       ready.forEach(row=>{const st=MilestoneSystem.status(state,row);totals[row.currencyId]=(totals[row.currencyId]||0)+st.total;});
       const reward=Object.entries(totals).map(([id,n])=>`${CurrencyTable[id].name} +${n.toLocaleString('ko-KR')}`).join(' · ');
-      return {ready:true,text:`받을 보상 ${ready.length}개`,sub:reward,pct:100};
+      return {ready:true,text:'보상 받기',sub:`${ready.length}개`,pct:100,reward};
     }
     let best=null;
     MILESTONE_TABLE.forEach(row=>{
@@ -5221,7 +5218,9 @@ const MilestoneUI={
     if(!el||!state)return;
     const s=this.strip(state);
     $('#open-milestones').classList.toggle('ready',s.ready);
-    el.innerHTML=`<b>${s.text}</b><small>${s.sub}</small><span class="ms-track"><i style="width:${s.pct.toFixed(0)}%"></i></span>`;
+    // pill은 좁다. 게이지는 버리고 목표 이름과 진행만 남긴다(자세한 건 패널에서 본다).
+    $('#open-milestones').setAttribute('aria-label',`마일스톤 미션 · ${s.text} ${s.sub}`.trim());
+    el.innerHTML=`<b>${s.text}</b><small>${s.sub}</small>`;
   },
   render(campaign){
     const state=campaign.state;if(!state)return;const count=MilestoneSystem.claimableCount(state);
@@ -5258,10 +5257,16 @@ const CampaignView={
     $('#prepare-btn').disabled=locked||recovered.stamina<entry;
     $('#prepare-btn').innerHTML=recovered.stamina<entry?`행동력 회복 중 <small>${recovered.stamina} / ${entry}</small>`:`${GameArt.icon('sword')} 전투 준비 <small>${GameArt.icon('energy')} ${entry}</small>`;
   },
-  stageCard(st){
-    $('#stage-list').innerHTML=`<div class="stage-card chosen" aria-label="스테이지 ${st.id} ${st.name}"><span class="stage-number">${String(st.id).padStart(2,'0')}</span><span><b>${st.name}</b><small>${st.waves} 웨이브 · 다음 지역 도전</small></span><span class="stage-mark">+${CampaignEconomy.stageTotalGold(st).toLocaleString('ko-KR')}<small>클리어 골드</small></span></div>`;
+  // 배너 캡션이 곧 스테이지 정보다. 별도 카드는 눌러도 아무 일이 없는 표시용이었다.
+  stageHeader(st){
+    $('#stage-eyebrow').textContent=`모험 · ${String(st.id).padStart(2,'0')}`;
+    $('#stage-name').textContent=st.name;
+    $('#stage-meta').innerHTML=`${st.waves} 웨이브 · 클리어 <b>+${CampaignEconomy.stageTotalGold(st).toLocaleString('ko-KR')}</b> 골드`;
   },
   partySummary(party){
+    // 평균 공격력은 편성 4인의 평균(party.stats.atk), 총 체력은 핵 체력 합계다.
+    $('#home-party-atk').textContent=Math.round(party.stats.atk).toLocaleString('ko-KR');
+    $('#home-party-hp').textContent=party.stats.hp.toLocaleString('ko-KR');
     $('#lobby-party-summary').innerHTML=party.members.map(m=>`<button class="lobby-party-member" data-home-hero="${m.characterId}" aria-label="${m.name} 레벨 ${m.level} 상세">${GameArt.portrait(m.characterId)}<span class="member-label">${GameArt.module(m.specialtyMissileId,'module-mini')}<b>${m.name}</b><em>Lv.${m.level}</em></span></button>`).join('');
     $$('[data-home-hero]').forEach(b=>b.onclick=()=>CharacterLobbyUI.open(Campaign,b.dataset.homeHero,b));
   },
@@ -5610,7 +5615,7 @@ const Campaign = {
   render(){
     this.renderWallet();
     this.selectedStage=this.state.unlocked;
-    CampaignView.stageCard(this.stage());
+    CampaignView.stageHeader(this.stage());
     CampaignView.partySummary(PartyCombatAdapter.snapshot(this.state));
     CharacterLobbyUI.render(this);
     SkillLobbyUI.render(this);
