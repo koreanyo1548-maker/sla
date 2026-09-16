@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>슬래그마 · 용광로의 수호자</title>
 <meta name="theme-color" content="#12282b">
-<meta name="slagma-build" content="v0916_7">
+<meta name="slagma-build" content="v0916_10">
 
 <style>
 /* ===== base.css ===== */
@@ -935,20 +935,27 @@ h2.reveal-kicker{margin-top:0}
 #combat-wrap>#energy-status-row .energy-status-label{font-size:9px;line-height:1.1;color:#b7c6ae;letter-spacing:0}
 #combat-wrap>#energy-status-row #energy-display{font-size:17px;line-height:1.15;color:#ffe6a6}
 
-/* 스킬 — 우하단 세로 2개. 전투 중 유일한 능동 입력이라 엄지 영역을 지킨다. */
-#combat-wrap>#skill-row{right:5px;bottom:7px;display:flex;flex-direction:column;
+/* 스킬 — 우하단 가로 2개. 전투 중 유일한 능동 입력이라 엄지 영역을 지킨다.
+   [2026-09-16] 세로 2단(44×94)은 영웅 4번 슬롯의 몸통을 덮었다(짧은 화면 실측 세로 72px 겹침).
+   가로로 눕히면 겹치는 띠가 버튼 한 줄 높이(44px)로 줄고, 남는 가로 폭에 스킬 이름이 들어가
+   아이콘만으로 뭘 쓰는지 모르던 문제도 같이 풀린다. 남은 44px 띠는 playerOffsetY로 비운다. */
+#combat-wrap>#skill-row{right:5px;bottom:7px;display:flex;flex-direction:row;
   grid-template-columns:none;width:auto;height:auto;flex:none;margin:0;gap:6px;transform:none}
-#combat-wrap>#skill-row .skill-btn{width:44px;height:44px;min-height:44px;padding:0;
+#combat-wrap>#skill-row .skill-btn{width:auto;height:44px;min-height:44px;padding:0 10px;
   border-radius:11px;border:1px solid var(--skill-accent,#c8ad70);background:#0d1a18cc;
-  backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;overflow:hidden}
+  backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;gap:6px;
+  overflow:hidden;position:relative}
 /* [버그] .skill-btn .sk-icon{display:none}(v0914_9)이 살아 있어 아이콘이 렌더되지 않았다.
-   v0914_9는 이름+비용 텍스트를 쓰던 시절이라 숨긴 것이고, 지금은 아이콘이 유일한 식별자다. */
-#combat-wrap>#skill-row .sk-icon{display:block!important;font-size:21px;line-height:1;
+   v0914_9는 이름+비용 텍스트를 쓰던 시절이라 숨긴 것이고, 지금은 아이콘이 이름 앞 식별자다. */
+#combat-wrap>#skill-row .sk-icon{display:block!important;font-size:19px;line-height:1;
   color:var(--skill-accent,#f5ddb0);text-shadow:0 1px 2px #000a}
-#combat-wrap>#skill-row .sk-level{position:absolute;right:3px;bottom:2px;font:700 9px system-ui;
-  color:#e9e8d7;text-shadow:0 1px 1px #000}
-#combat-wrap>#skill-row .sk-cd{left:0;top:auto;bottom:0;height:0;width:100%!important;
-  background:#0009;transition:height .1s linear}
+#combat-wrap>#skill-row .sk-name{font:800 12px system-ui;line-height:1;color:#eef0e0;
+  white-space:nowrap;text-shadow:0 1px 2px #000a}
+/* 레벨은 이름 뒤 작은 글자로. 정사각 시절의 우하단 뱃지 배치는 가로 버튼에서 뜬다. */
+#combat-wrap>#skill-row .sk-level{position:static;font:700 10px system-ui;line-height:1;
+  color:#c9d3bd;text-shadow:0 1px 1px #000}
+#combat-wrap>#skill-row .sk-cd{position:absolute;left:0;top:auto;bottom:0;height:0;width:100%!important;
+  background:#0009;transition:height .1s linear;pointer-events:none}
 #combat-wrap>#skill-row .skill-btn[data-state="ready"]{box-shadow:0 0 10px var(--skill-accent,#c8ad70)}
 #combat-wrap>#skill-row .skill-btn:disabled{opacity:.5}
 
@@ -956,12 +963,24 @@ h2.reveal-kicker{margin-top:0}
 #order-status-row{height:20px;min-height:20px;margin:0 0 5px;gap:8px;flex-wrap:nowrap}
 
 /* --- 4. 확보한 높이를 주문서 카드와 보드로 --- */
-.order-card{height:100px}
+/* [2026-09-16 정정] 카드 간소화로 oc-bottom(16px) 줄이 빠졌는데 높이는 84→100px로 올렸다.
+   내용은 제목 17 + 칩 27 = 44px뿐이라 space-between이 그 차이를 42px 공백으로 벌려 놨다.
+   내용에 맞춰 64px로 되돌리고, 줄어든 만큼은 1fr인 전장이 흡수한다(보드·생성기는 고정). */
+.order-card{height:64px}
+.order-card .oc-apply{justify-content:flex-start;gap:8px}
 #board{grid-template-rows:repeat(var(--board-rows,2),clamp(40px,12.4vw,52px))}
 /* 짧은 화면에서는 확대분을 되돌린다 — 전장 높이를 줄이지 않는 것이 우선이다.
    기준을 700px로 잡아야 iPhone SE(667)가 걸린다(기존 650 기준은 SE를 놓쳤다). */
-@media(max-height:700px){.order-card{height:86px}#board{grid-template-rows:repeat(var(--board-rows,2),38px)}
-  #order-status-row{height:18px;min-height:18px;margin-bottom:4px}}
+@media(max-height:700px){.order-card{height:58px}#board{grid-template-rows:repeat(var(--board-rows,2),38px)}
+  #order-status-row{height:18px;min-height:18px;margin-bottom:4px}
+  /* 짧은 화면은 전장 자체가 눌려 영웅 줄이 아래로 내려온다. 오버레이를 한 단 낮춰
+     영웅과 겹치지 않게 한다(실측: 360×640에서 스킬바 9px, 에너지 5px 겹쳤다). */
+  #combat-wrap>#skill-row{bottom:4px}
+  #combat-wrap>#skill-row .skill-btn{height:38px;min-height:38px;padding:0 8px;gap:5px}
+  #combat-wrap>#skill-row .sk-icon{font-size:17px}
+  #combat-wrap>#skill-row .sk-name{font-size:11px}
+  #combat-wrap>#energy-status-row{bottom:4px;padding:2px 7px}
+  #combat-wrap>#energy-status-row #energy-display{font-size:15px}}
 
 /* --- 5. 종료를 도구 메뉴로. 전투 중에만 뜨고, 데이터 초기화와 자리를 공유한다. --- */
 #quit-run{position:fixed;top:109px;bottom:auto;left:auto;font-size:15px}
@@ -1055,7 +1074,7 @@ h2.reveal-kicker{margin-top:0}
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
         <div class="journey-scene"><div class="journey-caption"><span>모험</span><h2>꺼지지 않는 불씨</h2></div><div class="forge-beacon" aria-hidden="true"></div><button id="open-milestones" class="milestone-strip" aria-label="마일스톤 미션"><span class="ms-head"><span data-ui-icon="milestone"></span><b>마일스톤</b><i id="milestone-home-dot" class="notify-dot" hidden></i></span><span id="milestone-strip-body" class="ms-body"></span></button><div id="stage-list"></div></div>
-        <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-label">장착 스킬</span><span id="home-skill-summary" class="hs-skill-icons"></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_7</span></div></div>
+        <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-label">장착 스킬</span><span id="home-skill-summary" class="hs-skill-icons"></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_10</span></div></div>
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow">GUARDIANS</span><h2>수호자</h2></div><span class="character-count" id="character-count">0 / 24 보유</span></div><div id="growth-list"></div></section>
       <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow">TACTICAL SKILLS</span><h2>전투 스킬</h2></div><span class="character-count" id="skill-count">0 / 4 보유</span></div><div id="skill-lobby-content"></div></section>
@@ -1353,7 +1372,10 @@ const DEFAULT_CONFIG = {
   // 달라도 이 범위 안에서는 캔버스를 늘려 화면을 꽉 채우고, 넘어서면 캔버스를 줄여
   // 여백(레터박스)을 만든다. 1.18이면 최신 폰은 여백 없이 꽉 차고 짧은 화면만 여백이 생긴다.
   field: {
-    width:440, height:480, playerOffsetY:42, maxAnisotropy:1.18,
+    // playerOffsetY: 영웅 편성 줄이 전장 바닥에서 떨어진 거리. 42는 우하단 가로 스킬바
+    // (44px + 여백)와 겹쳐 4번 슬롯 영웅이 버튼에 깔렸다. 68이면 짧은 화면에서도
+    // 스프라이트 하단이 스킬바 위에서 끝난다. 핵(coreY 315)과는 95px 떨어져 구도는 그대로다.
+    width:440, height:480, playerOffsetY:72, maxAnisotropy:1.18,
     // 핵은 영웅 앞 중앙 (220,315), 지름 48px. 영웅은 기존 후방 편성 위치를 쓴다.
     coreY:315, coreRadius:24, enemyContactGap:4, spawnMargin:64,
   },
@@ -4317,7 +4339,8 @@ class Game {
       return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${def.name} Lv.${entry?.level||1}">
         <span class="sk-cd"></span>
         <span class="sk-icon">${meta.icon}</span>
-        <span class="sk-level">${entry?.level||1}</span>
+        <span class="sk-name">${def.name}</span>
+        <span class="sk-level">Lv.${entry?.level||1}</span>
       </button>`;
     }).join('');
     $$('.skill-btn',row).forEach(btn=>{
