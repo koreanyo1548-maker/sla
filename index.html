@@ -105,8 +105,7 @@
   #hud .wave-label{white-space:nowrap;font-weight:600;}
 
   /* [2026-09-07] 캔버스 표시 크기는 JS(Game.layoutField)가 픽셀로 지정한다. 왜곡 상한을
-     넘는 화면에서는 캔버스가 컨테이너보다 작아지므로 flex로 가운데 정렬해 여백을 양쪽에 나눈다.
-     #dps-panel·#skill-row는 position:absolute라 flex 정렬에 영향받지 않는다. */
+     넘는 화면에서는 캔버스가 컨테이너보다 작아지므로 flex로 가운데 정렬해 여백을 양쪽에 나눈다. */
   #combat-wrap{position:relative;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at 50% 0%,#1c2733,#0c1015);}
   #combat-wrap::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
@@ -146,12 +145,12 @@
   #cinematic-layer.end-defeat #cinematic-title{color:#ff6666;}
   #screen-game.cinematic-ending #combat-canvas{animation:cinematicCameraPush var(--cinematic-duration,.65s) ease-out both;}
   #screen-game.cinematic-ending #board-wrap,#screen-game.cinematic-ending #skill-row,#screen-game.cinematic-ending #quit-run{pointer-events:none;}
-  /* #dps-panel은 v0914_9부터 미사일별 누적 강화 레벨을 표시한다(2026-09-05 확정은 DPS — openItems). */
   /* [UX 2026-09-02] 생성기가 보드 바로 위에 있어서, 길게 눌러 연속 생성하는 동안
      엄지손가락이 보드 위 칸들을 가리는 문제가 있었다 — 보드 아래(엄지가 자연스럽게
      닿는 화면 하단)로 옮겼다. */
-  /* [2026-09-05] 스킬 버튼 — 보드 조작 영역에서 전투 화면 오른쪽으로 이동했다.
-     적과 전투 상태를 보는 흐름 안에서 바로 발견하고 누르게 하며, 보드의 세로 공간도 확보한다. */
+  /* [2026-09-05] 스킬 버튼 — 보드 조작 영역에서 전투 화면 오른쪽으로 이동했었다.
+     2026-09-16 UI 정리로 주문서 게이지 줄(오른쪽 위) 안으로 다시 옮겼다 — 실제 배치는
+     파일 끝의 "[UI 정리 2026-09-16]" 섹션에서 #skill-row/.skill-btn을 재정의한다. */
   #skill-row{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:6;
     display:flex;flex-direction:column;gap:8px;width:min(92px,22vw);margin:0;pointer-events:auto;}
   .skill-btn{flex:none;width:100%;min-height:58px;position:relative;overflow:hidden;padding:8px 5px;border-radius:11px;
@@ -732,8 +731,6 @@ button:focus-visible{outline:3px solid #80e7e0;outline-offset:3px}
 #combat-wrap{position:relative;min-height:140px;background:#1c2b2a;overflow:hidden}
 #combat-wrap::before{content:'';position:absolute;inset:0;background:linear-gradient(#14252566,#14252599),var(--battlefield) center/cover;filter:saturate(.6);pointer-events:none}
 #combat-canvas{position:relative}
-#dps-panel{position:absolute;left:0;top:0;width:100%;height:25px;display:flex;justify-content:center;gap:13px;padding:5px 6px;border:0;border-radius:0;background:linear-gradient(#152424cc,transparent);box-shadow:none;pointer-events:none}
-.field-module{display:flex;align-items:center;gap:3px;font:500 10px system-ui;color:#d5dbce;opacity:.5}.field-module i{width:4px;height:4px;background:var(--module-color);border-radius:50%}.field-module b{font-weight:700;min-width:9px}.field-module.summoned{opacity:1}
 #board-wrap{padding:5px 8px 6px;background:#1b2928;border-top:1px solid #63705e;box-shadow:none;z-index:5}
 #order-status-row{display:flex;align-items:center;height:18px;min-height:18px;padding:0;margin:0 0 4px;gap:8px;color:#b5bfae;font-size:10px}
 .order-status-title{font:600 10px system-ui;color:#c2c8b9}.order-gauge-wrap{flex:1;max-width:none;display:flex;align-items:center;gap:5px}.order-gauge-track{height:3px;border:0;background:#3a4940;flex:1}.order-gauge-fill{background:#b9ca9a}.order-gauge-label{position:static;transform:none;min-width:32px;font:500 10px system-ui;color:#b5bfae}.order-stock{font:500 10px system-ui;background:none;border:0;padding:0}
@@ -762,7 +759,7 @@ button:focus-visible{outline:3px solid #80e7e0;outline-offset:3px}
 #app[data-state=playing] #tools-toggle{right:8px;top:9px;width:29px;height:29px;border:0;border-radius:3px;background:#2a3732;font-size:18px;box-shadow:none}
 #order-detail{position:absolute;inset:0;z-index:70;background:#09131077;display:flex;align-items:flex-end;padding:12px}
 .order-detail-card{width:100%;border:1px solid #8c987b;border-radius:6px;background:#26352e;color:#e3e5d6;padding:18px;box-shadow:0 6px 24px #0006}.order-detail-card h3{font-size:17px;margin:0 0 14px}.order-detail-card p{font-size:12px;line-height:1.6;margin:8px 0}.order-detail-card small{font-size:11px;color:#b8bfa9}.order-detail-actions{display:flex;justify-content:space-between;gap:10px;margin-top:18px}.order-detail-actions button{min-height:42px;padding:8px 16px;background:#3d4e3e;border:1px solid #71816a;border-radius:4px;font:600 12px system-ui}.order-detail-actions #order-detail-discard{background:none;color:#d3b9a5;border-color:#887366}
-@media(max-width:365px){#skill-row{flex-basis:118px;width:118px;gap:4px}#energy-status-row{flex-basis:40px}#board-wrap{padding-left:6px;padding-right:6px}.order-card .oc-title{font-size:9px}.oc-info{width:26px}.oc-chip .sprite-art{width:23px;height:23px}.oc-bottom b{font-size:9px}.field-module{font-size:9px}#dps-panel{gap:10px}}
+@media(max-width:365px){#board-wrap{padding-left:6px;padding-right:6px}.order-card .oc-title{font-size:9px}.oc-info{width:26px}.oc-chip .sprite-art{width:23px;height:23px}}
 @media(max-height:650px){#screen-game.active{grid-template-rows:44px minmax(120px,1fr) auto calc(16px + env(safe-area-inset-bottom))}#screen-game #hud{height:44px}#combat-wrap{min-height:120px}#board{grid-template-rows:repeat(var(--board-rows,2),34px)}.order-card{height:78px}#generator-row,#energy-status-row,#skill-row,.skill-btn{height:43px}#run-footer,#quit-run{height:16px}#action-log{line-height:16px}}
 
 #run-footer{height:auto;min-height:18px;padding-bottom:env(safe-area-inset-bottom)}
@@ -842,6 +839,77 @@ h2.reveal-kicker{margin-top:0}
 .pull-row .hero-art,.pull-row .pull-icon{width:40px;height:40px;border-radius:6px;background-color:#0d2226;padding:0}
 .pull-row b{display:block;font-size:13px;color:#f0e2c2}.pull-row small{color:var(--front);font-size:10px}
 .gacha-result .pull-icon{width:60px;height:60px;font-size:30px;border-radius:8px;background:#0d2226}
+
+/* =========================================================================
+   [UI 정리 2026-09-16] 결과창 여백 축소, 팝업 버튼 고정, 버튼 크기 통일,
+   로비 마일스톤/스킬 배치, 인플레이 스킬·에너지 위치, 주문서 카드 간소화.
+   앞의 여러 레이어(base/theme/finish/v0916_x)가 같은 선택자를 반복 정의해
+   추적이 어려우므로, 이번 정리 대상은 파일 맨 끝인 여기서 한 번에 덮어써
+   확실히 이긴다 — 이 파일이 이미 쓰던 패턴(finish.css 등)과 같은 방식이다.
+   ========================================================================= */
+
+/* --- 1. 결과 화면 압축 (작은 화면에서도 스크롤 없이 한 화면에) --- */
+#screen-result{padding:16px 18px 16px;gap:6px;justify-content:flex-start}
+.result-emblem{width:70px;height:62px;margin:0 auto 2px}
+#result-title{font-size:23px;margin:0 0 2px}
+#result-sub{font-size:11px!important}
+#result-reward{padding:12px 14px;margin:8px 0}
+#result-reward>strong{font-size:23px;margin:3px 0 7px}
+.reward-breakdown{padding-top:8px}
+#result-stats{gap:6px}
+.result-stat{padding:7px 3px;gap:2px}
+.result-stat strong{font-size:13px}
+#retry-btn{margin-top:8px;min-height:44px;font-size:14px}
+
+/* --- 2. 캐릭터/스킬 팝업 — 버튼 영역 고정, 나머지만 스크롤 --- */
+.character-dialog,.skill-dialog{display:flex;flex-direction:column;overflow:hidden}
+#character-modal-content,#skill-modal-content{display:contents}
+.character-modal-scroll{flex:1;min-height:0;overflow-y:auto}
+.character-modal-footer{flex:none;padding:10px 20px calc(12px + env(safe-area-inset-bottom));
+  background:#0c1620ee;border-top:1px solid #2c3648}
+.character-modal-footer:empty{display:none;padding:0;border-top:0}
+.skill-dialog .character-modal-scroll{padding-right:1px}
+.skill-dialog .character-modal-footer{padding:12px 0 0;background:none;border-top:1px solid #3a4a3e;margin-top:2px}
+
+/* --- 4. 팝업 액션 버튼 크기·폰트 통일 --- */
+.character-actions button,.character-deploy-button,.skill-detail-actions button,
+.skill-equip-actions button,.reveal-actions button{
+  min-height:48px;padding:8px 8px;font-size:13px;border-radius:10px;font-weight:800;}
+.character-actions button small,.skill-detail-actions button small{font-size:10px;margin-top:3px;opacity:.85;display:block}
+
+/* --- 5. 로비 마일스톤 → 상단 아이콘 + 점 뱃지 --- */
+.lobby-top-tools{display:flex;align-items:center;gap:6px}
+#open-milestones{position:relative}
+.notify-dot{position:absolute;top:1px;right:1px;width:8px;height:8px;border-radius:50%;
+  background:#ff5d5d;border:1.5px solid #142219;pointer-events:none}
+.notify-dot[hidden]{display:none}
+
+/* --- 6. 장착 스킬 아이콘화 (마일스톤이 빠진 자리) --- */
+.home-shortcuts{grid-template-columns:1fr}
+.home-shortcuts button{display:flex;align-items:center;justify-content:space-between;padding:9px 14px}
+.hs-label{font-size:12px;color:#eadab2;font-weight:800}
+.hs-skill-icons{display:flex;gap:6px}
+.hs-skill-icon{width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--skill-accent);
+  border-radius:7px;color:var(--skill-accent);background:#142a22;font-size:14px}
+
+/* --- 7. 인플레이 스킬 버튼 · 에너지 표시를 주문서 게이지 줄로 이동 --- */
+#order-status-row{height:auto;min-height:34px;flex-wrap:nowrap}
+#energy-status-row{position:relative;flex:none;display:flex;align-items:baseline;gap:4px;
+  min-height:0;height:auto;margin:0}
+.energy-status-label{font-size:9px}
+#energy-display{font-size:14px}
+#skill-row{position:static;transform:none;flex:none;display:flex;flex-direction:row;
+  gap:4px;width:auto;margin:0;z-index:auto;right:auto;top:auto;pointer-events:auto}
+#skill-row .skill-btn{width:30px;min-height:30px;padding:0;border-radius:8px;
+  display:flex;align-items:center;justify-content:center}
+#skill-row .sk-icon{font-size:15px;line-height:1}
+#skill-row .sk-level{position:absolute;right:2px;bottom:1px;font:700 8px system-ui;
+  color:#e9e8d7;text-shadow:0 1px 1px #000}
+
+/* --- 9. 주문서 카드 간소화: 이름+레벨 / X버튼 / 보석 칩만 --- */
+.oc-title{display:flex;align-items:center;gap:4px}
+.oc-title .oc-level{font-size:9px;color:#efd496;font-weight:700}
+.oc-info{font-size:20px;line-height:20px;font-weight:400}
 </style>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317393c%22%2F%3E%3Cpath%20d%3D%22M38%206%2013%2035h17l-4%2023%2026-34H34z%22%20fill%3D%22%23f7cd7e%22%2F%3E%3C%2Fsvg%3E">
 </head>
@@ -849,13 +917,13 @@ h2.reveal-kicker{margin-top:0}
 <div id="app">
   <div id="save-status" role="alert"></div>
   <div id="screen-lobby" class="screen">
-    <header class="lobby-top"><div class="brand-lockup"><span class="brand-glyph">S</span><div><h1>SLAGMA</h1><span>용광로의 수호자</span></div></div><button id="sound-toggle" class="icon-button" aria-label="효과음" aria-pressed="false"></button></header>
+    <header class="lobby-top"><div class="brand-lockup"><span class="brand-glyph">S</span><div><h1>SLAGMA</h1><span>용광로의 수호자</span></div></div><div class="lobby-top-tools"><button id="open-milestones" class="icon-button" aria-label="마일스톤"><span data-ui-icon="milestone"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button><button id="sound-toggle" class="icon-button" aria-label="효과음" aria-pressed="false"></button></div></header>
     <div class="wallet"><div class="wallet-energy"><span data-ui-icon="energy"></span><strong id="stamina-value"></strong><button id="stamina-charge-btn" class="wallet-add" aria-label="행동력 5 충전">+</button><small id="stamina-timer"></small><small id="stamina-charge-count" hidden></small></div><div class="wallet-gold"><span data-ui-icon="gold"></span><strong id="gold-value"></strong></div><div class="wallet-starfire"><span data-ui-icon="starfire"></span><strong id="starfire-value">0</strong></div></div>
     <div id="lobby-notice" role="status" aria-live="polite"></div>
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
         <div class="journey-scene"><div class="journey-caption"><span>모험</span><h2>꺼지지 않는 불씨</h2></div><div class="forge-beacon" aria-hidden="true"></div><div id="stage-list"></div></div>
-        <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button id="open-milestones">마일스톤<b id="milestone-home-badge">보상 확인</b></button><button data-open-skills>장착 스킬<b id="home-skill-summary">2개 장착</b></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_7</span></div></div>
+        <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-label">장착 스킬</span><span id="home-skill-summary" class="hs-skill-icons"></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_7</span></div></div>
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow">GUARDIANS</span><h2>수호자</h2></div><span class="character-count" id="character-count">0 / 24 보유</span></div><div id="growth-list"></div></section>
       <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow">TACTICAL SKILLS</span><h2>전투 스킬</h2></div><span class="character-count" id="skill-count">0 / 4 보유</span></div><div id="skill-lobby-content"></div></section>
@@ -895,27 +963,24 @@ h2.reveal-kicker{margin-top:0}
     </div>
     <div id="combat-wrap">
       <canvas id="combat-canvas" width="440" height="480"></canvas>
-      <div id="dps-panel" aria-label="영웅별 누적 강화 레벨"></div>
-      
     </div>
     <div id="board-wrap">
       <div id="order-status-row" aria-label="주문서 상태">
-        <span class="order-status-title">주문서</span>
+        <div id="energy-status-row" aria-label="보유 에너지"><span class="energy-status-label">에너지</span><strong id="energy-display">0</strong></div>
         <div id="order-gauge-wrap" class="order-gauge-wrap" title="주문서 생성 게이지">
           <div class="order-gauge-track"><div class="order-gauge-fill" id="order-gauge-bar"></div></div>
           <div class="order-gauge-label" id="order-gauge-label">0/10</div>
         </div>
         <div id="order-stock" class="order-stock" title="보유 주문서">대기 <span id="order-stock-count">0</span></div>
+        <div id="skill-row" aria-label="전투 스킬"></div>
       </div>
       <div id="order-sheet-panel"></div>
       <div id="board"></div>
       <div id="generator-row">
-        <div id="energy-status-row" aria-label="보유 에너지"><span class="energy-status-label">에너지</span><strong id="energy-display">0</strong></div>
         <button id="generator-btn" title="처치 점수가 100점 쌓일 때마다 에너지 5를 지급합니다">
           <span class="gen-fill" id="gen-fill"></span>
           <span class="gen-label"><b>피스 생성 <small>에너지 1</small></b><span class="gen-score" id="gen-score">0/100</span></span>
         </button>
-        <div id="skill-row" aria-label="전투 스킬"></div>
       </div>
     </div>
     <div id="run-footer" style="display:flex;align-items:center;gap:3px;padding-right:8px"><div id="action-log" style="flex:1;min-width:0"></div><button id="quit-run">종료</button></div>
@@ -1477,6 +1542,7 @@ const GameArt = {
     close:'<path d="m6 6 12 12M18 6 6 18"/>',
     info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7v1"/>',
     sound:'<path d="M4 9h4l5-5v16l-5-5H4zM16 8q5 4 0 8M19 5q8 7 0 14"/>',
+    milestone:'<path d="M6 3v18"/><path d="M6 4h11l-3 4 3 4H6z"/>',
   },
   icon(key,cls=''){return `<svg class="ui-icon ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${this.icons[key]||this.icons.heroes}</svg>`;},
   portrait(id,cls=''){
@@ -1803,12 +1869,13 @@ class HeroFieldSystem {
       ctx.strokeStyle=color;ctx.globalAlpha=.5;ctx.lineWidth=1.5;ctx.stroke();ctx.globalAlpha=t;
       if(pulse>0){ctx.shadowColor=color;ctx.shadowBlur=12*pulse;}
       const bob=reduced?0:Math.sin(g.elapsedTime*2.6+CONFIG.moduleKeys.indexOf(key))*1.2;
-      const size=104;
-      const ok=GameArt.drawFighter(ctx,unit.id,p.x-size/2,p.y-size*.88+(1-t)*18+bob+shot*4,size);
+      const size=104,spriteTop=p.y-size*.88+(1-t)*18+bob+shot*4;
+      const ok=GameArt.drawFighter(ctx,unit.id,p.x-size/2,spriteTop,size);
       if(!ok){ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y-25,14,0,Math.PI*2);ctx.fill();}
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.textAlign='center';
       ctx.font='600 11px system-ui';ctx.fillStyle='#e9e8d7';
-      ctx.fillText(`${CONFIG.attackModules[key].label} · ${unit.level}`,p.x,p.y+23);
+      const name=CharacterTable[unit.id]?.name||MISSILE_DEFS[key].label;
+      ctx.fillText(`${MISSILE_DEFS[key].icon} ${name} Lv.${unit.level}`,p.x,spriteTop-6);
       ctx.restore();
     }
   }
@@ -3497,7 +3564,6 @@ class OrderSheetSystem {
     preview.selected.forEach(x=>{ g.mergeBoard.cells[x.index]=null; });
     const kindLabel=this.enhancementLabel(slot);
     g.attackModuleSystem.applyUpgrade(slot.module,slot.stat,preview.level);
-    g.renderDpsPanel();
     g.stats.ordersCompleted++;GameAudio.play('up');
     logAction(`${'★'.repeat(this.rewardProgress(slot,preview).stars)} ${kindLabel} Lv.${preview.level} 적용!`);
     this.slots[slotIdx]=null;
@@ -3546,7 +3612,7 @@ class OrderSheetSystem {
     if(this.detailSlot&&!this.slots.includes(this.detailSlot))this.closeDetail();
     el.innerHTML=this.slots.map((slot,i)=>{
       if(!slot)return `<div class="order-card empty" data-slot="${i}"><span>주문서 대기</span><small>게이지를 채우세요</small></div>`;
-      const preview=this.preview(slot),progress=this.rewardProgress(slot,preview);
+      const preview=this.preview(slot);
       const active=this.game.attackModuleSystem.modules[slot.module]?.active;
       const kindLabel=this.enhancementLabel(slot);
       const chips=slot.requirements.map(r=>{
@@ -3554,15 +3620,13 @@ class OrderSheetSystem {
         return `<span class="oc-chip${tier?' available':''}">${GameArt.sprite(CONFIG.colors.names.indexOf(r.color))}<b>${tier}</b><span class="sr-only">${CONFIG.colors.labels[r.color]} 보유 티어</span></span>`;
       }).join('');
       const label=active?'강화':'소환';
-      const starLabel=`보상 달성도 ${progress.stars}/3`;
       const fx=slot.fx?` fx-${slot.fx}`:'';delete slot.fx;
       return `<div class="order-card grade-${slot.grade}${preview.ready?' ready':''}${fx}" data-slot="${i}">
         <button class="oc-apply" data-slot="${i}" aria-label="${kindLabel} ${preview.ready?`레벨 ${preview.level} ${label}`:'재료 부족'}" ${preview.ready?'':'disabled'}>
-          <span class="oc-title">${kindLabel}</span>
+          <span class="oc-title">${kindLabel}${preview.ready?`<b class="oc-level">Lv.${preview.level}</b>`:''}</span>
           <span class="oc-reqs">${chips}</span>
-          <span class="oc-bottom"><span class="oc-stars" aria-label="${starLabel}">${'★'.repeat(progress.stars)}${'☆'.repeat(3-progress.stars)}</span><b>${preview.ready?`${label} +${preview.level}`:'재료 부족'}</b></span>
         </button>
-        <button class="oc-info" data-slot="${i}" aria-label="${kindLabel} 상세 · 폐기">🗑</button>
+        <button class="oc-info" data-slot="${i}" aria-label="${kindLabel} 상세 · 폐기">×</button>
       </div>`;
     }).join('');
     $$('.oc-apply',el).forEach(btn=>btn.onclick=()=>this.resolveSlot(Number(btn.dataset.slot)));
@@ -4090,12 +4154,11 @@ class Game {
     const display=$('#energy-display');
     if(display) restartCssAnimation(display,'fx-gain');
     const statusRow=$('#energy-status-row');
-    if(statusRow) restartCssAnimation(statusRow,'fx-gain');
-    const row=$('#generator-row');
-    if(row){
+    if(statusRow){
+      restartCssAnimation(statusRow,'fx-gain');
       const pop=document.createElement('span');
       pop.className='energy-gain-pop'; pop.textContent=`+${n}`;
-      row.appendChild(pop); setTimeout(()=>pop.remove(),900);
+      statusRow.appendChild(pop); setTimeout(()=>pop.remove(),900);
     }
     restartCssAnimation($('#generator-btn'),'fx-energy-grant');
   }
@@ -4114,9 +4177,10 @@ class Game {
       const def = CONFIG.skills[key];
       const meta=SKILL_DEFS[key]||{icon:'◆',color:PALETTE.arcane};
       const entry=this.skillSystem.entry(key);
-      return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}">
+      return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${def.name} Lv.${entry?.level||1}">
         <span class="sk-cd"></span>
-        <span class="sk-label"><span class="sk-icon">${meta.icon}</span>${def.name}<span class="sk-level">Lv.${entry?.level||1}</span><span class="sk-cost">준비</span></span>
+        <span class="sk-icon">${meta.icon}</span>
+        <span class="sk-level">${entry?.level||1}</span>
       </button>`;
     }).join('');
     $$('.skill-btn',row).forEach(btn=>{
@@ -4143,14 +4207,6 @@ class Game {
       const cost = btn.querySelector('.sk-cost');
       if(cost) cost.textContent=state==='cooldown'?`${left.toFixed(1)}초`:state==='target'?reason:'사용 가능';
     });
-  }
-  renderDpsPanel(){
-    const panel=$('#dps-panel');
-    if(!panel) return;
-    panel.innerHTML=CONFIG.moduleKeys.map(key=>{
-      const unit=this.heroField.units[key],def=CONFIG.attackModules[key];
-      return `<span class="field-module${unit?' summoned':''}" style="--module-color:${def.color}" title="${def.label} 누적 강화 레벨"><i></i>${def.label} <b>${unit?unit.level:'—'}</b></span>`;
-    }).join('');
   }
 
   renderRunMetrics(){
@@ -4206,7 +4262,6 @@ class Game {
     this.orderGaugeSystem.reset();
     this.statusEffectSystem.reset();
     this.combatEffectSystem.reset();
-    this.renderDpsPanel();
     this.generator.resetOpeningGuarantee();
     this.enemySystem.enemies = [];
     this.waveSystem.finished = false;
@@ -4877,7 +4932,7 @@ const CharacterLobbyUI={
       const detail=action==='levelUp'?(ok?CharacterGrowthSystem.costs(id,x,action).map(k=>`${k.amount.toLocaleString('ko-KR')} 골드`).join(' + '):'레벨 상한'):(x.star>=CharacterGrowthRules.maxStars?'최대 성급':ok?`조각 ${CharacterGrowthSystem.shardCost(id,x)}개`:`Lv.${StarTable[x.star].maxLevel} 필요`);
       return `<button class="primary" data-character-action="${action}" ${locked||!ok||!payable?'disabled':''}>${label}<small>${detail}</small></button>`;
     };
-    $('#character-modal-content').innerHTML=`<div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${r.name}</span><h2 id="character-modal-title">${c.name}</h2><span class="character-stars">${'★'.repeat(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${IdentityTable[c.identityId]}</span><span>${RaceTable[c.raceId]}</span><span style="color:${def.color}">${def.label} 특화</span></div><div class="character-level-bar"><b>${x.owned?'Lv.'+x.level:'미보유'}</b><div class="level-track"><span style="width:${x.level/StarTable[x.star].maxLevel*100}%"></span></div><span>${StarTable[x.star].maxLevel}</span></div><div class="character-stats">${[['atk','공격력'],['def','방어력'],['hp','체력']].map(([k,label])=>`<div><small>${label}</small><b>${stats[k].toLocaleString('ko-KR')}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?`다음 ${next[k].toLocaleString('ko-KR')}`:canRank?`승급 시 ${rankNext[k].toLocaleString('ko-KR')}`:'기본 능력치'}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?`성급 패시브 · ${pv.need}성 해금`:'고정 패시브'}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(t=>`<li>${t}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${c.name} 조각</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div><div class="character-actions">${button('levelUp','레벨 올리기')}${button('rankUp','성급 올리기')}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?`${def.label} 슬롯 출전 중`:'출전 부대에 편성'}</button>`:`<p class="meta-note">영입에서 획득할 수 있습니다. ${r.name} 등급 전체 확률 ${GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)}%</p><button class="primary character-deploy-button" data-go-recruit>영입하러 가기</button>`}</div>`;
+    $('#character-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${r.name}</span><h2 id="character-modal-title">${c.name}</h2><span class="character-stars">${'★'.repeat(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${IdentityTable[c.identityId]}</span><span>${RaceTable[c.raceId]}</span><span style="color:${def.color}">${def.label} 특화</span></div><div class="character-level-bar"><b>${x.owned?'Lv.'+x.level:'미보유'}</b><div class="level-track"><span style="width:${x.level/StarTable[x.star].maxLevel*100}%"></span></div><span>${StarTable[x.star].maxLevel}</span></div><div class="character-stats">${[['atk','공격력'],['def','방어력'],['hp','체력']].map(([k,label])=>`<div><small>${label}</small><b>${stats[k].toLocaleString('ko-KR')}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?`다음 ${next[k].toLocaleString('ko-KR')}`:canRank?`승급 시 ${rankNext[k].toLocaleString('ko-KR')}`:'기본 능력치'}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?`성급 패시브 · ${pv.need}성 해금`:'고정 패시브'}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(t=>`<li>${t}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${c.name} 조각</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div>`:`<p class="meta-note">영입에서 획득할 수 있습니다. ${r.name} 등급 전체 확률 ${GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)}%</p>`}</div></div><div class="character-modal-footer">${x.owned?`<div class="character-actions">${button('levelUp','레벨 올리기')}${button('rankUp','성급 올리기')}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?`${def.label} 슬롯 출전 중`:'출전 부대에 편성'}</button>`:`<button class="primary character-deploy-button" data-go-recruit>영입하러 가기</button>`}</div>`;
   },
 };
 
@@ -4963,7 +5018,7 @@ const SkillLobbyUI={
     $$('[data-skill-open]').forEach(button=>button.onclick=()=>this.open(campaign,button.dataset.skillOpen,button));
     const ready=SKILL_KEYS.some(key=>{const x=inv.skills[key];return SkillGrowthSystem.allowed(x,'levelUp')&&SkillGrowthSystem.costs(x).length>0&&WalletSystem.canPay(campaign.state,SkillGrowthSystem.costs(x))||SkillGrowthSystem.allowed(x,'rankUp')&&x.shards>=SkillGrowthSystem.shardCost(x);});
     $('#skill-nav-dot').hidden=!ready;
-    $('#home-skill-summary').textContent=equipped.map(key=>CONFIG.skills[key].name).join(' · ');
+    $('#home-skill-summary').innerHTML=equipped.map(key=>{const m=SKILL_DEFS[key];return `<span class="hs-skill-icon" style="--skill-accent:${m.color}" title="${CONFIG.skills[key].name}">${m.icon}</span>`;}).join('');
     if(this.selectedKey&&!$('#skill-modal').hidden)this.renderModal(campaign,this.selectedKey);
   },
   open(campaign,key,focus){this.selectedKey=key;this.lastFocus=focus||document.activeElement;this.renderModal(campaign,key);$('#skill-modal').hidden=false;$('#skill-modal').setAttribute('aria-hidden','false');},
@@ -4971,7 +5026,7 @@ const SkillLobbyUI={
   renderModal(campaign,key){
     const x=campaign.state.skillInventory.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key],stats=SkillGrowthSystem.stats(key,x),nextStats=SkillGrowthSystem.stats(key,{...x,level:x.level+1}),equipped=campaign.state.skillInventory.equipped;
     const levelAllowed=SkillGrowthSystem.allowed(x,'levelUp'),rankAllowed=SkillGrowthSystem.allowed(x,'rankUp'),levelCost=SkillGrowthSystem.levelCost(x),rankCost=SkillGrowthSystem.shardCost(x);
-    $('#skill-modal-content').innerHTML=`<div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${d.name}</h2><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div><small>${x.owned?`Lv.${x.level} / ${StarTable[x.star].maxLevel}`:'미보유'}</small></div></div><div class="character-modal-section"><strong>액티브 효과</strong><p>${m.description}</p><b>${this.effectText(key,x)}</b><small>쿨타임 ${SkillGrowthSystem.cooldown(key)}초 · ${d.growth==='duration'?`성급 상승 시 지속 +${d.durationPerStar}초`:'성급 상승 시 효과 성장'}</small></div><div class="character-modal-section"><strong>장착 능력치</strong><div class="character-stats">${[['atk','공격'],['def','방어'],['hp','체력']].map(([s,label])=>`<div><small>${label}</small><b>+${stats[s]}</b><small>${levelAllowed?'다음 +'+nextStats[s]:'현재 최대'}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${d.name} 조각</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div><div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>레벨 올리기<small>${levelAllowed?`골드 ${levelCost.toLocaleString('ko-KR')}`:'레벨 상한'}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>성급 올리기<small>조각 ${rankCost}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?`${slot+1}번 장착 중`:`${slot+1}번 슬롯 장착`}</button>`).join('')}</div>`:'<p class="meta-note">불씨 소환에서 획득할 수 있습니다.</p>'}`;
+    $('#skill-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${d.name}</h2><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div><small>${x.owned?`Lv.${x.level} / ${StarTable[x.star].maxLevel}`:'미보유'}</small></div></div><div class="character-modal-section"><strong>액티브 효과</strong><p>${m.description}</p><b>${this.effectText(key,x)}</b><small>쿨타임 ${SkillGrowthSystem.cooldown(key)}초 · ${d.growth==='duration'?`성급 상승 시 지속 +${d.durationPerStar}초`:'성급 상승 시 효과 성장'}</small></div><div class="character-modal-section"><strong>장착 능력치</strong><div class="character-stats">${[['atk','공격'],['def','방어'],['hp','체력']].map(([s,label])=>`<div><small>${label}</small><b>+${stats[s]}</b><small>${levelAllowed?'다음 +'+nextStats[s]:'현재 최대'}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${d.name} 조각</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div>`:'<p class="meta-note">불씨 소환에서 획득할 수 있습니다.</p>'}</div><div class="character-modal-footer">${x.owned?`<div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>레벨 올리기<small>${levelAllowed?`골드 ${levelCost.toLocaleString('ko-KR')}`:'레벨 상한'}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>성급 올리기<small>조각 ${rankCost}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?`${slot+1}번 장착 중`:`${slot+1}번 슬롯 장착`}</button>`).join('')}</div>`:''}</div>`;
     $$('[data-skill-action]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.transact(campaign,key,button.dataset.skillAction)){this.renderModal(campaign,key);MilestoneUI.render(campaign);}});
     $$('[data-skill-slot]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.equip(campaign,key,Number(button.dataset.skillSlot)))this.renderModal(campaign,key);});
   },
@@ -4981,7 +5036,7 @@ const MilestoneUI={
   open(campaign){this.render(campaign);$('#milestone-panel').hidden=false;},close(){$('#milestone-panel').hidden=true;},
   render(campaign){
     const state=campaign.state;if(!state)return;const count=MilestoneSystem.claimableCount(state);
-    $('#milestone-home-badge').textContent=count?`수령 가능 ${count}개`:'새 목표 진행 중';
+    $('#milestone-home-dot').hidden=!count;
     $('#milestone-list').innerHTML=MILESTONE_TABLE.map(row=>{const st=MilestoneSystem.status(state,row),cur=CurrencyTable[row.currencyId].name,pct=Math.min(100,st.current/st.need*100),fmt=n=>n.toLocaleString('ko-KR');return `<article class="milestone-card${st.ready?' claimable':''}"><span class="milestone-icon">${row.icon}</span><div class="milestone-copy"><b>${row.name}<em class="milestone-tier">${fmt(st.tier+1)}단계</em></b><small>${row.description} · ${fmt(st.current)} / ${fmt(st.need)}</small><div class="milestone-progress"><i style="width:${pct}%"></i></div><div class="milestone-reward">${cur} +${fmt(st.ready?st.total:st.reward)}${st.count>1?` · ${st.count}단계 한꺼번에`:''}</div></div><button data-claim-milestone="${row.id}" ${st.ready?'':'disabled'}>${st.ready?'받기':'진행 중'}</button></article>`;}).join('');
     $$('[data-claim-milestone]').forEach(button=>button.onclick=()=>MilestoneSystem.claim(campaign,button.dataset.claimMilestone));
   },
