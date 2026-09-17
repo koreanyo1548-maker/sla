@@ -5,9 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>슬래그마 · 밸런스 에디터</title>
 <style>
+  /* [2026-09-17] 게임(index.html)과 같은 기본 디자인 토큰을 쓴다 — 프레임·패널·텍스트 계열만.
+     --ember/--bad 같은 개발용 상태 표시는 역할이 달라 토큰을 따로 두되 값만 새 팔레트에 맞춘다. */
   :root{
-    --bg:#0a0c0f; --panel:#12151a; --panel2:#191d24; --border:#282f3a;
-    --text:#eef1f5; --dim:#8b96a5; --accent:#4fc3ff; --ember:#ff7a3d; --bad:#ff4d4d;
+    --bg:#171C20; --surface:#222C30; --surface-2:#2A363B; --border:#3D4A4F;
+    --text-primary:#F2E9D8; --text-secondary:#B7B7AC; --text-disabled:#747A78;
+    --surface-disabled:#2B3133; --border-disabled:#41494C;
+    --primary:#DDB86A; --primary-text:#171C20;
+    --energy:#5EDBF4; --danger:#F2645A; --success:#5CCB8A;
+
+    --panel:var(--surface); --panel2:var(--surface-2);
+    --text:var(--text-primary); --dim:var(--text-secondary);
+    --accent:var(--primary);
+    --ember:#F77A3D;          /* 변경된 값 표시(개발용) */
+    --bad:var(--danger);      /* 검증 실패 표시(개발용) */
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--text);
@@ -21,37 +32,37 @@
   #status{font-size:12px;color:var(--dim);}
   #layout{flex:1;min-height:0;display:flex;}
   #editor-col{flex:1;min-width:0;overflow-y:auto;padding:16px;}
-  #game-col{flex:none;width:420px;border-left:1px solid var(--border);background:#000;
+  #game-col{flex:none;width:420px;border-left:1px solid var(--border);background:var(--bg);
     display:flex;align-items:stretch;justify-content:center;}
-  #game-col iframe{width:100%;border:0;background:#000;}
+  #game-col iframe{width:100%;border:0;background:var(--bg);}
   @media (max-width:900px){
     #layout{flex-direction:column;}
     #game-col{width:auto;height:70vh;border-left:0;border-top:1px solid var(--border);}
   }
   #error-banner{display:none;margin:16px;padding:14px 16px;border:1px solid var(--bad);
-    background:#2a1618;border-radius:8px;font-size:13px;line-height:1.7;color:#ffd0d0;}
+    background:var(--surface);border-radius:8px;font-size:13px;line-height:1.7;color:var(--danger);}
   #error-banner.show{display:block;}
-  #error-banner code{background:#000;padding:1px 6px;border-radius:4px;color:#ffdca0;}
+  #error-banner code{background:var(--bg);padding:1px 6px;border-radius:4px;color:var(--primary);}
   .note{color:var(--dim);font-size:12px;margin-bottom:14px;}
   .editor-section{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
     padding:12px;margin-bottom:12px;}
   .editor-section h3{margin:0 0 8px;font-size:13px;color:var(--accent);}
   .editor-row{display:flex;align-items:center;justify-content:space-between;gap:8px;
-    font-size:12px;padding:4px 0;border-bottom:1px dashed #2a323d;}
+    font-size:12px;padding:4px 0;border-bottom:1px dashed var(--surface-2);}
   .editor-row:last-child{border-bottom:none;}
   .editor-row label{color:var(--dim);flex:1;}
-  .editor-row input{width:110px;padding:5px 6px;background:#0f1216;border:1px solid var(--border);
+  .editor-row input{width:110px;padding:5px 6px;background:var(--bg);border:1px solid var(--border);
     border-radius:6px;color:var(--text);font-size:12px;}
-  .editor-row select{width:110px;padding:5px 6px;background:#0f1216;border:1px solid var(--border);
+  .editor-row select{width:110px;padding:5px 6px;background:var(--bg);border:1px solid var(--border);
     border-radius:6px;color:var(--text);font-size:12px;}
   .editor-row input[type="checkbox"]{width:20px;height:20px;accent-color:var(--accent);}
-  .editor-row.flagged label{color:#ffb84d;}
+  .editor-row.flagged label{color:var(--primary);}
   .editor-buttons{display:flex;gap:10px;margin:14px 0 30px;flex-wrap:wrap;position:sticky;bottom:0;
     background:var(--bg);padding:10px 0;}
   .editor-buttons button{padding:10px 16px;border-radius:8px;border:none;font-weight:600;
     font-size:13px;cursor:pointer;}
-  #apply-btn{background:var(--accent);color:#04121f;}
-  #reset-btn{background:#3a2020;color:#ff9d9d;}
+  #apply-btn{background:var(--accent);color:var(--primary-text);}
+  #reset-btn{background:var(--surface-2);color:var(--danger);}
 </style>
 </head>
 <body>
