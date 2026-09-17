@@ -249,8 +249,15 @@ const Editor = {
     if(factorSets.some(set=>!prob(set.critChance)||!prob(set.defenseIgnore)||!prob(set.pierceRate)))errors.push('치명타율·방어 무시율·관통 피해율의 개별 설정값은 0~1이어야 합니다.');
     if(!positive(c.combatRules.defenseConstant)||!positive(c.combatRules.minimumDamage))errors.push('피해 계산 규칙 값을 확인해주세요.');
     if(!positive(c.field.width)||!positive(c.field.height)||!nonNegative(c.field.playerOffsetY)||!positive(c.field.maxAnisotropy))errors.push('전장 크기·표시 값을 확인해주세요.');
-    const f=c.field,heroTop=f.height-f.playerOffsetY-104*.88-1.2;
-    if(!positive(f.coreY)||!positive(f.coreRadius)||!nonNegative(f.enemyContactGap)||f.coreY<=f.coreRadius+46+f.enemyContactGap||f.coreY+f.coreRadius>=heroTop||f.coreRadius>=f.width/2)errors.push('핵은 적의 이동 공간을 확보하고 영웅 머리 위에 배치해주세요.');
+    // [2026-09-17] 기준을 영웅 스프라이트 최상단에서 영웅이 서는 줄로 바꿨다.
+    // 이전 식(height-playerOffsetY-104*.88-1.2)은 104px 스프라이트의 꼭대기를 썼는데,
+    // 2026-09-16 UI 정비에서 playerOffsetY가 42→72가 되며 영웅이 30px 올라가 기본값조차
+    // 통과하지 못했다(heroTop 315.28 < coreY+coreRadius 339 → 항상 오류, 에디터 적용 불가).
+    // 핵이 영웅 스프라이트 윗부분과 겹치는 것은 현재 구도상 정상이다 — 렌더 순서가
+    // 핵 → 영웅이라 영웅이 핵 위에 그려지고, field.playerOffsetY 주석도 이 거리를 전제한다.
+    // 실제로 지켜야 할 것은 핵이 "영웅이 서는 줄보다 위(적 쪽)"에 있어야 한다는 것뿐이다.
+    const f=c.field,heroLineY=f.height-f.playerOffsetY;
+    if(!positive(f.coreY)||!positive(f.coreRadius)||!nonNegative(f.enemyContactGap)||f.coreY<=f.coreRadius+46+f.enemyContactGap||f.coreY+f.coreRadius>=heroLineY||f.coreRadius>=f.width/2)errors.push('핵은 적의 이동 공간을 확보하고 영웅 줄보다 위에 배치해주세요.');
     if(!positive(f.spawnMargin)||f.spawnMargin>=f.width/2||f.spawnMargin<24+f.width*.09)errors.push('출현 여백은 적 몸체가 좌우 난간 안쪽에 들어오도록 설정해주세요.');
     if(!positive(c.enemy.base.travelTimeSec)||Object.values(c.enemy.types).some(t=>!positive(t.travelTimeSec))||!positive(c.enemy.types.ranged.projectileSpeed)||c.enemy.types.ranged.rangePct>=1)errors.push('도달 시간·투사체 속도는 양수이고 원거리 사거리 비율은 1 미만이어야 합니다.');
     const pr=c.presentation||{};
