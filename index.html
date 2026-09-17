@@ -1762,7 +1762,9 @@ const DEFAULT_CONFIG = {
     // [2026-09-17] 확정(인철): 지속형 쿨타임의 "6성 최대 지속 대비 15% 여유" 자동 계산 규칙을 폐지하고
     // 개별 cooldownSec 값으로 바꿨다. 아래 23.6·23.6·25.8은 폐지 직전 파생값(11.8·11.8·12.9)의 2배다.
     // ASSUMPTION: 아래 수치는 전부 Claude 가안(인철 위임). 근거는 implNotes v0916_4.
-    energy_surge:  { name:SKILL_DEFS.energy_surge.name, baseEffect:5, growth:'effect', cooldownSec:40,
+    // [2026-09-17] 확정(인철): 에너지를 얻는 스킬이 에너지를 소모하는 것은 이해가 충돌한다.
+    // energyFree로 비용을 면제하고, 대신 쿨타임을 2배(40→80)로 늘려 가치를 되받는다.
+    energy_surge:  { name:SKILL_DEFS.energy_surge.name, baseEffect:5, growth:'effect', cooldownSec:80, energyFree:true,
       stats:{base:{atk:30,def:0,hp:20},perLevel:{atk:4,def:0,hp:3}} },
     attack_buff:   { name:SKILL_DEFS.attack_buff.name, baseEffect:0.25, growth:'duration', durationSec:5, durationPerStar:1, cooldownSec:23.6,
       stats:{base:{atk:55,def:0,hp:0},perLevel:{atk:7,def:0,hp:0}} },
@@ -1860,7 +1862,7 @@ const DEFAULT_CONFIG = {
     // [2026-09-16] 확정(인철): 스킬 레벨업은 캐릭터와 같은 골드 비용표(GrowthCostTable standard)를 쓴다.
     // 스킬은 희귀도가 없어 배율 없이 그대로 청구한다. 성급은 조각으로 올린다.
     skill: {
-      duplicateShards:2,
+      duplicateShards:1,
       shardSteps:[2,3,5,7,10],
       // 액티브 효과 성급 상승률. 기존 누적 배율 1.00/1.15/1.30/1.45/1.60/1.80(Claude 가안)을 캐릭터와 같은
       // 단계 상승률로 환산한 값이라 누적 배율은 그대로다(openItems: 값 정리 여부).
@@ -1893,11 +1895,11 @@ const DEFAULT_CONFIG = {
       growthCurve:{ blend:0.35, expBase:1.030 },
     },
     rarity: {
-      normal:{ statMul:1.00, levelCostMul:1.00, gachaWeight:35, duplicateShards:3, shardSteps:[2,3,4,6,8] },
-      magic: { statMul:1.15, levelCostMul:1.05, gachaWeight:27, duplicateShards:3, shardSteps:[2,3,4,5,7] },
-      rare:  { statMul:1.32, levelCostMul:1.10, gachaWeight:21, duplicateShards:2, shardSteps:[1,2,3,5,6] },
-      epic:  { statMul:1.52, levelCostMul:1.15, gachaWeight:11, duplicateShards:2, shardSteps:[1,2,3,4,5] },
-      legend:{ statMul:1.75, levelCostMul:1.20, gachaWeight:6,  duplicateShards:3, shardSteps:[1,1,2,2,3] },
+      normal:{ statMul:1.00, levelCostMul:1.00, gachaWeight:35, duplicateShards:1, shardSteps:[2,3,4,6,8] },
+      magic: { statMul:1.15, levelCostMul:1.05, gachaWeight:27, duplicateShards:1, shardSteps:[2,3,4,5,7] },
+      rare:  { statMul:1.32, levelCostMul:1.10, gachaWeight:21, duplicateShards:1, shardSteps:[1,2,3,5,6] },
+      epic:  { statMul:1.52, levelCostMul:1.15, gachaWeight:11, duplicateShards:1, shardSteps:[1,2,3,4,5] },
+      legend:{ statMul:1.75, levelCostMul:1.20, gachaWeight:6,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
     },
   },
 };
@@ -2781,6 +2783,9 @@ class SkillSystem {
   }
   // 다음 사용에 드는 에너지. 스킬마다 따로 누적한다(A를 써도 B의 비용은 오르지 않는다).
   energyCost(skillKey){
+    // energyFree 스킬은 누적 비용에서 빠진다. 사용 판정(blockReason)·차감(activate)·버튼 표시가
+    // 모두 이 값에서 파생되므로 여기 한 곳만 0으로 두면 나머지는 따라온다.
+    if(CONFIG.skills[skillKey]?.energyFree) return 0;
     const c=CONFIG.skillEnergy;
     const used=this.useCounts[skillKey]||0;
     return Math.max(0, Math.round((Number(c?.firstCost)||0) + used*(Number(c?.costStep)||0)));
@@ -4216,6 +4221,7 @@ function buildGameManual(){
     { title: '③ 스킬', body: [
       `로비에서 고른 ${CONFIG.skillPickCount}종이 전장 오른쪽 아래에 나온다. 쿨타임이 길어 타이밍이 중요하다.`,
       `스킬은 <b>에너지를 쓴다</b>. 각 스킬의 첫 사용은 ${CONFIG.skillEnergy.firstCost}이고, 그 스킬을 쓸 때마다 ${CONFIG.skillEnergy.costStep}씩 올라간다(${[0,1,2,3].map(n=>CONFIG.skillEnergy.firstCost+n*CONFIG.skillEnergy.costStep).join(' → ')} …). 비용은 스킬마다 따로 쌓이고 한 판 동안 내려가지 않는다. 버튼에 다음 비용이 표시된다.`,
+      `${SKILL_KEYS.filter(k=>CONFIG.skills[k]?.energyFree).map(k=>`<b>${CONFIG.skills[k].name}</b>`).join(' · ')}은 예외로 에너지를 쓰지 않는다. 대신 쿨타임이 길다.`,
       `전체 ${SKILL_KEYS.length}종이 공격 · 제어(스턴/감속/밀어내기) · 강화 · 회복 · 에너지로 나뉜다. 제어는 보스에게도 걸린다.`,
       '공격 스킬의 피해는 그때까지 쌓은 공격력 강화를 함께 반영한다 — 강화가 붙을수록 스킬도 세진다.',
     ]},
@@ -4636,7 +4642,8 @@ class Game {
         costEl.textContent=need>0?`⚡${need}`:'';
         costEl.classList.toggle('short', this.energy<need);
       }
-      btn.title=`${def.name} Lv.${this.skillSystem.entry(key)?.level||1} · 에너지 ${this.skillSystem.energyCost(key)}`;
+      const titleCost=this.skillSystem.energyCost(key);
+      btn.title=`${def.name} Lv.${this.skillSystem.entry(key)?.level||1} · ${titleCost>0?`에너지 ${titleCost}`:'에너지 소모 없음'}`;
     });
   }
 
@@ -5194,6 +5201,46 @@ const CharacterGrowthSystem={
    [2026-09-16] 확정(인철): 소환 재화를 별불로 바꾸고 가격을 200개로 고정했다(누적 증가 제거). 등급 가중치로 희귀도를 먼저 뽑고, 그 등급 안에서 캐릭터를 균등 추첨한다.
    이미 가진 캐릭터가 나오면 승급 재료인 조각으로 바뀐다.
    ===================================================================== */
+/* =====================================================================
+   [ShardLedger] 조각 장부 — 예약분과 과잉분을 가른다
+   ---------------------------------------------------------------------
+   [2026-09-17] 확정(인철): 중복 조각을 전 등급 1개로 고정하고, 과잉은 그대로 둔다.
+   대신 어느 대상에 조각이 얼마나 남는지를 저장에 남겨 나중에 다른 재화로 쓸 수 있게 한다.
+
+   보유량(x.shards)과 성급(x.star)은 이미 저장되므로 과잉분은 언제나 여기서 다시 계산할 수
+   있다. 별도 필드로 복제해 두면 승급·초기화 경로마다 같이 고쳐야 하고 어긋나면 재화가
+   틀어지므로, 장부는 저장값에서 파생시키고 저장에는 누적 집계(lifetime.shardsGained)만 둔다.
+   ===================================================================== */
+const ShardLedger={
+  // 남은 승급에 필요한 조각 합계. 이미 최고 성급이면 0이다.
+  required(steps,star){
+    const from=Math.max(1,Math.floor(Number(star)||1));
+    return (Array.isArray(steps)?steps:[]).slice(from-1).reduce((a,v)=>a+(Number(v)||0),0);
+  },
+  // 한 대상의 장부. surplus는 모든 승급을 마치고도 남는, 즉 성급으로는 쓸 수 없는 몫이다.
+  entry(steps,x){
+    const held=Math.max(0,Number(x?.shards)||0),need=this.required(steps,x?.star);
+    return {held,required:need,earmarked:Math.min(held,need),surplus:Math.max(0,held-need)};
+  },
+  character(id,x){ return this.entry(rarityConf(CharacterTable[id]?.rarityId).shardSteps,x); },
+  skill(x){ return this.entry(CONFIG.meta.skill.shardSteps,x); },
+  // 저장 상태 전체의 과잉분. 대상별 내역과 합계를 함께 돌려준다.
+  summary(state){
+    const characters=[],skills=[];
+    let total=0;
+    Object.entries(state?.characterInventory?.characters||{}).forEach(([id,x])=>{
+      if(!CharacterTable[id]||!x?.owned)return;
+      const e=this.character(id,x);
+      if(e.surplus>0){characters.push({id,name:CharacterTable[id].name,rarityId:CharacterTable[id].rarityId,...e});total+=e.surplus;}
+    });
+    Object.entries(state?.skillInventory?.skills||{}).forEach(([key,x])=>{
+      if(!CONFIG.skills[key]||!x?.owned)return;
+      const e=this.skill(x);
+      if(e.surplus>0){skills.push({key,name:CONFIG.skills[key].name,...e});total+=e.surplus;}
+    });
+    return {characters,skills,total};
+  },
+};
 const GachaSystem={
   // gachaCount는 가격에 쓰지 않고 통계로만 남긴다.
   cost(){
@@ -5222,14 +5269,14 @@ const GachaSystem={
     const type=this.rollCategory();if(!type)return {error:'소환 카테고리 확률이 모두 0입니다.'};
     if(type==='skill'){
       const skillKey=choice(SKILL_KEYS),def=CONFIG.skills[skillKey],x=next.skillInventory.skills[skillKey],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(CONFIG.meta.skill.duplicateShards)||0):0;
-      if(duplicate)x.shards+=gained;else x.owned=true;
-      return {type,skillKey,name:def.name,duplicate,gained,shards:x.shards};
+      if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
+      return {type,skillKey,name:def.name,duplicate,gained,shards:x.shards,surplus:ShardLedger.skill(x).surplus};
     }
     const rarityId=this.rollRarity();if(!rarityId)return {error:'캐릭터 등급 확률이 모두 0입니다.'};
     const pool=CharacterRepository.list().filter(c=>c.rarityId===rarityId);if(!pool.length)return {error:'해당 등급의 캐릭터가 없습니다.'};
     const c=choice(pool),x=next.characterInventory.characters[c.characterId],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(rarityConf(rarityId).duplicateShards)||0):0;
-    if(duplicate)x.shards+=gained;else x.owned=true;
-    return {type,characterId:c.characterId,name:c.name,rarityId,duplicate,gained,shards:x.shards};
+    if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
+    return {type,characterId:c.characterId,name:c.name,rarityId,duplicate,gained,shards:x.shards,surplus:ShardLedger.character(c.characterId,x).surplus};
   },
   // [2026-09-16] 확정(인철): 별불 200개에 결과 10개. 결과 전체를 한 번에 저장한 뒤 공개 연출을 시작한다.
   pull(campaign){
@@ -5720,7 +5767,7 @@ const RunHost = {
 const CampaignStore = {
   READ_ERROR:'진행 데이터를 읽지 못했습니다. 브라우저 저장 설정을 확인한 뒤 새로고침해 주세요.',
   WRITE_ERROR:'저장하지 못했습니다. 브라우저 저장 공간을 확인한 뒤 다시 시도해 주세요.',
-  fresh(){return {version:4,gold:0,balances:{starfire:CONFIG.meta.gacha.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),gachaCount:0,stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0},active:null,lastResult:null};},
+  fresh(){return {version:4,gold:0,balances:{starfire:CONFIG.meta.gacha.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),gachaCount:0,stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0,shardsGained:0},active:null,lastResult:null};},
   validate(s){
     const integer=(n,min,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
     if(s.version!==4||!integer(s.gold,0)||!integer(s.stamina,0,CAMPAIGN_CONFIG.staminaMax)||!integer(s.staminaChargeClicks,0)||typeof s.tutorialCompleted!=='boolean'||!integer(s.unlocked,1,9999)||!Number.isFinite(s.recoveredAt)||s.recoveredAt<0||
