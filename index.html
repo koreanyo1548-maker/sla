@@ -1762,7 +1762,9 @@ const DEFAULT_CONFIG = {
     // [2026-09-17] 확정(인철): 지속형 쿨타임의 "6성 최대 지속 대비 15% 여유" 자동 계산 규칙을 폐지하고
     // 개별 cooldownSec 값으로 바꿨다. 아래 23.6·23.6·25.8은 폐지 직전 파생값(11.8·11.8·12.9)의 2배다.
     // ASSUMPTION: 아래 수치는 전부 Claude 가안(인철 위임). 근거는 implNotes v0916_4.
-    energy_surge:  { name:SKILL_DEFS.energy_surge.name, baseEffect:5, growth:'effect', cooldownSec:40,
+    // [2026-09-17] 확정(인철): 에너지를 얻는 스킬이 에너지를 소모하는 것은 이해가 충돌한다.
+    // energyFree로 비용을 면제하고, 대신 쿨타임을 2배(40→80)로 늘려 가치를 되받는다.
+    energy_surge:  { name:SKILL_DEFS.energy_surge.name, baseEffect:5, growth:'effect', cooldownSec:80, energyFree:true,
       stats:{base:{atk:30,def:0,hp:20},perLevel:{atk:4,def:0,hp:3}} },
     attack_buff:   { name:SKILL_DEFS.attack_buff.name, baseEffect:0.25, growth:'duration', durationSec:5, durationPerStar:1, cooldownSec:23.6,
       stats:{base:{atk:55,def:0,hp:0},perLevel:{atk:7,def:0,hp:0}} },
@@ -2781,6 +2783,9 @@ class SkillSystem {
   }
   // 다음 사용에 드는 에너지. 스킬마다 따로 누적한다(A를 써도 B의 비용은 오르지 않는다).
   energyCost(skillKey){
+    // energyFree 스킬은 누적 비용에서 빠진다. 사용 판정(blockReason)·차감(activate)·버튼 표시가
+    // 모두 이 값에서 파생되므로 여기 한 곳만 0으로 두면 나머지는 따라온다.
+    if(CONFIG.skills[skillKey]?.energyFree) return 0;
     const c=CONFIG.skillEnergy;
     const used=this.useCounts[skillKey]||0;
     return Math.max(0, Math.round((Number(c?.firstCost)||0) + used*(Number(c?.costStep)||0)));
@@ -4216,6 +4221,7 @@ function buildGameManual(){
     { title: '③ 스킬', body: [
       `로비에서 고른 ${CONFIG.skillPickCount}종이 전장 오른쪽 아래에 나온다. 쿨타임이 길어 타이밍이 중요하다.`,
       `스킬은 <b>에너지를 쓴다</b>. 각 스킬의 첫 사용은 ${CONFIG.skillEnergy.firstCost}이고, 그 스킬을 쓸 때마다 ${CONFIG.skillEnergy.costStep}씩 올라간다(${[0,1,2,3].map(n=>CONFIG.skillEnergy.firstCost+n*CONFIG.skillEnergy.costStep).join(' → ')} …). 비용은 스킬마다 따로 쌓이고 한 판 동안 내려가지 않는다. 버튼에 다음 비용이 표시된다.`,
+      `${SKILL_KEYS.filter(k=>CONFIG.skills[k]?.energyFree).map(k=>`<b>${CONFIG.skills[k].name}</b>`).join(' · ')}은 예외로 에너지를 쓰지 않는다. 대신 쿨타임이 길다.`,
       `전체 ${SKILL_KEYS.length}종이 공격 · 제어(스턴/감속/밀어내기) · 강화 · 회복 · 에너지로 나뉜다. 제어는 보스에게도 걸린다.`,
       '공격 스킬의 피해는 그때까지 쌓은 공격력 강화를 함께 반영한다 — 강화가 붙을수록 스킬도 세진다.',
     ]},
@@ -4636,7 +4642,8 @@ class Game {
         costEl.textContent=need>0?`⚡${need}`:'';
         costEl.classList.toggle('short', this.energy<need);
       }
-      btn.title=`${def.name} Lv.${this.skillSystem.entry(key)?.level||1} · 에너지 ${this.skillSystem.energyCost(key)}`;
+      const titleCost=this.skillSystem.energyCost(key);
+      btn.title=`${def.name} Lv.${this.skillSystem.entry(key)?.level||1} · ${titleCost>0?`에너지 ${titleCost}`:'에너지 소모 없음'}`;
     });
   }
 
