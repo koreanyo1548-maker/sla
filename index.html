@@ -1253,8 +1253,13 @@ const WAVE_ARCHETYPES = {
     timing:{ spawnTimesSec:[0,1,2,3], spawnRatios:[0.25,0.25,0.25,0.25], durationSec:11 } },
   standard:{ label:'혼성',        mix:null,              budgetMul:1.00, speedMul:1.0, timing:null },
 };
-// 확정(인철): 탱커 → 돌격 → 원거리 → 물량 → 혼성 순으로 돈다.
-const ARCHETYPE_CYCLE = ['fortress','rush','siege','horde','standard'];
+// [2026-09-17 2차] 확정(인철): 탱커 → 돌격 → 원거리 → 물량 → 혼성 → 보스 6슬롯 루프.
+// 보스가 루프 안에 들어가므로 보스 주기가 4WAVE에서 6WAVE로 바뀐다. 30 WAVE는 6의 배수라
+// 마지막 슬롯이 정확히 WAVE 30에 떨어져 최종보스 자리가 맞는다.
+// 이 루프는 30 WAVE 구성(스테이지 3 이상)에만 적용하고, 스테이지 1~2는 원안을 그대로 둔다.
+const ARCHETYPE_LOOP = ['fortress','rush','siege','horde','standard','boss'];
+const ARCHETYPE_LOOP_MIN_STAGE = 3;
+function usesArchetypeLoop(stageId){ return Math.max(1,Math.floor(Number(stageId)||1)) >= ARCHETYPE_LOOP_MIN_STAGE; }
 const ENEMY_TYPE_KEYS = ['melee','ranged','tank'];
 
 function enemyTypeTable(){
@@ -1296,34 +1301,38 @@ function waveSpeedMul(waveCfg){ return Number(WAVE_ARCHETYPES[waveCfg?.archetype
 // [2026-09-17] stageId는 아키타입 순환의 시작점만 바꾼다 — 같은 스테이지는 항상 같은 순서라
 // 공략이 가능하고, 스테이지가 바뀌면 순서가 한 칸씩 돌아 30 WAVE가 매번 같게 느껴지지 않는다.
 function buildStageWaves(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE, stageId=1){
-  // 아키타입은 튜토리얼 구간(EARLY_STAGE_COMPOSITIONS)과 보스를 뺀 일반 WAVE에만, 등장 순서대로 배정한다.
-  // WAVE 번호로 나머지를 구하면 보스가 번호를 잡아먹어 순환이 불규칙해지므로 별도 카운터를 쓴다.
-  let archetypeSeq=0;
+  // 난이도(difficulty)와 기본 구성은 기존 4WAVE 그룹 기준을 그대로 쓴다 — 루프는 보스 위치와
+  // 아키타입만 바꾸고 난이도 곡선은 건드리지 않는다.
+  const loop=usesArchetypeLoop(stageId);
   return Array.from({length:total},(_,index)=>{
     const stage=index+1;
     const group=Math.floor((stage-1)/4);
     const pos=(stage-1)%4;
     const isFinal=stage===total;
-    const isMidBoss=!isFinal && stage%4===0;
+    const slot=loop ? ARCHETYPE_LOOP[(stage-1)%ARCHETYPE_LOOP.length] : null;
+    const isMidBoss=!isFinal && (loop ? slot==='boss' : stage%4===0);
     const difficulty=1+group*2+pos+(isFinal?1:0);
     if(isFinal) return { wave:stage, difficulty, type:'finalboss' };
     if(isMidBoss) return { wave:stage, difficulty, type:'midboss' };
-    if(EARLY_STAGE_COMPOSITIONS[stage]){
-      return { wave:stage, difficulty, type:'normal', archetype:'standard', ...EARLY_STAGE_COMPOSITIONS[stage] };
+    // 스테이지 1~2(10·20 WAVE)는 아키타입 도입 전 원안 그대로다.
+    if(!loop){
+      const composition=EARLY_STAGE_COMPOSITIONS[stage] ?? normalCompositionForStage(stage,curve);
+      return { wave:stage, difficulty, type:'normal', archetype:'standard', ...composition };
     }
-    const offset=Math.max(0,Math.floor(Number(stageId)||1)-1);
-    const archetype=ARCHETYPE_CYCLE[(archetypeSeq+++offset)%ARCHETYPE_CYCLE.length];
+    // 루프 스테이지는 WAVE 1부터 아키타입이 시작하므로 1~3WAVE 고정 구성을 쓰지 않는다(확정).
     const base=normalCompositionForStage(stage,curve);
-    return { wave:stage, difficulty, type:'normal', archetype, ...archetypeComposition(base,archetype) };
+    return { wave:stage, difficulty, type:'normal', archetype:slot, ...archetypeComposition(base,slot) };
   });
 }
 // [2026-09-04] 보스 HP는 "그 스테이지가 일반이었다면의 총 HP"인데, 여기에 물량 배수까지 곱하면
 // 보스 HP도 3배가 되어 보스전이 22초를 넘긴다(계산 확인). 물량 증가는 일반 스테이지만의 변경이므로
 // 보스 구성은 배수를 적용하지 않은 원래 값을 쓴다.
 // 보스 HP는 baseCompositionForStage(WAVE 번호)에서만 나오므로 아키타입과 무관하다(의도).
-function buildBossCompositions(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE){
+// stageId를 반드시 같이 넘겨야 한다 — 루프 스테이지는 보스가 6WAVE마다라 4WAVE 기준으로 만들면
+// 실제 보스 WAVE의 구성이 없어 보스 HP가 0이 된다.
+function buildBossCompositions(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE, stageId=1){
   const result={};
-  buildStageWaves(total,curve).filter(w=>w.type!=='normal').forEach(w=>{
+  buildStageWaves(total,curve,stageId).filter(w=>w.type!=='normal').forEach(w=>{
     const base=baseCompositionForStage(w.wave);
     result[w.wave]=w.type==='finalboss'
       ? {melee:base.melee+1,ranged:base.ranged+1,tank:base.tank+1}
@@ -1579,13 +1588,16 @@ const DEFAULT_CONFIG = {
   // 확정적(랜덤 없음)이라 여기에 소확률 랜덤을 얹어 가장 빈번한 행동에도 서프라이즈를 준다.
   // "어렵게 생각하지 말고 기능으로 떼서 옵션으로" (인철) — 독립 on/off + 확률 + 보너스 티어만.
   criticalMerge: {
-    chance: 0.05,     // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
+    // [2026-09-17] 확정(인철): 기본값을 0으로 내린다. featureFlags는 켜 둔 채 확률만 0이라
+    // 에디터에서 숫자만 올리면 그대로 되살아난다.
+    chance: 0,        // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
     bonusTiers: 1,    // 성공 시 원래 상승분(+1티어) 위에 몇 티어를 더 올릴지
   },
   // [2026-09-02 도파민 옵션] 확정(인철): 생성기 클릭도 이미 확률 행동이라 여기에 소확률로
   // 상위 티어가 바로 나오는 "골든 피스"를 얹는다. 수치는 Claude 기본값, 에디터에서 조정.
   goldenPiece: {
-    chance: 0.08,     // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
+    // [2026-09-17] 확정(인철): 기본값을 0으로 내린다(위 크리티컬 머지와 같은 이유).
+    chance: 0,        // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
     bonusTiers: 1,    // 성공 시 1티어(T1) 대신 몇 티어 위로 생성할지
   },
   // [2026-09-15] 확정(인철): 30점당 3장을 10점당 1장으로 쪼갠다. 점당 공급량(0.1장)은
@@ -2041,7 +2053,7 @@ const RunConfig = {
   playerStat(key){ return this.battle?.player?.[key] ?? CONFIG.player[key]; },
   enemyBaseStat(key){ return this.battle?.enemyBase?.[key] ?? CONFIG.enemy.base[key] ?? 0; },
   waves(){ return this.battle?.waves ?? buildStageWaves(DEFAULT_STAGE_COUNT,CONFIG.stage); },
-  bossComposition(wave){ return (this.battle?.bossCompositions ?? buildBossCompositions(this.waves().length))[wave]; },
+  bossComposition(wave){ return (this.battle?.bossCompositions ?? buildBossCompositions(this.waves().length,CONFIG.stage,this.battle?.stageId??1))[wave]; },
   clear(){ this.selectedSkills=[]; this.skillSnapshot=null; this.partySnapshot=null; this.battle=null; },
 };
 
@@ -5753,7 +5765,7 @@ const Campaign = {
         def:stageEnemyDefense(st.id,CONFIG.enemy),
       },
       waves:buildStageWaves(st.waves,CONFIG.stage,st.id),
-      bossCompositions:buildBossCompositions(st.waves),
+      bossCompositions:buildBossCompositions(st.waves,CONFIG.stage,st.id),
     };
   },
   // 전투가 캠페인에 요청할 수 있는 창구. Game은 이 객체만 알고 Campaign을 직접 부르지 않는다.
