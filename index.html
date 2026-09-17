@@ -937,6 +937,17 @@ h2.reveal-kicker{margin-top:0}
 #combat-wrap>#energy-status-row .energy-status-label{font-size:9px;line-height:1.1;color:#b7c6ae;letter-spacing:0}
 #combat-wrap>#energy-status-row #energy-display{font-size:17px;line-height:1.15;color:#ffe6a6}
 
+/* WAVE 종류 — 좌상단. [2026-09-17] 확정(인철): WAVE 시작 시 잠깐 뜨던 텍스트를 없애고
+   현재 WAVE의 성격을 상시 표기한다. 에너지 배지와 같은 형식이라 좌우 대칭이 맞는다. */
+#combat-wrap>#wave-type-badge{position:absolute;z-index:4;left:5px;top:7px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  padding:4px 7px;border-radius:9px;border:1px solid #c8ad7066;background:#0d1a18c9;
+  backdrop-filter:blur(2px);pointer-events:none}
+#combat-wrap>#wave-type-badge .wave-type-caption{font-size:9px;line-height:1.1;color:#b7c6ae;letter-spacing:0}
+#combat-wrap>#wave-type-badge #wave-type-name{font-size:15px;line-height:1.2;color:#ffe6a6;white-space:nowrap}
+#combat-wrap>#wave-type-badge.is-boss{border-color:#ff9a5c88}
+#combat-wrap>#wave-type-badge.is-boss #wave-type-name{color:#ffb98a}
+
 /* 스킬 — 우하단 가로 2개. 전투 중 유일한 능동 입력이라 엄지 영역을 지킨다.
    [2026-09-16] 세로 2단(44×94)은 영웅 4번 슬롯의 몸통을 덮었다(짧은 화면 실측 세로 72px 겹침).
    가로로 눕히면 겹치는 띠가 버튼 한 줄 높이(44px)로 줄고, 남는 가로 폭에 스킬 이름이 들어가
@@ -1111,6 +1122,7 @@ h2.reveal-kicker{margin-top:0}
     </div>
     <div id="combat-wrap">
       <canvas id="combat-canvas" width="440" height="480"></canvas>
+      <div id="wave-type-badge" aria-label="현재 WAVE 종류"><span class="wave-type-caption">WAVE</span><strong id="wave-type-name">혼성</strong></div>
       <div id="energy-status-row" aria-label="보유 에너지"><span class="energy-status-label">에너지</span><strong id="energy-display">0</strong></div>
       <div id="skill-row" aria-label="전투 스킬"></div>
     </div>
@@ -1241,17 +1253,17 @@ function normalCompositionForStage(stage,curve=NORMAL_COUNT_CURVE){
    아키타입은 난이도가 아니라 형태만 바꾸는 것이 목적이다.
    ===================================================================== */
 const WAVE_ARCHETYPES = {
-  fortress:{ label:'탱커전',      mix:{tank:1},          budgetMul:1.00, speedMul:1.0,
+  fortress:{ short:'탱커',   label:'탱커전',      mix:{tank:1},          budgetMul:1.00, speedMul:1.0,
     timing:{ spawnTimesSec:[0], spawnRatios:[1], durationSec:14 } },
-  rush:    { label:'돌격전',      mix:{melee:1},         budgetMul:0.70, speedMul:1.4,
+  rush:    { short:'돌격',   label:'돌격전',      mix:{melee:1},         budgetMul:0.70, speedMul:1.4,
     timing:{ spawnTimesSec:[0], spawnRatios:[1], durationSec:7 } },
-  siege:   { label:'원거리 압박', mix:{melee:1,ranged:3}, budgetMul:1.00, speedMul:1.0,
+  siege:   { short:'원거리', label:'원거리 압박', mix:{melee:1,ranged:3}, budgetMul:1.00, speedMul:1.0,
     timing:{ spawnTimesSec:[0,2], spawnRatios:[0.40,0.60], durationSec:11 } },
   // 4배치로 끊임없이 밀려온다. 간격 1초·길이 11초는 마지막 배치(7초 도달)까지 전원이
   // 공격 기회를 얻는 가장 긴 조합이다 — 간격을 더 벌리면 뒷배치가 도달 전에 WAVE가 끝난다.
-  horde:   { label:'물량전',      mix:{melee:1},         budgetMul:1.00, speedMul:1.0,
+  horde:   { short:'물량',   label:'물량전',      mix:{melee:1},         budgetMul:1.00, speedMul:1.0,
     timing:{ spawnTimesSec:[0,1,2,3], spawnRatios:[0.25,0.25,0.25,0.25], durationSec:11 } },
-  standard:{ label:'혼성',        mix:null,              budgetMul:1.00, speedMul:1.0, timing:null },
+  standard:{ short:'혼성',   label:'혼성',        mix:null,              budgetMul:1.00, speedMul:1.0, timing:null },
 };
 // [2026-09-17 2차] 확정(인철): 탱커 → 돌격 → 원거리 → 물량 → 혼성 → 보스 6슬롯 루프.
 // 보스가 루프 안에 들어가므로 보스 주기가 4WAVE에서 6WAVE로 바뀐다. 30 WAVE는 6의 배수라
@@ -1296,6 +1308,13 @@ function waveTimingFor(waveCfg){
   };
 }
 function waveSpeedMul(waveCfg){ return Number(WAVE_ARCHETYPES[waveCfg?.archetype]?.speedMul)||1; }
+// 전장 좌상단 배지에 쓰는 짧은 표기. 보스 WAVE는 아키타입이 없으므로 따로 돌려준다.
+function waveTypeShort(waveCfg){
+  if(!waveCfg) return '';
+  if(waveCfg.type==='finalboss') return '최종보스';
+  if(waveCfg.type==='midboss') return '보스';
+  return WAVE_ARCHETYPES[waveCfg.archetype]?.short || WAVE_ARCHETYPES.standard.short;
+}
 
 // [2026-09-04] bossEnergy 제거 — 에너지는 처치 점수(ScoreSystem)로만 지급한다.
 // [2026-09-17] stageId는 아키타입 순환의 시작점만 바꾼다 — 같은 스테이지는 항상 같은 순서라
@@ -1473,7 +1492,11 @@ const DEFAULT_CONFIG = {
   // enemyHitRadius() 하나를 통해 양쪽이 함께 읽는다.
   hitbox: {
     enemyRadius: 9,
-    bossRadius: 16,
+    // [2026-09-17] 확정(인철): 16 → 40. 보스 스프라이트는 반지름 39~46px인데 판정이 16px이라
+    // 스프라이트 위를 지나는 탄이 판정에 걸리지 않았다. 특히 산탄 옆탄이 중간보스 기준
+    // 중심까지 21.0px vs 판정 20px으로 1px 차이로 빗나가, 보스 상대로 중앙탄만 들어갔다.
+    // 이 값은 레이저 폭·폭발 반경·직선탄 명중 판정에도 함께 쓰이므로 보스전 전반이 후해진다.
+    bossRadius: 40,
     laserEdgePad: 4,          // 직선탄이 적 반경 바깥을 스칠 때 허용하는 여유
     homingHitDist: 10,        // 목표 지정 탄환이 목표에 이만큼 붙으면 명중 처리
     projectileRangeMul: 1.2,  // 직선탄 최대 비행거리 = 전장 대각선 × 이 값
@@ -3332,11 +3355,11 @@ class WaveSystem {
     const cfg = this.currentWaveCfg;
     this.game.currentWaveCfg = cfg;
     $('#wave-label').textContent = `WAVE ${cfg.wave} / ${RunConfig.waves().length}`;
-    // 아키타입 이름을 WAVE 시작 연출에 띄운다. HUD의 #wave-label은 폭이 좁아 건드리지 않는다.
+    // [2026-09-17] WAVE 시작 float 텍스트는 없애고 전장 좌상단 배지에 상시 표기한다.
     const label = cfg.type==='normal' ? (WAVE_ARCHETYPES[cfg.archetype]?.label || '혼성') : '보스전';
+    this.renderWaveTypeBadge(cfg);
     if(this.game.effects){
       this.game.effects.ring(this.game.playerPos.x,this.game.playerPos.y-55,PALETTE.accent,95,.6,3);
-      spawnFloatNumber(this.game.floatLayer,this.game.playerPos.x-40,this.game.playerPos.y-85,`WAVE ${cfg.wave} · ${label}`,'enhance');
     }
 
     if(cfg.type === 'normal'){
@@ -3359,6 +3382,13 @@ class WaveSystem {
       this.game.showBossAlert(cfg.type==='finalboss'?'final':'mid');
       logAction(`WAVE ${cfg.wave} 시작 — ${label}`);
     }
+  }
+
+  renderWaveTypeBadge(cfg){
+    const badge=$('#wave-type-badge'), name=$('#wave-type-name');
+    if(!badge||!name) return;
+    name.textContent=waveTypeShort(cfg);
+    badge.classList.toggle('is-boss', cfg?.type!=='normal');
   }
 
   currentWaveAliveCount(){
