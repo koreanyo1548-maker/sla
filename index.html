@@ -1155,6 +1155,13 @@ h2.reveal-kicker{margin-top:0}
   .character-roster small{font-size:8.5px}
   .character-roster .module-mini{width:18px;height:18px}
 }
+
+/* --- 스킬 에너지 비용 표기 (2026-09-17) --- */
+#combat-wrap>#skill-row .sk-cost{font:800 11px system-ui;line-height:1;color:var(--energy);
+  text-shadow:0 1px 2px color-mix(in srgb, var(--bg) 67%, transparent);white-space:nowrap}
+#combat-wrap>#skill-row .sk-cost.short{color:var(--danger)}
+.skill-btn .sk-cost{font-size:9px;color:var(--energy)}
+@media(max-width:365px){ #combat-wrap>#skill-row .sk-cost{font-size:10px} }
 </style>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317393c%22%2F%3E%3Cpath%20d%3D%22M38%206%2013%2035h17l-4%2023%2026-34H34z%22%20fill%3D%22%23f7cd7e%22%2F%3E%3C%2Fsvg%3E">
 </head>
@@ -1728,7 +1735,12 @@ const DEFAULT_CONFIG = {
     pointPerEnergy: 1,
     pointPerMerge: 1,
   },
-  // [2026-09-16] 로비에서 2개를 장착하고 전투에서는 에너지 없이 쿨타임으로 사용한다.
+  // [2026-09-17] 확정(인철): 스킬을 다시 에너지 소비로 되돌린다(2026-09-04 "에너지를 소모하지
+  // 않는다" 확정의 정정). 비용은 스킬마다 따로 누적하며 첫 사용 firstCost, 이후 사용마다 costStep씩
+  // 오른다(1 → 3 → 5 …). 런 내내 누적되고 WAVE가 넘어가도 초기화되지 않는다.
+  // 주문서 게이지에는 연동하지 않는다 — 게이지는 피스 생성으로 쓴 에너지와 머지만 센다.
+  skillEnergy: { firstCost: 1, costStep: 2 },
+  // [2026-09-16] 로비에서 2개를 장착하고 전투에서는 쿨타임으로 사용한다.
   // 레벨은 장착 능력치, 성급은 액티브 효과만 성장시킨다.
   // 이름·설명·분류·아이콘은 SKILL_DEFS에 있고 여기는 조정 수치만 둔다(미사일의 MISSILE_DEFS/attackModules와 같은 구조).
   skillPickCount: 2,
@@ -2755,7 +2767,14 @@ class SkillSystem {
   constructor(game){ this.game = game; this.reset(); }
   reset(){
     this.cooldowns = {};
+    this.useCounts = {};   // 스킬별 사용 횟수 — 비용이 여기서 나온다. 런 시작에만 초기화한다.
     this.state = {attackPct:0,attackLeft:0,defPct:0,defLeft:0,reductionPct:0,reductionLeft:0,regenPerTick:0,regenTicks:0,regenTickLeft:0};
+  }
+  // 다음 사용에 드는 에너지. 스킬마다 따로 누적한다(A를 써도 B의 비용은 오르지 않는다).
+  energyCost(skillKey){
+    const c=CONFIG.skillEnergy;
+    const used=this.useCounts[skillKey]||0;
+    return Math.max(0, Math.round((Number(c?.firstCost)||0) + used*(Number(c?.costStep)||0)));
   }
   // [2026-09-04 버그 수정] 스킬 피해가 기본 공격력만 참조해 런 내내 강화와 무관하게 고정돼 있었다.
   // 확정(인철): "기본 공격력은 그대로 쓰되 공격력 강화 레벨 합산을 스킬에도 적용한다".
@@ -2791,6 +2810,7 @@ class SkillSystem {
     if(!def||!CONFIG.skills[skillKey]||!entry) return '장착되지 않음';
     if(this.game.ending) return '전투 종료';
     if(this.cooldownLeft(skillKey) > 0) return '쿨타임';
+    if(this.game.energy < this.energyCost(skillKey)) return '에너지 부족';
     return def.requires ? SkillSystem.REQUIRES[def.requires](this) : null;
   }
   canUse(skillKey){ return this.blockReason(skillKey)===null; }
@@ -2798,7 +2818,16 @@ class SkillSystem {
   activate(skillKey){
     const reason = this.blockReason(skillKey);
     if(reason){ logAction(`${CONFIG.skills[skillKey]?.name||'스킬'} 사용 불가 (${reason})`); return false; }
+    // 비용은 발동이 확정된 뒤에 뺀다 — use()가 false를 돌려주면 에너지를 잃지 않는다.
+    const cost=this.energyCost(skillKey);
     if(!this.use(skillKey)) return false;
+    if(cost>0){
+      this.game.energy-=cost;
+      this.game.stats.energySpent+=cost;
+      // 주문서 게이지에는 넣지 않는다(확정) — 게이지는 피스 생성과 머지만 센다.
+      this.game.updateEnergyUi();
+    }
+    this.useCounts[skillKey]=(this.useCounts[skillKey]||0)+1;
     this.game.stats.skillsUsed++;
     this.cooldowns[skillKey]=this.entry(skillKey)?.cooldownSec||CONFIG.skills[skillKey].cooldownSec;
     this.game.renderSkillBar();
@@ -4171,12 +4200,13 @@ function buildGameManual(){
     { title: '② 보드와 주문서', body: [
       `보드는 ${board.rows}×${board.cols} 칸이다. 꽉 차면 생성기가 멈추니 합칠 수 있는 건 바로 합치자. 생성기를 꾹 누르면 ${gen.holdIntervalSec}초 간격으로 계속 만든다.`,
       `주문서는 ${CONFIG.orderSheet.slotCount}칸이며 한 칸은 항상 재료 1개짜리로 유지된다. 재료는 1~3개이고 많을수록 강화 상한이 높다(Lv.4 / 8 / 12).`,
-      `에너지를 쓰거나 머지할 때마다 주문서 게이지가 1점 오르고, ${og.maxCharge}점마다 새 주문서가 온다. 중간보스를 잡으면 ${og.midBossOrders}장을 한 번에 준다.`,
+      `피스를 만들거나 머지할 때마다 주문서 게이지가 1점 오르고, ${og.maxCharge}점마다 새 주문서가 온다. 스킬로 쓴 에너지는 게이지에 들어가지 않는다. 중간보스를 잡으면 ${og.midBossOrders}장을 한 번에 준다.`,
       '미사일은 연쇄(흩어진 적) · 폭발(뭉친 적) · 산탄(가까운 적) · 레이저(직선상의 적) 4종이며 서로 독립적으로 발사된다.',
       ...dopamine,
     ]},
     { title: '③ 스킬', body: [
-      `로비에서 고른 ${CONFIG.skillPickCount}종이 전장 오른쪽 아래에 나온다. 에너지를 쓰지 않고 쿨타임만 있으니 아끼지 말되, 쿨타임이 길어 타이밍이 중요하다.`,
+      `로비에서 고른 ${CONFIG.skillPickCount}종이 전장 오른쪽 아래에 나온다. 쿨타임이 길어 타이밍이 중요하다.`,
+      `스킬은 <b>에너지를 쓴다</b>. 각 스킬의 첫 사용은 ${CONFIG.skillEnergy.firstCost}이고, 그 스킬을 쓸 때마다 ${CONFIG.skillEnergy.costStep}씩 올라간다(${[0,1,2,3].map(n=>CONFIG.skillEnergy.firstCost+n*CONFIG.skillEnergy.costStep).join(' → ')} …). 비용은 스킬마다 따로 쌓이고 한 판 동안 내려가지 않는다. 버튼에 다음 비용이 표시된다.`,
       `전체 ${SKILL_KEYS.length}종이 공격 · 제어(스턴/감속/밀어내기) · 강화 · 회복 · 에너지로 나뉜다. 제어는 보스에게도 걸린다.`,
       '공격 스킬의 피해는 그때까지 쌓은 공격력 강화를 함께 반영한다 — 강화가 붙을수록 스킬도 세진다.',
     ]},
@@ -4255,7 +4285,7 @@ class TutorialSystem {
       energy:{index:'1 / 4',title:'에너지로 피스를 만드세요',body:`생성기를 누르면 에너지 ${CONFIG.generator.costPerPiece}을 사용해 피스가 생성됩니다.\n적을 처치해 ${CONFIG.scoring.pointsPerGrant}점을 채우면 에너지 ${CONFIG.scoring.energyPerGrant}을 받습니다.`,targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
       order:{index:'2 / 4',title:'주문서에 필요한 피스를 모으세요',body:'주문서에 표시된 색의 피스를 보드에 준비하세요.\n같은 색과 같은 티어의 피스는 합칠 수 있습니다.',targets:['#order-sheet-panel','#board'],anchor:'#order-sheet-panel'},
       ready:{index:'3 / 4',title:'주문서를 완성하세요',body:'조건이 충족되었습니다.\n빛나는 주문서를 누르면 영웅이 소환됩니다.\n같은 미사일의 다음 주문서는 영웅을 강화합니다.',targets:['.order-card.ready'],anchor:'.order-card.ready'},
-      skill:{index:'4 / 4',title:'스킬은 쿨타임마다 사용할 수 있습니다',body:'로비에서 장착한 스킬입니다. 에너지를 소모하지 않으며, 사용 후 개별 쿨타임이 흐릅니다.',targets:['#skill-row'],anchor:'#skill-row'},
+      skill:{index:'4 / 4',title:'스킬은 에너지를 쓰고 쿨타임이 흐릅니다',body:`로비에서 장착한 스킬입니다. 버튼에 표시된 에너지를 소모하며, 같은 스킬을 쓸수록 비용이 ${CONFIG.skillEnergy.costStep}씩 올라갑니다.`,targets:['#skill-row'],anchor:'#skill-row'},
     }[this.step];
   }
   setStep(step){
@@ -4564,6 +4594,7 @@ class Game {
         <span class="sk-icon">${meta.icon}</span>
         <span class="sk-name">${def.name}</span>
         <span class="sk-level">Lv.${entry?.level||1}</span>
+        <span class="sk-cost"></span>
       </button>`;
     }).join('');
     $$('.skill-btn',row).forEach(btn=>{
@@ -4589,8 +4620,14 @@ class Game {
       // [2026-09-16] 스킬 버튼이 전장 우하단 정사각 오버레이가 되면서 가로 바 대신
       // 세로로 줄어드는 가림막을 쓴다. 남은 쿨타임 비율이 그대로 높이다.
       if(fill) fill.style.height = (clamp(left/(this.skillSystem.entry(key)?.cooldownSec||def.cooldownSec||1),0,1)*100).toFixed(0)+'%';
-      const cost = btn.querySelector('.sk-cost');
-      if(cost) cost.textContent=state==='cooldown'?`${left.toFixed(1)}초`:state==='target'?reason:'사용 가능';
+      // 비용은 쓸수록 오르므로 매 렌더마다 다시 읽는다.
+      const costEl = btn.querySelector('.sk-cost');
+      if(costEl){
+        const need=this.skillSystem.energyCost(key);
+        costEl.textContent=need>0?`⚡${need}`:'';
+        costEl.classList.toggle('short', this.energy<need);
+      }
+      btn.title=`${def.name} Lv.${this.skillSystem.entry(key)?.level||1} · 에너지 ${this.skillSystem.energyCost(key)}`;
     });
   }
 
