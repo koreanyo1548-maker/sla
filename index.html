@@ -1100,30 +1100,33 @@ h2.reveal-kicker{margin-top:0}
    앞 레이어들이 같은 선택자를 여러 번 재정의하므로 여기서 한 번에 덮어쓴다.
    ========================================================================= */
 
-/* --- 1. 골드는 노란색. 행동력·별불은 시스템 시안 그대로 두고 골드만 분리한다. --- */
+/* --- 1. 재화별 색 구분. 골드는 노란색, 행동력은 흰색, 별불만 시스템 시안으로 남긴다. --- */
 .wallet-gold strong{color:var(--primary)}
 .wallet-gold>span,.wallet-gold .ui-icon{color:var(--primary)}
+/* 행동력은 .wallet>div:first-child strong이 --skill(시안)로 칠하고 있어 선택자를 맞춰 덮는다. */
+.wallet-energy strong,.wallet>div:first-child strong{color:var(--text-primary)}
+.wallet-energy>span,.wallet-energy .ui-icon{color:var(--text-primary)!important}
 
 /* --- 2. 전투 준비 버튼: 골드 배경 위 글자는 전부 검정 계열로 통일.
        비용(⚡5)만 --text-secondary라 골드 위에서 흐릿하게 떴다. --- */
 #prepare-btn small,#prepare-btn small *{color:var(--primary-text)}
 #prepare-btn .ui-icon{color:var(--primary-text)}
 
-/* --- 3. 마일스톤 pill을 2배로. 배너 위에서 눌 수 있는 버튼으로 읽히게 한다. --- */
-#open-milestones.milestone-pill{max-width:74%;gap:12px;padding:12px 20px;
+/* --- 3. 마일스톤 pill 1.5배. 2배는 배너를 덮어 과했다(인철). 기준값 대비 1.5배다. --- */
+#open-milestones.milestone-pill{max-width:68%;gap:9px;padding:9px 15px;
   border-radius:999px;border-width:2px}
-.milestone-pill [data-ui-icon],.milestone-pill [data-ui-icon] svg{width:24px;height:24px}
-.milestone-pill .ms-body{gap:12px}
-.milestone-pill .ms-body b{font-size:22px}
-.milestone-pill .ms-body small{font-size:20px}
-.milestone-pill .notify-dot{width:12px;height:12px}
-/* 좁은 화면도 2배를 유지하되, 배너 위에서 줄바꿈되지 않게 폭만 조인다.
+.milestone-pill [data-ui-icon],.milestone-pill [data-ui-icon] svg{width:18px;height:18px}
+.milestone-pill .ms-body{gap:9px}
+.milestone-pill .ms-body b{font-size:17px}
+.milestone-pill .ms-body small{font-size:15px}
+.milestone-pill .notify-dot{width:9px;height:9px}
+/* 좁은 화면도 1.5배를 유지하되 폭만 조여 줄바꿈을 막는다.
    (앞의 @media max-width:360px 블록보다 뒤이므로 이쪽이 이긴다) */
 @media(max-width:360px){
-  #open-milestones.milestone-pill{max-width:78%;padding:10px 16px;gap:9px}
-  .milestone-pill .ms-body{gap:9px}
-  .milestone-pill .ms-body b{font-size:19px}
-  .milestone-pill .ms-body small{font-size:17px}
+  #open-milestones.milestone-pill{max-width:72%;padding:8px 14px;gap:7px}
+  .milestone-pill .ms-body{gap:7px}
+  .milestone-pill .ms-body b{font-size:15px}
+  .milestone-pill .ms-body small{font-size:14px}
 }
 </style>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317393c%22%2F%3E%3Cpath%20d%3D%22M38%206%2013%2035h17l-4%2023%2026-34H34z%22%20fill%3D%22%23f7cd7e%22%2F%3E%3C%2Fsvg%3E">
