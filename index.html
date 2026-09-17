@@ -1130,16 +1130,16 @@ h2.reveal-kicker{margin-top:0}
       <div id="order-status-row" aria-label="주문서 상태">
         <div id="order-gauge-wrap" class="order-gauge-wrap" title="주문서 생성 게이지">
           <div class="order-gauge-track"><div class="order-gauge-fill" id="order-gauge-bar"></div></div>
-          <div class="order-gauge-label" id="order-gauge-label">0/10</div>
+          <div class="order-gauge-label" id="order-gauge-label">0/12</div>
         </div>
         <div id="order-stock" class="order-stock" title="보유 주문서">대기 <span id="order-stock-count">0</span></div>
       </div>
       <div id="order-sheet-panel"></div>
       <div id="board"></div>
       <div id="generator-row">
-        <button id="generator-btn" title="처치 점수가 100점 쌓일 때마다 에너지 5를 지급합니다">
+        <button id="generator-btn" title="처치 점수가 20점 쌓일 때마다 에너지 1을 지급합니다">
           <span class="gen-fill" id="gen-fill"></span>
-          <span class="gen-label"><b>피스 생성 <small>에너지 1</small></b><span class="gen-score" id="gen-score">0/100</span></span>
+          <span class="gen-label"><b>피스 생성 <small>에너지 1</small></b><span class="gen-score" id="gen-score">0/20</span></span>
         </button>
       </div>
     </div>
@@ -1195,6 +1195,9 @@ const EARLY_STAGE_COMPOSITIONS = {
 // 먼저 총개체 수를 정한 뒤 아래 기본 구성의 타입 비율로 나눠, 기본 구성 증가와 물량 배율이
 // 서로 곱해져 후반 개체 수가 가속되던 기존 구조를 제거한다.
 const NORMAL_COUNT_CURVE = { startWave: 5, endWave: 29, startCount: 8, endCount: 40 };
+// 적 타입 목록의 단일 소스. WAVE 구성·위협 예산·스폰·보스 HP가 모두 이 순서를 공유한다.
+// CONFIG.enemy.types의 키와 같아야 하며, 타입을 늘릴 때 여기와 CONFIG 양쪽을 함께 고친다.
+const ENEMY_TYPE_KEYS = ['melee','ranged','tank'];
 
 // [2026-09-09 주석 정정] 기존 12웨이브 표의 증가 패턴을 그 스테이지의 총 WAVE 수까지 확장한다.
 // 총 WAVE 수는 buildStageWaves의 total 인자로 들어오며, 현재 상한은 DEFAULT_STAGE_COUNT(30)다.
@@ -1219,7 +1222,7 @@ function linearNormalTotal(stage, curve=NORMAL_COUNT_CURVE){
   return Math.round(curve.startCount+(curve.endCount-curve.startCount)*t);
 }
 function allocateTypeCounts(base,total){
-  const keys=['melee','ranged','tank'];
+  const keys=ENEMY_TYPE_KEYS;
   const weightTotal=keys.reduce((sum,key)=>sum+base[key],0);
   const exact=keys.map(key=>total*base[key]/weightTotal);
   const counts=exact.map(Math.floor);
@@ -1235,22 +1238,27 @@ function normalCompositionForStage(stage,curve=NORMAL_COUNT_CURVE){
 /* =====================================================================
    [WAVE_ARCHETYPES] WAVE 성격 정의
    ---------------------------------------------------------------------
-   [2026-09-17] 확정(인철): 30 WAVE를 같은 형태로 반복하지 않고 탱커전·돌격전·
-   원거리 압박·물량전·혼성이 순서대로 돌게 한다.
+   [2026-09-17] 확정(인철): 30 WAVE를 같은 형태로 반복하지 않고 성격이 순서대로 돌게 한다.
+   순환은 아래 ARCHETYPE_LOOP(탱커 → 돌격 → 원거리 → 물량 → 혼성 → 보스)이며,
+   30 WAVE 구성인 스테이지 3 이상에만 적용한다(스테이지 1~2는 아키타입 도입 전 원안).
 
    난이도 곡선은 건드리지 않는다. 각 WAVE의 "위협 예산"(Σ 마리수 × hpMul)을
    불변량으로 두고, 아키타입은 같은 예산을 다른 형태로 지출할 뿐이다. 탱커는
    hpMul이 2.0이라 수가 절반이 되고 근접은 0.8이라 수가 늘어난다.
 
+   short      — 전장 좌상단 배지에 쓰는 짧은 표기
+   label      — 행동 로그 등에 쓰는 긴 이름
    mix        — 타입 구성비(null이면 기존 비율을 그대로 쓴다)
    budgetMul  — 위협 예산 배율. 돌격전만 0.7로 덜 쓰는 대신 빠르게 한꺼번에 온다
    speedMul   — 이동 속도 배율(도달 시간을 이 값으로 나눈다)
    timing     — 스폰 시각·비율·WAVE 길이. null이면 CONFIG.waveTiming을 쓴다
                 (혼성을 null로 둬야 밸런스 에디터의 WAVE 타이밍 입력이 계속 살아 있다)
 
-   ASSUMPTION: mix·budgetMul·speedMul·timing 수치는 전부 Claude 가안이다. 30 WAVE
-   전체의 피격 상한이 혼성 대비 -18%~+32%에 들어오도록 WAVE 길이를 맞췄다 —
-   아키타입은 난이도가 아니라 형태만 바꾸는 것이 목적이다.
+   ASSUMPTION: 아래 수치는 전부 Claude 가안이다. 아키타입은 난이도가 아니라 형태만
+   바꾸는 것이 목적이므로, 30 WAVE 전체의 피격 상한이 혼성과 비슷해지도록 WAVE 길이를
+   맞췄다 — 최종 실측값은 돌격전 -14% · 탱커전 -1% · 원거리 압박 +40% · 물량전 +56%다.
+   마리 수가 많은 두 아키타입이 높게 남는 것은 "전원이 도달해 때린다"와 "마리 수가 최다"를
+   동시에 만족시킬 수 없어서이며, 물량전이 가장 위험한 WAVE가 되는 것은 의도한 결과다.
    ===================================================================== */
 const WAVE_ARCHETYPES = {
   fortress:{ short:'탱커',   label:'탱커전',      mix:{tank:1},          budgetMul:1.00, speedMul:1.0,
@@ -1269,20 +1277,19 @@ const WAVE_ARCHETYPES = {
 // 보스가 루프 안에 들어가므로 보스 주기가 4WAVE에서 6WAVE로 바뀐다. 30 WAVE는 6의 배수라
 // 마지막 슬롯이 정확히 WAVE 30에 떨어져 최종보스 자리가 맞는다.
 // 이 루프는 30 WAVE 구성(스테이지 3 이상)에만 적용하고, 스테이지 1~2는 원안을 그대로 둔다.
-const ARCHETYPE_LOOP = ['fortress','rush','siege','horde','standard','boss'];
+// BOSS_SLOT은 WAVE_ARCHETYPES의 키가 아니다 — 루프 안에서 "이 자리는 보스 WAVE"만 뜻한다.
+const BOSS_SLOT = 'boss';
+const ARCHETYPE_LOOP = ['fortress','rush','siege','horde','standard',BOSS_SLOT];
 const ARCHETYPE_LOOP_MIN_STAGE = 3;
 function usesArchetypeLoop(stageId){ return Math.max(1,Math.floor(Number(stageId)||1)) >= ARCHETYPE_LOOP_MIN_STAGE; }
-const ENEMY_TYPE_KEYS = ['melee','ranged','tank'];
 
-function enemyTypeTable(){
-  return (typeof CONFIG!=='undefined' ? CONFIG : DEFAULT_CONFIG).enemy.types;
-}
+// ── B3: CONFIG를 직접 읽는다(이 파일의 다른 곳과 같은 방식). 이 함수들은 전부 런타임에만 불린다.
 // WAVE의 위협 예산 — 아키타입이 형태를 바꿔도 이 값은 보존된다.
-function waveThreatBudget(comp, types=enemyTypeTable()){
+function waveThreatBudget(comp, types=CONFIG.enemy.types){
   return ENEMY_TYPE_KEYS.reduce((sum,key)=>sum+(comp[key]||0)*(Number(types[key]?.hpMul)||0),0);
 }
 // 예산을 아키타입의 구성비로 다시 나눠 실제 마리 수를 만든다.
-function archetypeComposition(baseComp, archetypeKey, types=enemyTypeTable()){
+function archetypeComposition(baseComp, archetypeKey, types=CONFIG.enemy.types){
   const archetype=WAVE_ARCHETYPES[archetypeKey];
   if(!archetype?.mix) return Object.fromEntries(ENEMY_TYPE_KEYS.map(key=>[key,baseComp[key]||0]));
   const keys=Object.keys(archetype.mix).filter(key=>ENEMY_TYPE_KEYS.includes(key));
@@ -1308,12 +1315,14 @@ function waveTimingFor(waveCfg){
   };
 }
 function waveSpeedMul(waveCfg){ return Number(WAVE_ARCHETYPES[waveCfg?.archetype]?.speedMul)||1; }
-// 전장 좌상단 배지에 쓰는 짧은 표기. 보스 WAVE는 아키타입이 없으므로 따로 돌려준다.
-function waveTypeShort(waveCfg){
+// WAVE 종류 표기. 보스 WAVE는 아키타입이 없으므로 여기서 함께 처리한다.
+// form='short'는 전장 좌상단 배지용(폭이 좁다), 'label'은 행동 로그용이다.
+const BOSS_WAVE_NAMES = { midboss:{short:'보스', label:'보스전'}, finalboss:{short:'최종보스', label:'최종보스전'} };
+function waveTypeName(waveCfg, form='short'){
   if(!waveCfg) return '';
-  if(waveCfg.type==='finalboss') return '최종보스';
-  if(waveCfg.type==='midboss') return '보스';
-  return WAVE_ARCHETYPES[waveCfg.archetype]?.short || WAVE_ARCHETYPES.standard.short;
+  const boss=BOSS_WAVE_NAMES[waveCfg.type];
+  if(boss) return boss[form];
+  return (WAVE_ARCHETYPES[waveCfg.archetype] ?? WAVE_ARCHETYPES.standard)[form];
 }
 
 // [2026-09-04] bossEnergy 제거 — 에너지는 처치 점수(ScoreSystem)로만 지급한다.
@@ -1329,7 +1338,7 @@ function buildStageWaves(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE, st
     const pos=(stage-1)%4;
     const isFinal=stage===total;
     const slot=loop ? ARCHETYPE_LOOP[(stage-1)%ARCHETYPE_LOOP.length] : null;
-    const isMidBoss=!isFinal && (loop ? slot==='boss' : stage%4===0);
+    const isMidBoss=!isFinal && (loop ? slot===BOSS_SLOT : stage%4===0);
     const difficulty=1+group*2+pos+(isFinal?1:0);
     if(isFinal) return { wave:stage, difficulty, type:'finalboss' };
     if(isMidBoss) return { wave:stage, difficulty, type:'midboss' };
@@ -3155,9 +3164,9 @@ class EnemySystem {
     const comp = RunConfig.bossComposition(waveCfg.wave);
     const mul = this.hpMultiplier(waveCfg.difficulty);
     let total = 0;
-    Object.keys(CONFIG.enemy.types).forEach(t=>{
+    ENEMY_TYPE_KEYS.forEach(t=>{
       const cnt = comp?.[t] || 0;
-      total += cnt * RunConfig.enemyBaseStat('hp') * mul * CONFIG.enemy.types[t].hpMul;
+      total += cnt * RunConfig.enemyBaseStat('hp') * mul * (CONFIG.enemy.types[t]?.hpMul || 0);
     });
     return Math.round(total);
   }
@@ -3217,7 +3226,7 @@ class EnemySystem {
       this.game.stats.enemiesKilled++;if(e.isBoss)this.game.stats.bossesKilled++;
       this.game.hitStop(e.isBoss?CONFIG.presentation.bossKillStopSec:CONFIG.presentation.killStopSec,!!e.isBoss);
       this.game.effects.enemyKilled(e);
-      // [2026-09-04] 처치 보상은 에너지 직접 지급이 아니라 점수다. 점수가 100점 쌓일 때마다
+      // [2026-09-04] 처치 보상은 에너지 직접 지급이 아니라 점수다. 점수가 일정량 쌓일 때마다
       // ScoreSystem이 에너지를 지급한다(목돈 지급을 없애 생성 간격 상한과 맞추기 위함).
       const points = e.isBoss
         ? (e.bossKind==='mid' ? CONFIG.scoring.midBoss : CONFIG.scoring.finalBoss)
@@ -3356,7 +3365,7 @@ class WaveSystem {
     this.game.currentWaveCfg = cfg;
     $('#wave-label').textContent = `WAVE ${cfg.wave} / ${RunConfig.waves().length}`;
     // [2026-09-17] WAVE 시작 float 텍스트는 없애고 전장 좌상단 배지에 상시 표기한다.
-    const label = cfg.type==='normal' ? (WAVE_ARCHETYPES[cfg.archetype]?.label || '혼성') : '보스전';
+    const label = waveTypeName(cfg,'label');
     this.renderWaveTypeBadge(cfg);
     if(this.game.effects){
       this.game.effects.ring(this.game.playerPos.x,this.game.playerPos.y-55,PALETTE.accent,95,.6,3);
@@ -3387,7 +3396,7 @@ class WaveSystem {
   renderWaveTypeBadge(cfg){
     const badge=$('#wave-type-badge'), name=$('#wave-type-name');
     if(!badge||!name) return;
-    name.textContent=waveTypeShort(cfg);
+    name.textContent=waveTypeName(cfg,'short');
     badge.classList.toggle('is-boss', cfg?.type!=='normal');
   }
 
@@ -3928,7 +3937,8 @@ class OrderSheetSystem {
    [ScoreSystem] 처치 점수 → 에너지 지급
    ---------------------------------------------------------------------
    확정(인철, 2026-09-04): 에너지를 처치 즉시 주지 않고 점수로 적립한 뒤
-   100점마다 정해진 양을 지급한다. 생성기 버튼에 다음 지급까지의 진행도를 표시한다.
+   pointsPerGrant 점마다 energyPerGrant 만큼 지급한다(2026-09-17 기준 20점당 1).
+   생성기 버튼에 다음 지급까지의 진행도를 표시한다.
    기존 방식(일반 1 에너지 / 보스 15~200 에너지 목돈)은 생성 간격 상한(0.3초/개) 때문에
    런 전체 수입의 72%가 소비되지 못하고 버려졌다 — 그 목돈 구조를 없애기 위한 교체다.
    ===================================================================== */
@@ -4055,12 +4065,11 @@ const GAME_MANUAL = {
     ]},
     { title: '② 머지 보드 — 피스 만들고 합치기', body: [
       '화면 하단 "생성기" 버튼을 누르면 에너지 1을 써서 무작위 색깔의 1티어 피스가 보드 빈 칸에 놓인다. 꾹 누르고 있으면 0.3초 간격으로 계속 생성된다(보드가 꽉 차거나 에너지가 없으면 멈춘다).',
-      '에너지는 처치 점수로 받는다 — 일반 적 3점, 중간보스 200점이며 점수가 100점 쌓일 때마다 에너지 5를 받는다. 시작할 때 에너지 10을 들고 시작한다.',
+      '에너지는 처치 점수로 받는다 — 일반 적 3점, 중간보스 200점이며 점수가 20점 쌓일 때마다 에너지 1을 받는다(일반 적 약 7기마다 1). 시작할 때 에너지 10을 들고 시작한다.',
       '보유 에너지는 전장 왼쪽 아래 표시에서 확인한다. 에너지를 받으면 표시가 한 번 빛난다.',
-      '생성기 버튼 안쪽이 다음 지급까지의 진행도로 채워진다. 에너지가 떨어지면 버튼이 비활성화되고, 점수가 100점을 넘기면 다시 켜진다.',
+      '생성기 버튼 안쪽이 다음 지급까지의 진행도로 채워진다. 에너지가 떨어지면 버튼이 비활성화되고, 다음 20점을 채우면 다시 켜진다.',
       '같은 색 + 같은 티어 피스 두 개를 드래그해서 겹치면 합쳐지며 티어가 1 올라간다(최대 T4).',
-      '가끔(기본 5% 확률) "크리티컬 머지"가 떠서 원래보다 티어가 한 단계 더 올라간다.',
-      '가끔(기본 8% 확률) 생성기에서 "골든 피스"가 나와 처음부터 T2로 생성된다 — 보드에서 금색 테두리로 표시된다.',
+      '"크리티컬 머지"(머지 결과가 한 티어 더 오름)와 "골든 피스"(생성 시 바로 T2)는 기능만 남아 있고 현재 기본 확률이 0이라 발동하지 않는다.',
     ]},
     { title: '③ 주문서 — 피스를 힘으로 바꾸기', body: [
       '미사일은 연쇄·폭발·산탄·레이저 4종이다. 연쇄는 흩어진 적에게 튀어가고, 폭발은 뭉친 적을 한꺼번에 때리고, 산탄은 가까이 붙은 적에게 여러 발이 겹치고, 레이저는 날아가는 시간 없이 직선상의 적을 즉시 때린다.',
@@ -4094,16 +4103,19 @@ const GAME_MANUAL = {
     ]},
     { title: '⑤ 주문서 생성 게이지', body: [
       '에너지 1을 소모하거나 머지에 성공할 때마다 주문서 카드 바로 위의 얇은 게이지가 1점 오른다.',
-      '10점이 되면 주문서 1개가 공급되어 빈 슬롯을 채운다. 자주 조금씩 들어온다.',
+      '12점이 되면 주문서 1개가 공급되어 빈 슬롯을 채운다. 자주 조금씩 들어온다.',
       '중간보스를 처치하면 게이지와 무관하게 주문서 2개를 한 번에 받는다. 슬롯이 모두 차 있으면 상한 없이 보유되며 같은 📜 주문서 줄 오른쪽의 \'대기\' 숫자에서 수량을 확인할 수 있다.',
     ]},
     { title: '⑥ 적과 WAVE', body: [
       '적 타입 3종: 근접(기본형), 원거리(사거리 밖에서 원거리 공격, 체력은 낮음), 탱커(체력·공격력 모두 높음).',
+      '타입마다 핵까지 오는 속도가 다르다 — 근접 7초, 원거리 8초, 탱커 10초다. 빠른 타입일수록 체력이 낮다.',
       '미사일별 누적 강화 레벨은 전장의 수호자 머리 위에 이름과 함께 표시된다(아직 소환하지 않은 슬롯은 미사일 이름만 흐리게 보인다). 피해 숫자는 미사일 이름과 같은 색으로 떠서 어떤 공격이 피해를 줬는지 구분할 수 있다.',
-      '한 일반 WAVE는 보통 12초간 진행되며, 시작 시점에 0/1/2초로 나눠서 스폰된다. 대부분이 처치돼 생존 개체가 10% 이하로 줄면 다음 WAVE로 조기 전환된다.',
-      '1~3WAVE에는 각각 8·12·16마리가 등장한다. 근접 적을 먼저 만나고, 원거리와 탱커가 차례로 추가된다.',
-      '마지막 WAVE를 제외한 4의 배수 WAVE에는 중간보스가 등장하고, 각 스테이지의 마지막 WAVE에는 최종보스가 등장한다. 중간보스는 큰 점수와 주문서 2장을 준다.',
-      '일반 WAVE의 총개체 수는 WAVE 5의 8기부터 WAVE 29의 40기까지 일정한 폭으로 늘어난다. 중간보스 WAVE에서는 보스 1기만 나오지만 큰 처치 점수를 준다.',
+      '현재 WAVE의 성격은 전장 왼쪽 위에 항상 표시된다 — 탱커·돌격·원거리·물량·혼성·보스 중 하나다.',
+      '30 WAVE 스테이지(스테이지 3 이상)는 탱커 → 돌격 → 원거리 → 물량 → 혼성 → 보스 순서를 여섯 WAVE 주기로 반복한다. 스테이지 1~2는 성격 구분 없이 혼성으로만 진행되며 4의 배수 WAVE마다 중간보스가 나온다.',
+      '탱커 WAVE는 적이 적고 단단하며 한 덩어리로 온다. 돌격 WAVE는 수가 적은 대신 빠르게 한꺼번에 도달하고 WAVE가 짧다. 원거리 WAVE는 사거리에서 쏘는 적이 많고, 물량 WAVE는 네 번에 나눠 끊임없이 밀려온다.',
+      'WAVE마다 적 수가 크게 달라 보여도 전체 위협량은 같게 맞춰져 있다 — 탱커는 체력이 두 배라 수가 절반이고 근접은 체력이 낮아 수가 많다.',
+      '일반 WAVE는 성격에 따라 7~14초간 진행되며 스폰 시점도 다르다. 대부분이 처치돼 생존 개체가 10% 이하로 줄면 다음 WAVE로 조기 전환된다.',
+      '각 스테이지의 마지막 WAVE에는 최종보스가 등장한다. 중간보스는 큰 점수와 주문서 2장을 준다.',
       '핵의 최대 HP는 편성한 영웅 4명의 체력 합계다. 회복 스킬은 핵의 HP를 회복하고 방어 스킬은 핵이 받는 피해를 줄인다. 자동 회복은 없다.',
     ]},
   ],
@@ -4111,7 +4123,8 @@ const GAME_MANUAL = {
     '보드가 가득 차면 생성기가 멈춘다 — 합칠 수 있는 피스는 미루지 말고 바로바로 합쳐서 자리를 비워두자.',
     '주문서가 준비됐더라도 고티어 피스를 더 머지하면 높은 강화 레벨을 받을 수 있다. 지금 바로 완성할지 기다렸다가 강하게 완성할지 선택하자.',
     '목표 지정 탄환은 목표가 먼저 죽으면 사라지므로 여러 탄환이 같은 적에게 몰리는 상황도 고려하자.',
-    '방어 스킬은 지속시간이 짧다(5초) — 보스전 직전처럼 피해가 집중될 타이밍에 맞춰 쓰는 게 좋다.',
+    '방어 스킬은 지속시간이 짧고(5초) 쿨타임은 길다 — 보스전 직전처럼 피해가 집중될 타이밍에 맞춰 쓰는 게 좋다.',
+    '전장 왼쪽 위의 WAVE 성격을 보고 스킬을 아껴두자. 돌격 WAVE는 적이 한꺼번에 도달하고 물량 WAVE는 계속 밀려오므로 광역기를 남겨두면 편하다.',
   ],
 };
 const ManualPanel = {
@@ -4160,7 +4173,7 @@ class TutorialSystem {
   }
   data(){
     return {
-      energy:{index:'1 / 4',title:'에너지로 피스를 만드세요',body:'생성기를 누르면 에너지 1을 사용해 피스가 생성됩니다.\n적을 처치해 100점을 채우면 에너지 5를 받습니다.',targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
+      energy:{index:'1 / 4',title:'에너지로 피스를 만드세요',body:'생성기를 누르면 에너지 1을 사용해 피스가 생성됩니다.\n적을 처치해 20점을 채우면 에너지 1을 받습니다.',targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
       order:{index:'2 / 4',title:'주문서에 필요한 피스를 모으세요',body:'주문서에 표시된 색의 피스를 보드에 준비하세요.\n같은 색과 같은 티어의 피스는 합칠 수 있습니다.',targets:['#order-sheet-panel','#board'],anchor:'#order-sheet-panel'},
       ready:{index:'3 / 4',title:'주문서를 완성하세요',body:'조건이 충족되었습니다.\n빛나는 주문서를 누르면 영웅이 소환됩니다.\n같은 미사일의 다음 주문서는 영웅을 강화합니다.',targets:['.order-card.ready'],anchor:'.order-card.ready'},
       skill:{index:'4 / 4',title:'스킬은 쿨타임마다 사용할 수 있습니다',body:'로비에서 장착한 스킬입니다. 에너지를 소모하지 않으며, 사용 후 개별 쿨타임이 흐릅니다.',targets:['#skill-row'],anchor:'#skill-row'},
