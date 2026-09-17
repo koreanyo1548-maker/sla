@@ -1130,16 +1130,16 @@ h2.reveal-kicker{margin-top:0}
       <div id="order-status-row" aria-label="주문서 상태">
         <div id="order-gauge-wrap" class="order-gauge-wrap" title="주문서 생성 게이지">
           <div class="order-gauge-track"><div class="order-gauge-fill" id="order-gauge-bar"></div></div>
-          <div class="order-gauge-label" id="order-gauge-label">0/12</div>
+          <div class="order-gauge-label" id="order-gauge-label"></div>
         </div>
         <div id="order-stock" class="order-stock" title="보유 주문서">대기 <span id="order-stock-count">0</span></div>
       </div>
       <div id="order-sheet-panel"></div>
       <div id="board"></div>
       <div id="generator-row">
-        <button id="generator-btn" title="처치 점수가 20점 쌓일 때마다 에너지 1을 지급합니다">
+        <button id="generator-btn">
           <span class="gen-fill" id="gen-fill"></span>
-          <span class="gen-label"><b>피스 생성 <small>에너지 1</small></b><span class="gen-score" id="gen-score">0/20</span></span>
+          <span class="gen-label"><b>피스 생성 <small>에너지 1</small></b><span class="gen-score" id="gen-score"></span></span>
         </button>
       </div>
     </div>
@@ -1198,6 +1198,7 @@ const NORMAL_COUNT_CURVE = { startWave: 5, endWave: 29, startCount: 8, endCount:
 // 적 타입 목록의 단일 소스. WAVE 구성·위협 예산·스폰·보스 HP가 모두 이 순서를 공유한다.
 // CONFIG.enemy.types의 키와 같아야 하며, 타입을 늘릴 때 여기와 CONFIG 양쪽을 함께 고친다.
 const ENEMY_TYPE_KEYS = ['melee','ranged','tank'];
+const ENEMY_TYPE_LABELS = { melee:'근접', ranged:'원거리', tank:'탱커' };
 
 // [2026-09-09 주석 정정] 기존 12웨이브 표의 증가 패턴을 그 스테이지의 총 WAVE 수까지 확장한다.
 // 총 WAVE 수는 buildStageWaves의 total 인자로 들어오며, 현재 상한은 DEFAULT_STAGE_COUNT(30)다.
@@ -4052,84 +4053,71 @@ function replaceObjectContents(target,source){
    여기 적힌 수치·용어는 기획서.md/CONFIG의 확정·미확정 여부와 무관하게 "현재 기본값
    기준으로 이렇게 진행된다"만 설명한다 — 밸런스 수치가 바뀌면 이 설명서도 같이 갱신할 것.
    ===================================================================== */
-const GAME_MANUAL = {
-  intro: '슬래그마는 수호자와 전투 스킬을 성장시키고 점차 길어지는 스테이지를 돌파하는 실시간 머지 디펜스다. 아래 순서대로 읽으면 첫 판을 바로 시작할 수 있다.',
+function buildGameManual(){
+  const sc=CONFIG.scoring, gen=CONFIG.generator, og=CONFIG.orderGauge, board=CONFIG.board;
+  const killsPerGrant=Math.max(1,Math.ceil(sc.pointsPerGrant/Math.max(1,sc.normalKill)));
+  const maxLevel=CharacterGrowthRules.maxStars*CharacterGrowthRules.levelsPerStar;
+  const gacha=CONFIG.meta.gacha, stamina=CAMPAIGN_CONFIG;
+  const stageWaves=[1,2,3].map(id=>campaignStage(id).waves).join('·');
+  const travel=ENEMY_TYPE_KEYS.map(k=>`${ENEMY_TYPE_LABELS[k]} ${CONFIG.enemy.types[k].travelTimeSec}초`).join(' · ');
+  const loop=ARCHETYPE_LOOP.map(k=>k===BOSS_SLOT?'보스':WAVE_ARCHETYPES[k].short).join(' → ');
+  const durations=Object.values(WAVE_ARCHETYPES).map(a=>a.timing?.durationSec ?? CONFIG.waveTiming.durationSec);
+  const dopamine=[
+    CONFIG.featureFlags.criticalMerge&&CONFIG.criticalMerge.chance>0
+      ? `머지할 때 ${Math.round(CONFIG.criticalMerge.chance*100)}% 확률로 티어가 한 단계 더 오른다(크리티컬 머지).` : null,
+    CONFIG.featureFlags.goldenPiece&&CONFIG.goldenPiece.chance>0
+      ? `생성할 때 ${Math.round(CONFIG.goldenPiece.chance*100)}% 확률로 상위 티어 피스가 바로 나온다(골든 피스).` : null,
+  ].filter(Boolean);
+  return {
+  intro: '용광로 핵을 지키는 실시간 머지 디펜스다. 전투는 자동이고, 당신이 하는 일은 아래 보드에서 피스를 합쳐 공격을 강화하는 것뿐이다.',
   sections: [
-    {title:'로비와 영구 성장',body:['통과한 WAVE마다 골드를 얻고 클리어 시 추가 보상을 받는다. 결과 화면에서 자동 지급되며 패배·중도 종료도 통과분은 지급된다.', '수호자 탭에서 미사일별 4인을 편성하고, 스킬 탭에서 전투 스킬 2개를 장착한다. 수호자와 스킬의 레벨은 모두 골드로 올리며 같은 비용표를 따른다. 둘 다 6성·60레벨 구조다.', '마일스톤은 한 번으로 끝나지 않고 단계가 이어진다. 새로운 최고 스테이지를 클리어하면 별불을, WAVE·보스·스킬 사용·주문서·머지 목표를 채우면 골드를 받는다. 별불은 소환에만 쓴다.', '진행은 현재 브라우저에 저장된다. 전투 중 새로고침·창 닫기는 중도 종료로 처리하고 다음 실행에서 통과 WAVE 보상을 정산한다. 행동력은 환급하지 않는다.', '데이터 초기화를 누르면 골드·별불·수호자·스킬·마일스톤·스테이지·튜토리얼 진행이 초기화된다.']},
-    { title: '① 목표와 시작', body: [
-      '로비에서 스킬 2종을 미리 장착하고 출전 준비 화면에서는 현재 장착 상태만 확인한다. 입장 시 행동력 5를 쓰며, 행동력은 최대 30까지 5분마다 1 회복된다.',
-      '스테이지 1~3은 10·20·30 WAVE이며 이후는 30 WAVE다. 스테이지 1의 적 HP는 기본보다 10% 낮다. 마지막 보스를 처치하면 클리어, 용광로 핵의 HP가 0이 되면 패배다.',
-      '영웅 앞 중앙의 용광로 핵을 지킨다. 적은 핵을 향해 모여들며, 영웅들은 핵 뒤에서 적을 공격한다.',
-      '상단에는 용광로 핵의 공용 HP가 표시된다. 그 위에서 런 경과 시간과 누적 처치 점수를 확인할 수 있으며, 누적 점수는 에너지가 지급돼도 줄어들지 않는다.',
-      '전투는 자동이다 — 캐릭터는 알아서 가장 가까운 적을 공격한다. 플레이어가 손으로 조작하는 부분은 아래 머지 보드뿐이다.',
+    { title: '① 한 판의 흐름', body: [
+      `적을 잡으면 <b>점수</b>가 쌓이고, ${sc.pointsPerGrant}점마다 <b>에너지</b> ${sc.energyPerGrant}을 받는다(일반 적 약 ${killsPerGrant}기). 시작 에너지는 ${sc.startEnergy}이다.`,
+      `에너지 ${gen.costPerPiece}로 <b>피스</b>를 만들고, 같은 색·같은 티어끼리 합쳐 티어를 올린다(최대 T${CONFIG.colors.maxTier}).`,
+      '<b>주문서</b>가 요구하는 색을 보드에 갖추면 주문서를 눌러 미사일을 강화한다. 소모한 피스의 티어 합계가 강화 레벨이 된다.',
+      '즉 <b>적 처치 → 에너지 → 피스 → 주문서 → 더 센 공격</b>의 순환이다. 이 순환을 빨리 돌릴수록 강해진다.',
     ]},
-    { title: '② 머지 보드 — 피스 만들고 합치기', body: [
-      '화면 하단 "생성기" 버튼을 누르면 에너지 1을 써서 무작위 색깔의 1티어 피스가 보드 빈 칸에 놓인다. 꾹 누르고 있으면 0.3초 간격으로 계속 생성된다(보드가 꽉 차거나 에너지가 없으면 멈춘다).',
-      '에너지는 처치 점수로 받는다 — 일반 적 3점, 중간보스 200점이며 점수가 20점 쌓일 때마다 에너지 1을 받는다(일반 적 약 7기마다 1). 시작할 때 에너지 10을 들고 시작한다.',
-      '보유 에너지는 전장 왼쪽 아래 표시에서 확인한다. 에너지를 받으면 표시가 한 번 빛난다.',
-      '생성기 버튼 안쪽이 다음 지급까지의 진행도로 채워진다. 에너지가 떨어지면 버튼이 비활성화되고, 다음 20점을 채우면 다시 켜진다.',
-      '같은 색 + 같은 티어 피스 두 개를 드래그해서 겹치면 합쳐지며 티어가 1 올라간다(최대 T4).',
-      '"크리티컬 머지"(머지 결과가 한 티어 더 오름)와 "골든 피스"(생성 시 바로 T2)는 기능만 남아 있고 현재 기본 확률이 0이라 발동하지 않는다.',
+    { title: '② 보드와 주문서', body: [
+      `보드는 ${board.rows}×${board.cols} 칸이다. 꽉 차면 생성기가 멈추니 합칠 수 있는 건 바로 합치자. 생성기를 꾹 누르면 ${gen.holdIntervalSec}초 간격으로 계속 만든다.`,
+      `주문서는 ${CONFIG.orderSheet.slotCount}칸이며 한 칸은 항상 재료 1개짜리로 유지된다. 재료는 1~3개이고 많을수록 강화 상한이 높다(Lv.4 / 8 / 12).`,
+      `에너지를 쓰거나 머지할 때마다 주문서 게이지가 1점 오르고, ${og.maxCharge}점마다 새 주문서가 온다. 중간보스를 잡으면 ${og.midBossOrders}장을 한 번에 준다.`,
+      '미사일은 연쇄(흩어진 적) · 폭발(뭉친 적) · 산탄(가까운 적) · 레이저(직선상의 적) 4종이며 서로 독립적으로 발사된다.',
+      ...dopamine,
     ]},
-    { title: '③ 주문서 — 피스를 힘으로 바꾸기', body: [
-      '미사일은 연쇄·폭발·산탄·레이저 4종이다. 연쇄는 흩어진 적에게 튀어가고, 폭발은 뭉친 적을 한꺼번에 때리고, 산탄은 가까이 붙은 적에게 여러 발이 겹치고, 레이저는 날아가는 시간 없이 직선상의 적을 즉시 때린다.',
-      '산탄은 활성화되는 순간부터 목표를 향해 중앙·좌·우 3발을 쏜다. 발사 수 옵션을 강화하면 부채꼴 바깥쪽으로 한 발씩 늘어난다. 적이 가까이 붙으면 여러 발이 같은 적에게 맞는다.',
-      '캐릭터는 노말·매직·레어·영웅·전설 등급으로 나뉜다. 처음에는 노말 4명만 갖고 시작하며 나머지는 로비의 소환 탭에서 얻는다. 소환은 1회 별불 200개에 결과 10개가 나오며, 결과마다 수호자 70%·스킬 30%로 나오고 스킬에는 희귀도가 없다.',
-      '성급을 올리면 그 자리에서 능력치가 오른다. 1성에서 2성은 15%, 2성에서 5성까지는 각 10%, 5성에서 6성은 20%다. 레벨이 상한에 닿아야 승급할 수 있으므로 레벨을 다 올린 뒤에 조각을 쓰면 된다.',
-      '레어 이상 캐릭터는 패시브가 두 개이며 두 번째는 3성에서 열린다. 노말과 매직은 패시브가 하나이고 성급으로는 능력치만 오른다.',
-      '패시브에는 적에게 감전이나 융해를 거는 것과, 그 상태가 걸린 적에게 더 큰 피해를 주는 것이 있다. 상태 자체는 피해를 주지 않으므로 거는 캐릭터와 받아먹는 캐릭터를 같은 상태로 맞춰 편성해야 효과가 난다.',
-      '종족이나 직업이 조건인 패시브도 있다. 4인 편성 안에 같은 종족이나 같은 직업이 조건 수만큼 모이면 발동한다.',
-      '미사일 고유 규칙은 기본으로 켜져 있지 않고, 그 규칙을 패시브로 가진 전설 수호자를 편성해야 작동한다. 연쇄는 튈 적이 모자라면 남은 횟수만큼 첫 대상을 더 세게 때리고, 폭발은 적을 죽인 자리에서 한 번 더 터지며, 산탄은 가운데로 곧게 나가는 1발의 피해가 오르고, 레이저는 가끔 굵고 강하게 발사되거나 광선에 적이 1기만 걸리면 더 세게 때린다.',
-      '시작 주문서 3장은 4종 중 3종의 재료 1개 공격력 주문서로 배정된다. 처음 강화한 미사일이 기본 공격을 대체하며, 나머지도 이후 추가할 수 있다.',
-      '공격력·공격속도·고유 능력 주문서는 서로 다른 색상 피스 1~3개를 요구한다. 필요한 색과 개수는 카드의 재료 표시에서 확인한다.',
-      '주문서는 보드를 자동으로 확인하며 조건이 맞으면 주문서가 활성화된다. 주문서 자체를 누르면 적용하며, 🗑 버튼에서 상세 정보와 폐기를 확인한다.',
-      '버튼을 누르면 필요한 색상의 높은 티어 피스를 한 개씩 자동으로 소모한다. 색상과 개수만 맞으면 완성할 수 있고, 소모 피스의 티어 합계가 적용 레벨이 된다.',
-      '항상 한 칸은 재료 1개 주문서로 유지된다. 주문서가 보충되면 적은 재료로 완성할 수 있다.',
-      '별은 현재 준비된 재료로 받을 보상의 달성도다. 낮은 구간은 별 1개, 중간 구간은 2개, 최대 레벨이면 3개가 채워진다. 재료가 부족하면 빈 별로 표시된다.',
-      '재료 1개 주문서는 최대 Lv.4, 2개는 Lv.8, 3개는 Lv.12다. 같은 별 3개라도 실제 강화 레벨은 다르므로 별 옆의 현재/최대 레벨을 함께 확인하자.',
-      '강화 주문서는 연쇄·폭발·산탄·레이저 각각의 공격력·공격속도·고유 능력을 런 동안 강화한다.',
-      '원하지 않는 주문서는 무료로 폐기할 수 있고, 보유 주문서가 있으면 즉시 새 주문서가 들어온다.',
-      '지정색은 미사일과 스탯 조합마다 정해져 있고 5색이 고르게 쓰인다. 주문서 카드의 색 점을 보면 어떤 피스가 필요한지 알 수 있다.',
+    { title: '③ 스킬', body: [
+      `로비에서 고른 ${CONFIG.skillPickCount}종이 전장 오른쪽 아래에 나온다. 에너지를 쓰지 않고 쿨타임만 있으니 아끼지 말되, 쿨타임이 길어 타이밍이 중요하다.`,
+      `전체 ${SKILL_KEYS.length}종이 공격 · 제어(스턴/감속/밀어내기) · 강화 · 회복 · 에너지로 나뉜다. 제어는 보스에게도 걸린다.`,
+      '공격 스킬의 피해는 그때까지 쌓은 공격력 강화를 함께 반영한다 — 강화가 붙을수록 스킬도 세진다.',
     ]},
-    { title: '④ 스킬 — 직접 발동', body: [
-      '로비에서 장착한 스킬 2종은 전장 오른쪽 아래 버튼으로 나온다. 주문서와 무관하게 직접 누를 수 있다. 쿨타임 동안은 버튼이 어두운 막으로 덮이고, 준비되면 테두리가 밝게 빛난다.',
-      '스킬은 에너지를 소모하지 않는다. 사용에 성공하면 개별 쿨타임이 시작되며 전투가 멈추거나 느려지면 쿨타임도 같은 기준을 따른다.',
-      '공격할 적이 없으면 공격 스킬을, 핵 HP가 가득 차면 회복 스킬을 사용할 수 없다.',
-      '스킬 레벨을 올리면 장착 공격·방어·체력이 증가하고, 성급을 올리면 액티브 효과만 강해진다. 쿨타임은 성장하지 않는다.',
-      '중복 스킬은 해당 스킬 조각이 되며, 레벨 상한에 도달한 뒤 조각으로 성급을 올린다.',
-      '공격 스킬의 피해는 쌓아온 공격력 강화를 함께 반영한다. 강화가 붙을수록 스킬도 같이 세진다.',
-      '스킬은 11종이다. 공격(분쇄창·낙뢰 폭격), 제어(굉음 충격 스턴·슬래그 늪 감속·열풍 분출 밀어내기), 강화(달군 칼날 일반 공격력·강철 외피 방어력·용광 방벽 피해 감소), 회복(재생 불씨 즉시·치유 잔불 지속), 운영(불씨 충전 에너지)으로 나뉜다. 제어는 보스에게도 걸린다.',
-      '달군 칼날은 기본 공격과 미사일에만 붙고 스킬 피해는 올리지 않는다. 성급을 올리면 공격·제어·즉시 회복·에너지 스킬은 수치가, 달군 칼날·강철 외피·치유 잔불은 지속시간이 1초씩 늘어난다.',
+    { title: '④ 적과 WAVE', body: [
+      `적은 ${ENEMY_TYPE_KEYS.length}종이다. 핵까지 오는 데 걸리는 시간이 다르고, 빠른 쪽이 체력이 낮다 — ${travel}.`,
+      '현재 WAVE의 성격은 <b>전장 왼쪽 위</b>에 항상 떠 있다. 이걸 보고 미리 대응하면 된다.',
+      `${ARCHETYPE_LOOP_MIN_STAGE}스테이지부터는 ${loop} 순서를 ${ARCHETYPE_LOOP.length}WAVE 주기로 반복한다. 그 전 스테이지는 성격 구분 없이 진행된다.`,
+      'WAVE마다 적 수가 크게 달라 보여도 전체 위협량은 같게 맞춰져 있다 — 탱커는 단단해서 적게 오고, 근접은 약해서 많이 온다.',
+      `WAVE는 성격에 따라 ${Math.min(...durations)}~${Math.max(...durations)}초이며, 생존 개체가 ${Math.round(CONFIG.waveTiming.earlyTransitionAlivePct*100)}% 이하로 줄면 바로 다음으로 넘어간다.`,
+      '핵의 최대 HP는 편성한 4인의 체력 합계다. 자동 회복은 없으니 회복은 스킬로만 한다.',
     ]},
-    { title: '⑤ 주문서 생성 게이지', body: [
-      '에너지 1을 소모하거나 머지에 성공할 때마다 주문서 카드 바로 위의 얇은 게이지가 1점 오른다.',
-      '12점이 되면 주문서 1개가 공급되어 빈 슬롯을 채운다. 자주 조금씩 들어온다.',
-      '중간보스를 처치하면 게이지와 무관하게 주문서 2개를 한 번에 받는다. 슬롯이 모두 차 있으면 상한 없이 보유되며 같은 📜 주문서 줄 오른쪽의 \'대기\' 숫자에서 수량을 확인할 수 있다.',
-    ]},
-    { title: '⑥ 적과 WAVE', body: [
-      '적 타입 3종: 근접(기본형), 원거리(사거리 밖에서 원거리 공격, 체력은 낮음), 탱커(체력·공격력 모두 높음).',
-      '타입마다 핵까지 오는 속도가 다르다 — 근접 7초, 원거리 8초, 탱커 10초다. 빠른 타입일수록 체력이 낮다.',
-      '미사일별 누적 강화 레벨은 전장의 수호자 머리 위에 이름과 함께 표시된다(아직 소환하지 않은 슬롯은 미사일 이름만 흐리게 보인다). 피해 숫자는 미사일 이름과 같은 색으로 떠서 어떤 공격이 피해를 줬는지 구분할 수 있다.',
-      '현재 WAVE의 성격은 전장 왼쪽 위에 항상 표시된다 — 탱커·돌격·원거리·물량·혼성·보스 중 하나다.',
-      '30 WAVE 스테이지(스테이지 3 이상)는 탱커 → 돌격 → 원거리 → 물량 → 혼성 → 보스 순서를 여섯 WAVE 주기로 반복한다. 스테이지 1~2는 성격 구분 없이 혼성으로만 진행되며 4의 배수 WAVE마다 중간보스가 나온다.',
-      '탱커 WAVE는 적이 적고 단단하며 한 덩어리로 온다. 돌격 WAVE는 수가 적은 대신 빠르게 한꺼번에 도달하고 WAVE가 짧다. 원거리 WAVE는 사거리에서 쏘는 적이 많고, 물량 WAVE는 네 번에 나눠 끊임없이 밀려온다.',
-      'WAVE마다 적 수가 크게 달라 보여도 전체 위협량은 같게 맞춰져 있다 — 탱커는 체력이 두 배라 수가 절반이고 근접은 체력이 낮아 수가 많다.',
-      '일반 WAVE는 성격에 따라 7~14초간 진행되며 스폰 시점도 다르다. 대부분이 처치돼 생존 개체가 10% 이하로 줄면 다음 WAVE로 조기 전환된다.',
-      '각 스테이지의 마지막 WAVE에는 최종보스가 등장한다. 중간보스는 큰 점수와 주문서 2장을 준다.',
-      '핵의 최대 HP는 편성한 영웅 4명의 체력 합계다. 회복 스킬은 핵의 HP를 회복하고 방어 스킬은 핵이 받는 피해를 줄인다. 자동 회복은 없다.',
+    { title: '⑤ 로비에서 키우기', body: [
+      `스테이지는 ${stageWaves} WAVE로 길어지고 이후는 ${campaignStage(3).waves} WAVE다. 입장에 행동력 ${stamina.entryCost}를 쓰며 ${Math.round(stamina.recoveryMs/60000)}분마다 1씩 최대 ${stamina.staminaMax}까지 찬다.`,
+      `수호자 4인과 스킬 ${CONFIG.skillPickCount}종을 미리 편성한다. 레벨은 골드로, 성급은 조각으로 올리며 둘 다 ${CharacterGrowthRules.maxStars}성·${maxLevel}레벨이 상한이다.`,
+      `소환은 ${gacha.currencyId==='starfire'?'별불':'골드'} ${gacha.cost}에 결과 ${gacha.resultsPerPull}개이며, 결과마다 수호자 ${gacha.characterWeight}% · 스킬 ${gacha.skillWeight}%로 나온다. 중복은 조각이 된다.`,
+      '통과한 WAVE만큼 골드를 받고 마일스톤이 추가 보상을 준다. 새 스테이지를 처음 클리어할 때만 별불이 나온다.',
     ]},
   ],
   tips: [
-    '보드가 가득 차면 생성기가 멈춘다 — 합칠 수 있는 피스는 미루지 말고 바로바로 합쳐서 자리를 비워두자.',
-    '주문서가 준비됐더라도 고티어 피스를 더 머지하면 높은 강화 레벨을 받을 수 있다. 지금 바로 완성할지 기다렸다가 강하게 완성할지 선택하자.',
-    '목표 지정 탄환은 목표가 먼저 죽으면 사라지므로 여러 탄환이 같은 적에게 몰리는 상황도 고려하자.',
-    '방어 스킬은 지속시간이 짧고(5초) 쿨타임은 길다 — 보스전 직전처럼 피해가 집중될 타이밍에 맞춰 쓰는 게 좋다.',
-    '전장 왼쪽 위의 WAVE 성격을 보고 스킬을 아껴두자. 돌격 WAVE는 적이 한꺼번에 도달하고 물량 WAVE는 계속 밀려오므로 광역기를 남겨두면 편하다.',
+    '보드 자리를 비워두는 게 최우선이다 — 자리가 없으면 에너지가 있어도 아무것도 못 한다.',
+    '주문서는 준비되자마자 쓰지 않아도 된다. 고티어 피스를 더 모아 쓰면 같은 주문서로 더 높은 레벨을 얻는다.',
+    '전장 왼쪽 위 WAVE 성격을 보고 광역기를 아껴두자. 돌격은 한꺼번에 도달하고 물량은 계속 밀려온다.',
+    '보스는 체력이 크고 한 기만 나온다 — 광역보다 단일 화력이 잘 통한다.',
   ],
-};
+  };
+}
 const ManualPanel = {
   build(){
     const panel = $('#manual-panel');
+    // [2026-09-17] 설명서 문구는 CONFIG에서 수치를 읽어 렌더 시점에 만든다. 밸런스 수치를 바꿔도
+    // 설명서가 따로 낡지 않으며, 확률이 0인 기능(크리티컬 머지·골든 피스)은 문장 자체가 빠진다.
+    const GAME_MANUAL = buildGameManual();
     panel.innerHTML = `
       <h2>❓ 게임 설명서</h2>
       <div class="note">${GAME_MANUAL.intro}</div>
@@ -4173,7 +4161,7 @@ class TutorialSystem {
   }
   data(){
     return {
-      energy:{index:'1 / 4',title:'에너지로 피스를 만드세요',body:'생성기를 누르면 에너지 1을 사용해 피스가 생성됩니다.\n적을 처치해 20점을 채우면 에너지 1을 받습니다.',targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
+      energy:{index:'1 / 4',title:'에너지로 피스를 만드세요',body:`생성기를 누르면 에너지 ${CONFIG.generator.costPerPiece}을 사용해 피스가 생성됩니다.\n적을 처치해 ${CONFIG.scoring.pointsPerGrant}점을 채우면 에너지 ${CONFIG.scoring.energyPerGrant}을 받습니다.`,targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
       order:{index:'2 / 4',title:'주문서에 필요한 피스를 모으세요',body:'주문서에 표시된 색의 피스를 보드에 준비하세요.\n같은 색과 같은 티어의 피스는 합칠 수 있습니다.',targets:['#order-sheet-panel','#board'],anchor:'#order-sheet-panel'},
       ready:{index:'3 / 4',title:'주문서를 완성하세요',body:'조건이 충족되었습니다.\n빛나는 주문서를 누르면 영웅이 소환됩니다.\n같은 미사일의 다음 주문서는 영웅을 강화합니다.',targets:['.order-card.ready'],anchor:'.order-card.ready'},
       skill:{index:'4 / 4',title:'스킬은 쿨타임마다 사용할 수 있습니다',body:'로비에서 장착한 스킬입니다. 에너지를 소모하지 않으며, 사용 후 개별 쿨타임이 흐릅니다.',targets:['#skill-row'],anchor:'#skill-row'},
@@ -4465,8 +4453,10 @@ class Game {
   }
   updateEnergyUi(){
     $('#energy-display').textContent = String(this.energy);
-    // 에너지가 없으면 생성기를 비활성화한다(점수가 100점 쌓이면 다시 켜진다).
+    // 에너지가 없으면 생성기를 비활성화한다(다음 지급 점수를 채우면 다시 켜진다).
     const btn = $('#generator-btn');
+    // [2026-09-17] 툴팁도 CONFIG에서 만든다 — 마크업에 수치를 박아 두면 밸런스 변경 때 낡는다.
+    if(btn)btn.title=`처치 점수가 ${CONFIG.scoring.pointsPerGrant}점 쌓일 때마다 에너지 ${CONFIG.scoring.energyPerGrant}을 지급합니다`;
     if(btn){btn.disabled=!!this.ending||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?'공간 부족':`생성 <small>−${CONFIG.generator.costPerPiece}</small>`;}
     this.renderSkillBar();
   }
