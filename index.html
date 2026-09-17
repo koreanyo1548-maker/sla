@@ -1220,29 +1220,119 @@ function allocateTypeCounts(base,total){
 function normalCompositionForStage(stage,curve=NORMAL_COUNT_CURVE){
   return allocateTypeCounts(baseCompositionForStage(stage),linearNormalTotal(stage,curve));
 }
+/* =====================================================================
+   [WAVE_ARCHETYPES] WAVE 성격 정의
+   ---------------------------------------------------------------------
+   [2026-09-17] 확정(인철): 30 WAVE를 같은 형태로 반복하지 않고 탱커전·돌격전·
+   원거리 압박·물량전·혼성이 순서대로 돌게 한다.
+
+   난이도 곡선은 건드리지 않는다. 각 WAVE의 "위협 예산"(Σ 마리수 × hpMul)을
+   불변량으로 두고, 아키타입은 같은 예산을 다른 형태로 지출할 뿐이다. 탱커는
+   hpMul이 2.0이라 수가 절반이 되고 근접은 0.8이라 수가 늘어난다.
+
+   mix        — 타입 구성비(null이면 기존 비율을 그대로 쓴다)
+   budgetMul  — 위협 예산 배율. 돌격전만 0.7로 덜 쓰는 대신 빠르게 한꺼번에 온다
+   speedMul   — 이동 속도 배율(도달 시간을 이 값으로 나눈다)
+   timing     — 스폰 시각·비율·WAVE 길이. null이면 CONFIG.waveTiming을 쓴다
+                (혼성을 null로 둬야 밸런스 에디터의 WAVE 타이밍 입력이 계속 살아 있다)
+
+   ASSUMPTION: mix·budgetMul·speedMul·timing 수치는 전부 Claude 가안이다. 30 WAVE
+   전체의 피격 상한이 혼성 대비 -18%~+32%에 들어오도록 WAVE 길이를 맞췄다 —
+   아키타입은 난이도가 아니라 형태만 바꾸는 것이 목적이다.
+   ===================================================================== */
+const WAVE_ARCHETYPES = {
+  fortress:{ label:'탱커전',      mix:{tank:1},          budgetMul:1.00, speedMul:1.0,
+    timing:{ spawnTimesSec:[0], spawnRatios:[1], durationSec:14 } },
+  rush:    { label:'돌격전',      mix:{melee:1},         budgetMul:0.70, speedMul:1.4,
+    timing:{ spawnTimesSec:[0], spawnRatios:[1], durationSec:7 } },
+  siege:   { label:'원거리 압박', mix:{melee:1,ranged:3}, budgetMul:1.00, speedMul:1.0,
+    timing:{ spawnTimesSec:[0,2], spawnRatios:[0.40,0.60], durationSec:11 } },
+  // 4배치로 끊임없이 밀려온다. 간격 1초·길이 11초는 마지막 배치(7초 도달)까지 전원이
+  // 공격 기회를 얻는 가장 긴 조합이다 — 간격을 더 벌리면 뒷배치가 도달 전에 WAVE가 끝난다.
+  horde:   { label:'물량전',      mix:{melee:1},         budgetMul:1.00, speedMul:1.0,
+    timing:{ spawnTimesSec:[0,1,2,3], spawnRatios:[0.25,0.25,0.25,0.25], durationSec:11 } },
+  standard:{ label:'혼성',        mix:null,              budgetMul:1.00, speedMul:1.0, timing:null },
+};
+// [2026-09-17 2차] 확정(인철): 탱커 → 돌격 → 원거리 → 물량 → 혼성 → 보스 6슬롯 루프.
+// 보스가 루프 안에 들어가므로 보스 주기가 4WAVE에서 6WAVE로 바뀐다. 30 WAVE는 6의 배수라
+// 마지막 슬롯이 정확히 WAVE 30에 떨어져 최종보스 자리가 맞는다.
+// 이 루프는 30 WAVE 구성(스테이지 3 이상)에만 적용하고, 스테이지 1~2는 원안을 그대로 둔다.
+const ARCHETYPE_LOOP = ['fortress','rush','siege','horde','standard','boss'];
+const ARCHETYPE_LOOP_MIN_STAGE = 3;
+function usesArchetypeLoop(stageId){ return Math.max(1,Math.floor(Number(stageId)||1)) >= ARCHETYPE_LOOP_MIN_STAGE; }
+const ENEMY_TYPE_KEYS = ['melee','ranged','tank'];
+
+function enemyTypeTable(){
+  return (typeof CONFIG!=='undefined' ? CONFIG : DEFAULT_CONFIG).enemy.types;
+}
+// WAVE의 위협 예산 — 아키타입이 형태를 바꿔도 이 값은 보존된다.
+function waveThreatBudget(comp, types=enemyTypeTable()){
+  return ENEMY_TYPE_KEYS.reduce((sum,key)=>sum+(comp[key]||0)*(Number(types[key]?.hpMul)||0),0);
+}
+// 예산을 아키타입의 구성비로 다시 나눠 실제 마리 수를 만든다.
+function archetypeComposition(baseComp, archetypeKey, types=enemyTypeTable()){
+  const archetype=WAVE_ARCHETYPES[archetypeKey];
+  if(!archetype?.mix) return Object.fromEntries(ENEMY_TYPE_KEYS.map(key=>[key,baseComp[key]||0]));
+  const keys=Object.keys(archetype.mix).filter(key=>ENEMY_TYPE_KEYS.includes(key));
+  const weightTotal=keys.reduce((sum,key)=>sum+archetype.mix[key],0);
+  const averageHp=keys.reduce((sum,key)=>sum+archetype.mix[key]/weightTotal*(Number(types[key]?.hpMul)||1),0);
+  if(!(weightTotal>0)||!(averageHp>0)) return Object.fromEntries(ENEMY_TYPE_KEYS.map(key=>[key,baseComp[key]||0]));
+  const total=Math.max(1,Math.round(waveThreatBudget(baseComp,types)*archetype.budgetMul/averageHp));
+  const out=Object.fromEntries(ENEMY_TYPE_KEYS.map(key=>[key,0]));
+  let left=total;
+  keys.forEach((key,index)=>{
+    const count=index===keys.length-1 ? left : Math.round(total*archetype.mix[key]/weightTotal);
+    out[key]=count; left-=count;
+  });
+  return out;
+}
+// 아키타입이 적용된 WAVE의 스폰 타이밍·길이. timing이 null인 혼성은 설정값을 그대로 읽는다.
+function waveTimingFor(waveCfg){
+  const timing=WAVE_ARCHETYPES[waveCfg?.archetype]?.timing;
+  return {
+    spawnTimesSec: timing?.spawnTimesSec ?? CONFIG.waveTiming.spawnTimesSec,
+    spawnRatios:   timing?.spawnRatios   ?? CONFIG.waveTiming.spawnRatios,
+    durationSec:   timing?.durationSec   ?? CONFIG.waveTiming.durationSec,
+  };
+}
+function waveSpeedMul(waveCfg){ return Number(WAVE_ARCHETYPES[waveCfg?.archetype]?.speedMul)||1; }
+
 // [2026-09-04] bossEnergy 제거 — 에너지는 처치 점수(ScoreSystem)로만 지급한다.
-function buildStageWaves(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE){
+// [2026-09-17] stageId는 아키타입 순환의 시작점만 바꾼다 — 같은 스테이지는 항상 같은 순서라
+// 공략이 가능하고, 스테이지가 바뀌면 순서가 한 칸씩 돌아 30 WAVE가 매번 같게 느껴지지 않는다.
+function buildStageWaves(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE, stageId=1){
+  // 난이도(difficulty)와 기본 구성은 기존 4WAVE 그룹 기준을 그대로 쓴다 — 루프는 보스 위치와
+  // 아키타입만 바꾸고 난이도 곡선은 건드리지 않는다.
+  const loop=usesArchetypeLoop(stageId);
   return Array.from({length:total},(_,index)=>{
     const stage=index+1;
     const group=Math.floor((stage-1)/4);
     const pos=(stage-1)%4;
     const isFinal=stage===total;
-    const isMidBoss=!isFinal && stage%4===0;
+    const slot=loop ? ARCHETYPE_LOOP[(stage-1)%ARCHETYPE_LOOP.length] : null;
+    const isMidBoss=!isFinal && (loop ? slot==='boss' : stage%4===0);
     const difficulty=1+group*2+pos+(isFinal?1:0);
     if(isFinal) return { wave:stage, difficulty, type:'finalboss' };
     if(isMidBoss) return { wave:stage, difficulty, type:'midboss' };
-    if(EARLY_STAGE_COMPOSITIONS[stage]){
-      return { wave:stage, difficulty, type:'normal', ...EARLY_STAGE_COMPOSITIONS[stage] };
+    // 스테이지 1~2(10·20 WAVE)는 아키타입 도입 전 원안 그대로다.
+    if(!loop){
+      const composition=EARLY_STAGE_COMPOSITIONS[stage] ?? normalCompositionForStage(stage,curve);
+      return { wave:stage, difficulty, type:'normal', archetype:'standard', ...composition };
     }
-    return { wave:stage, difficulty, type:'normal', ...normalCompositionForStage(stage,curve) };
+    // 루프 스테이지는 WAVE 1부터 아키타입이 시작하므로 1~3WAVE 고정 구성을 쓰지 않는다(확정).
+    const base=normalCompositionForStage(stage,curve);
+    return { wave:stage, difficulty, type:'normal', archetype:slot, ...archetypeComposition(base,slot) };
   });
 }
 // [2026-09-04] 보스 HP는 "그 스테이지가 일반이었다면의 총 HP"인데, 여기에 물량 배수까지 곱하면
 // 보스 HP도 3배가 되어 보스전이 22초를 넘긴다(계산 확인). 물량 증가는 일반 스테이지만의 변경이므로
 // 보스 구성은 배수를 적용하지 않은 원래 값을 쓴다.
-function buildBossCompositions(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE){
+// 보스 HP는 baseCompositionForStage(WAVE 번호)에서만 나오므로 아키타입과 무관하다(의도).
+// stageId를 반드시 같이 넘겨야 한다 — 루프 스테이지는 보스가 6WAVE마다라 4WAVE 기준으로 만들면
+// 실제 보스 WAVE의 구성이 없어 보스 HP가 0이 된다.
+function buildBossCompositions(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CURVE, stageId=1){
   const result={};
-  buildStageWaves(total,curve).filter(w=>w.type!=='normal').forEach(w=>{
+  buildStageWaves(total,curve,stageId).filter(w=>w.type!=='normal').forEach(w=>{
     const base=baseCompositionForStage(w.wave);
     result[w.wave]=w.type==='finalboss'
       ? {melee:base.melee+1,ranged:base.ranged+1,tank:base.tank+1}
@@ -1498,13 +1588,16 @@ const DEFAULT_CONFIG = {
   // 확정적(랜덤 없음)이라 여기에 소확률 랜덤을 얹어 가장 빈번한 행동에도 서프라이즈를 준다.
   // "어렵게 생각하지 말고 기능으로 떼서 옵션으로" (인철) — 독립 on/off + 확률 + 보너스 티어만.
   criticalMerge: {
-    chance: 0.05,     // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
+    // [2026-09-17] 확정(인철): 기본값을 0으로 내린다. featureFlags는 켜 둔 채 확률만 0이라
+    // 에디터에서 숫자만 올리면 그대로 되살아난다.
+    chance: 0,        // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
     bonusTiers: 1,    // 성공 시 원래 상승분(+1티어) 위에 몇 티어를 더 올릴지
   },
   // [2026-09-02 도파민 옵션] 확정(인철): 생성기 클릭도 이미 확률 행동이라 여기에 소확률로
   // 상위 티어가 바로 나오는 "골든 피스"를 얹는다. 수치는 Claude 기본값, 에디터에서 조정.
   goldenPiece: {
-    chance: 0.08,     // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
+    // [2026-09-17] 확정(인철): 기본값을 0으로 내린다(위 크리티컬 머지와 같은 이유).
+    chance: 0,        // ASSUMPTION: 구체 수치 미확정, Claude 기본값. 에디터에서 조정
     bonusTiers: 1,    // 성공 시 1티어(T1) 대신 몇 티어 위로 생성할지
   },
   // [2026-09-15] 확정(인철): 30점당 3장을 10점당 1장으로 쪼갠다. 점당 공급량(0.1장)은
@@ -1960,7 +2053,7 @@ const RunConfig = {
   playerStat(key){ return this.battle?.player?.[key] ?? CONFIG.player[key]; },
   enemyBaseStat(key){ return this.battle?.enemyBase?.[key] ?? CONFIG.enemy.base[key] ?? 0; },
   waves(){ return this.battle?.waves ?? buildStageWaves(DEFAULT_STAGE_COUNT,CONFIG.stage); },
-  bossComposition(wave){ return (this.battle?.bossCompositions ?? buildBossCompositions(this.waves().length))[wave]; },
+  bossComposition(wave){ return (this.battle?.bossCompositions ?? buildBossCompositions(this.waves().length,CONFIG.stage,this.battle?.stageId??1))[wave]; },
   clear(){ this.selectedSkills=[]; this.skillSnapshot=null; this.partySnapshot=null; this.battle=null; },
 };
 
@@ -2995,7 +3088,7 @@ class EnemySystem {
   hpMultiplier(difficulty){ return 1 + (difficulty-1) * CONFIG.enemy.hpStepPct; }
   atkMultiplier(difficulty){ return 1 + (difficulty-1) * CONFIG.enemy.atkStepPct; }
 
-  spawnEnemy(type, difficulty, waveIndex){
+  spawnEnemy(type, difficulty, waveIndex, speedMul=1){
     const g = this.game;
     const typeDef = CONFIG.enemy.types[type];
     const canvasW = g.canvas.width;
@@ -3010,7 +3103,8 @@ class EnemySystem {
       x: rand(CONFIG.field.spawnMargin,canvasW-CONFIG.field.spawnMargin), y: -20,
       waveIndex, stopped:false, attackCd: rand(0,0.5), dead:false,
       statuses:{},
-      travelTimeSec: typeDef.travelTimeSec || CONFIG.enemy.base.travelTimeSec,
+      // 아키타입 속도 배율은 도달 시간을 나눈다(돌격전 1.4 → 근접 7초가 5초로 당겨진다).
+      travelTimeSec: (typeDef.travelTimeSec || CONFIG.enemy.base.travelTimeSec)/Math.max(0.1,Number(speedMul)||1),
     };
     this.prepareApproach(e);
     this.enemies.push(e);
@@ -3219,8 +3313,8 @@ class WaveSystem {
   get currentWaveCfg(){ return RunConfig.waves()[this.waveIndex]; }
 
   // 세 스폰 비율을 모두 사용하고, 반올림 뒤에도 총 개체수가 정확히 보존되도록 배분한다.
-  allocateSpawnSizes(total){
-    const weights = CONFIG.waveTiming.spawnRatios.map(v=>Math.max(0, Number(v) || 0));
+  allocateSpawnSizes(total, ratios=CONFIG.waveTiming.spawnRatios){
+    const weights = ratios.map(v=>Math.max(0, Number(v) || 0));
     const sum = weights.reduce((a,b)=>a+b, 0);
     if(sum<=0) return weights.map((_,i)=>i===0 ? total : 0);
     const exact = weights.map(v=>total*v/sum);
@@ -3238,31 +3332,32 @@ class WaveSystem {
     const cfg = this.currentWaveCfg;
     this.game.currentWaveCfg = cfg;
     $('#wave-label').textContent = `WAVE ${cfg.wave} / ${RunConfig.waves().length}`;
+    // 아키타입 이름을 WAVE 시작 연출에 띄운다. HUD의 #wave-label은 폭이 좁아 건드리지 않는다.
+    const label = cfg.type==='normal' ? (WAVE_ARCHETYPES[cfg.archetype]?.label || '혼성') : '보스전';
     if(this.game.effects){
       this.game.effects.ring(this.game.playerPos.x,this.game.playerPos.y-55,PALETTE.accent,95,.6,3);
-      spawnFloatNumber(this.game.floatLayer,this.game.playerPos.x-30,this.game.playerPos.y-85,`WAVE ${cfg.wave}`,'enhance');
+      spawnFloatNumber(this.game.floatLayer,this.game.playerPos.x-40,this.game.playerPos.y-85,`WAVE ${cfg.wave} · ${label}`,'enhance');
     }
 
     if(cfg.type === 'normal'){
       const list = [];
-      for(let i=0;i<cfg.melee;i++) list.push('melee');
-      for(let i=0;i<cfg.ranged;i++) list.push('ranged');
-      for(let i=0;i<cfg.tank;i++) list.push('tank');
+      ENEMY_TYPE_KEYS.forEach(type=>{ for(let i=0;i<(cfg[type]||0);i++) list.push(type); });
       this.waveEnemyTotal = list.length;
+      const timing = waveTimingFor(cfg);
       const shuffled = shuffle(list);
-      const sizes = this.allocateSpawnSizes(this.waveEnemyTotal);
+      const sizes = this.allocateSpawnSizes(this.waveEnemyTotal, timing.spawnRatios);
       let cursor = 0;
       this.spawnScheduled = sizes.map((size,i)=>{
         const batch = shuffled.slice(cursor, cursor+sizes[i]);
         cursor += sizes[i];
-        return { time: CONFIG.waveTiming.spawnTimesSec[i] ?? 0, types: batch, done:false };
+        return { time: timing.spawnTimesSec[i] ?? 0, types: batch, done:false };
       });
-      logAction(`WAVE ${cfg.wave} 시작 (일반 ${this.waveEnemyTotal}기)`);
+      logAction(`WAVE ${cfg.wave} 시작 — ${label} (${this.waveEnemyTotal}기)`);
     } else {
       this.waveEnemyTotal = 1;
       this.spawnScheduled = [{ time:0, boss: cfg.type==='midboss'?'mid':'final', done:false }];
       this.game.showBossAlert(cfg.type==='finalboss'?'final':'mid');
-      logAction(`WAVE ${cfg.wave} 시작 (보스전)`);
+      logAction(`WAVE ${cfg.wave} 시작 — ${label}`);
     }
   }
 
@@ -3281,7 +3376,7 @@ class WaveSystem {
         if(s.boss){
           this.game.enemySystem.spawnBoss(cfg, s.boss);
         } else {
-          s.types.forEach(t=>this.game.enemySystem.spawnEnemy(t, cfg.difficulty, this.waveIndex));
+          s.types.forEach(t=>this.game.enemySystem.spawnEnemy(t, cfg.difficulty, this.waveIndex, waveSpeedMul(cfg)));
         }
       }
     });
@@ -3291,7 +3386,7 @@ class WaveSystem {
 
     let shouldAdvance = false;
     if(cfg.type === 'normal'){
-      if(this.waveTimer >= CONFIG.waveTiming.durationSec) shouldAdvance = true;
+      if(this.waveTimer >= waveTimingFor(cfg).durationSec) shouldAdvance = true;
       // ASSUMPTION: 조기 전환 판정은 해당 웨이브 스폰이 전부 끝난 뒤부터 체크 (스폰 도중 오판 방지)
       if(allBatchesSpawned && this.waveEnemyTotal>0){
         if(alive / this.waveEnemyTotal <= CONFIG.waveTiming.earlyTransitionAlivePct) shouldAdvance = true;
@@ -5669,8 +5764,8 @@ const Campaign = {
         atk:Math.round(CONFIG.enemy.base.atk*st.atkScale),
         def:stageEnemyDefense(st.id,CONFIG.enemy),
       },
-      waves:buildStageWaves(st.waves,CONFIG.stage),
-      bossCompositions:buildBossCompositions(st.waves),
+      waves:buildStageWaves(st.waves,CONFIG.stage,st.id),
+      bossCompositions:buildBossCompositions(st.waves,CONFIG.stage,st.id),
     };
   },
   // 전투가 캠페인에 요청할 수 있는 창구. Game은 이 객체만 알고 Campaign을 직접 부르지 않는다.
