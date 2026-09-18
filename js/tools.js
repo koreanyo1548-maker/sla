@@ -101,7 +101,13 @@ const ManualPanel = {
         <button id="close-manual-btn">닫기</button>
       </div>
     `;
-    $('#close-manual-btn').onclick = ()=>panel.classList.remove('open');
+    // 패널을 닫는 순간 모바일 브라우저 주소창이 다시 나타나며 실제 보이는 높이가
+    // 줄 수 있다. --app-100dvh는 resize 이벤트로만 갱신되므로(js/campaign.js) 여기서
+    // 강제로 한 번 더 쏴서 #app이 방금 전(주소창이 접혀 있던) 높이에 머무르지 않게 한다.
+    $('#close-manual-btn').onclick = ()=>{
+      panel.classList.remove('open');
+      window.dispatchEvent(new Event('resize'));
+    };
   },
 };
 

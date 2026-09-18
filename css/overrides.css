@@ -353,3 +353,12 @@ h2.reveal-kicker{margin-top:0}
 #combat-wrap>#skill-row .sk-cost.short{color:var(--danger)}
 .skill-btn .sk-cost{font-size:9px;color:var(--energy)}
 @media(max-width:365px){ #combat-wrap>#skill-row .sk-cost{font-size:10px} }
+
+/* --- #app 높이를 실측 뷰포트로 고정 (2026-09-18) ---
+   100dvh는 모바일 브라우저 주소창이 접혔다 펴질 때 항상 즉시 재계산되지는
+   않는다 — 특히 설명서 패널 같은 전체 화면 오버레이를 닫는 순간, #app이 방금
+   전(주소창이 접혀 더 컸던) 높이에 머물러 화면 맨 아래(#lobby-nav 등)가 잘려
+   보이는 사고로 이어졌다. js/campaign.js의 syncViewportHeight가 resize·
+   visualViewport resize마다 --app-100dvh를 실측 px로 채운다 — 값이 없을 때만
+   100dvh로 되돌아간다. */
+#app{height:var(--app-100dvh,100dvh)}

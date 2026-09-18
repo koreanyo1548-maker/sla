@@ -393,6 +393,20 @@ window.addEventListener('DOMContentLoaded', ()=>{
     if(window.visualViewport) window.visualViewport.addEventListener('resize', relayoutField);
   }
 
+  // [2026-09-18] #app 높이(--app-100dvh)를 실측 뷰포트 높이로 직접 맞춘다. 모바일
+  // 브라우저 주소창이 접혔다 펴지면 보이는 높이가 바뀌는데, 위 ResizeObserver는
+  // #combat-wrap 박스 크기 변화에만 반응하고 dvh 재계산 시점은 브라우저마다
+  // 어긋난다(특히 설명서 패널처럼 전체 화면 오버레이를 닫는 순간) — #lobby-nav 등
+  // 화면 맨 아래 요소가 주소창 밑에 가려 잘려 보이는 사고로 이어졌다. syncViewportHeight를
+  // resize·visualViewport resize마다 불러 --app-100dvh를 실측 px로 덮어쓴다.
+  const syncViewportHeight=()=>{
+    const h=window.visualViewport?.height ?? window.innerHeight;
+    document.documentElement.style.setProperty('--app-100dvh', h+'px');
+  };
+  syncViewportHeight();
+  window.addEventListener('resize', syncViewportHeight);
+  if(window.visualViewport) window.visualViewport.addEventListener('resize', syncViewportHeight);
+
   $('#generator-btn').addEventListener('pointerdown', ()=>RunHost.holdStart());
   ['pointerup','pointerleave','pointercancel','lostpointercapture'].forEach(evt=>{
     $('#generator-btn').addEventListener(evt, ()=>RunHost.holdStop());
