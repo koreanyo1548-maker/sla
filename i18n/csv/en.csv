@@ -90,7 +90,8 @@ skill.detail.stats,장착 능력치,Equip stats
 skill.detail.statAtk,공격,ATK
 skill.detail.statDef,방어,DEF
 skill.detail.statHp,체력,HP
-skill.detail.slotStat,슬롯 레벨 기준,At slot level
+skill.detail.nextStat,다음 레벨 +{value},Next level +{value}
+skill.detail.maxStat,현재 최대,At max
 skill.detail.sharedLevel,레벨은 {n}번 스킬 슬롯의 공용 레벨을 따릅니다 · 강화에서 올립니다,Level follows shared skill slot {n} · raise it in Upgrade
 skill.detail.unequippedLevel,장착하면 그 슬롯의 공용 레벨을 그대로 씁니다,Equip it to use that slot's shared level
 skill.detail.starfire,보유 별불,Starfire held
@@ -143,6 +144,7 @@ milestone.strip.count,{n}개,{n}
 milestone.strip.none,진행 중인 목표 없음,No goal in progress
 milestone.strip.progress,{current} / {need},{current} / {need}
 milestone.tier,{n}단계,Tier {n}
+milestone.group,{currency} 보상,{currency} rewards
 milestone.card.progress,{description} · {current} / {need},{description} · {current} / {need}
 milestone.card.reward,{currency} +{amount},{currency} +{amount}
 milestone.card.bulk," · {n}단계 한꺼번에"," · {n} tiers at once"
@@ -175,16 +177,18 @@ milestone.owned_skills.name,전술 수집,Tactics Collected
 milestone.owned_skills.desc,새 전투 스킬 해금,New combat skills unlocked
 upgrade.eyebrow,UPGRADE FORGE,UPGRADE FORGE
 upgrade.title,공용 강화,Shared Upgrade
-upgrade.count,누적 레벨 {total},{total} total levels
-upgrade.stage.caption,미사일과 스킬 슬롯은 레벨을 함께 씁니다,Missiles and skill slots share their levels
-upgrade.stage.strong,슬롯을 올리면 새 전력이 깨어납니다,Raise a slot to wake new power
-upgrade.track.skillSlot,{n}번 스킬 슬롯 · {name},Skill slot {n} · {name}
-upgrade.levelUp,레벨 올리기,Level up
+upgrade.count,수호자 {owned} / {total},Guardians {owned} / {total}
+upgrade.intro,"레벨은 수호자가 아니라 슬롯이 가집니다. 누구를 편성해도 그 슬롯의 레벨을 그대로 쓰고, 슬롯을 올리면 새 전력이 열립니다.","Levels belong to the slot, not the guardian. Whoever you deploy uses that slot's level, and raising a slot unlocks new power."
+upgrade.gain.atk,편성 공격력 {from} → {to},Deployed attack {from} → {to}
+upgrade.gain.skillStat,장착 {stat} +{from} → +{to},Equipped {stat} +{from} → +{to}
+upgrade.short,골드 {n} 부족,{n} gold short
+upgrade.track.skillSlot,슬롯 {n} · {name},Slot {n} · {name}
+upgrade.levelUp,올리기,Raise
 upgrade.cost,골드 {amount},{amount} gold
 upgrade.levelMax,레벨 상한,Max level
-upgrade.unlock.module,Lv.{level} 도달 시 {rarity} 수호자 해금,Unlocks a {rarity} guardian at Lv.{level}
+upgrade.unlock.module,Lv.{level} · {rarity} 수호자 해금,Lv.{level} · unlocks a {rarity} guardian
 upgrade.unlock.moduleDone,이 미사일의 수호자를 모두 모았습니다,Every guardian of this missile is collected
-upgrade.unlock.skill,두 슬롯 합계 {need}에서 스킬 1종 무작위 해금 · 현재 {current},One random skill at a combined {need} · currently {current}
+upgrade.unlock.skill,슬롯 합계 {need}에서 스킬 1종 무작위 · 현재 {current},Random skill at combined {need} · now {current}
 upgrade.unlock.skillDone,전투 스킬을 모두 모았습니다,Every combat skill is collected
 upgrade.details,해금 현황,Unlock progress
 upgrade.progress.title,보유 현황,Collection

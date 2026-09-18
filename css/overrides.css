@@ -1,7 +1,7 @@
 /* ===== v0916_2 · skills / milestones / summon ===== */
 .wallet{grid-template-columns:1.05fr .92fr .92fr}.wallet-starfire strong{color:var(--energy)!important}.wallet-starfire .ui-icon{color:var(--energy)}
 #lobby-nav{grid-template-columns:repeat(4,1fr)}
-#lobby-skills,#lobby-gacha{padding:20px 16px 18px;background:var(--surface);min-height:100%}
+#lobby-skills,#lobby-upgrade{padding:20px 16px 18px;background:var(--surface);min-height:100%}
 .home-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.home-shortcuts button{min-height:45px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);border-radius:5px;font-weight:800}.home-shortcuts b{display:block;color:var(--energy);font-size:10px;margin-top:2px}
 .skill-equipped-panel{padding:11px;border:1px solid var(--border);background:var(--surface-2);border-radius:5px;margin-bottom:14px}.skill-equipped-panel>strong{display:block;color:var(--text-primary);font-size:12px;margin-bottom:9px}.skill-equipped-grid,.prepare-skills{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .skill-slot,.skill-card{position:relative;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);border-radius:5px;text-align:left;padding:10px;min-width:0}.skill-slot{min-height:70px}.skill-slot b,.skill-card b{display:block;font-size:13px}.skill-slot small,.skill-card small{display:block;margin-top:5px;color:var(--text-secondary);font-size:10px;line-height:1.45}.skill-slot .skill-icon,.skill-card .skill-icon{float:left;width:34px;height:34px;display:grid;place-items:center;margin-right:8px;border:1px solid var(--skill-accent);color:var(--skill-accent);background:var(--surface);font-size:19px}
@@ -498,21 +498,58 @@ h2.reveal-kicker{margin-top:0}
 
 /* =========================================================================
    [2026-09-18] 공용 레벨업 6종 창 — 소환 창이 있던 자리
-   미사일 4 + 스킬 슬롯 2를 같은 카드로 낸다. 카드마다 레벨·게이지·다음 해금·비용이
-   한 덩어리로 보여야 해서, 수호자 카드(.character-roster)가 아니라 전용 블록을 쓴다.
+   미사일 4 + 스킬 슬롯 2를 같은 카드로 낸다. 카드 하나가 아이콘 · 정보 · 버튼
+   세 칸의 가로 배치라 여섯 개가 한 화면 가까이에 들어온다(세로 배치는 카드당
+   140px을 넘겨 스크롤만 길어졌다).
+   클래스가 .track-card인 것은 base.css의 예전 성장 화면에 .upgrade-card가 이미
+   있어서다 — 그쪽 button{width:100px}·small{color:dim}이 이 카드를 덮어썼다.
    ========================================================================= */
-.upgrade-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-.upgrade-card{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--border);
-  border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--bg));
+.upgrade-intro{margin:12px 0 0;font-size:11px;line-height:1.6;color:var(--dim)}
+.upgrade-list{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.track-card{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;
+  padding:11px 12px;border:1px solid var(--border);border-radius:14px;
+  background:linear-gradient(180deg,var(--surface),var(--bg));
   border-left:3px solid var(--track-color,var(--border))}
-.upgrade-head{display:flex;align-items:center;gap:10px}
-.upgrade-head>div{display:flex;flex-direction:column;gap:2px;min-width:0}
-.upgrade-head b{font-size:14px;color:var(--text-primary)}
-.upgrade-head small{font-size:11px;color:var(--dim)}
-.upgrade-head .pull-icon,.upgrade-head .module-mini{width:34px;height:34px;flex:none;font-size:19px;
-  display:flex;align-items:center;justify-content:center;border-radius:9px;background:var(--bg)}
-.upgrade-card .level-track{height:6px;border-radius:3px;overflow:hidden;background:var(--bg)}
-.upgrade-card .level-track span{display:block;height:100%;background:var(--track-color,var(--primary))}
-.upgrade-unlock{font-size:11px;color:var(--dim)}
-.upgrade-card button{min-height:44px;font-weight:800}
-.upgrade-card button small{display:block;margin-top:2px;font-size:11px;font-weight:600;opacity:.85}
+.uc-icon{width:38px;height:38px;display:flex;align-items:center;justify-content:center}
+/* 스프라이트는 background-image로 그려진다 — 여기에 background를 얹으면 아이콘이 사라진다. */
+.uc-icon .module-mini{width:38px;height:38px}
+.uc-skill-icon{width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+  border-radius:10px;background:var(--bg);color:var(--icon-color);font-size:18px}
+.uc-body{min-width:0;display:flex;flex-direction:column;gap:4px}
+.uc-title{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.uc-title b{font-size:14px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uc-level{flex:none;font-size:12px;font-weight:800;color:var(--text-primary)}
+.uc-level em{margin-left:3px;font-style:normal;font-weight:600;font-size:10px;color:var(--dim)}
+/* .level-track은 character-level-bar 안에서 flex:1로 늘어나는 전제다. 여기서는 세로 배치라
+   그 값이 높이로 작용하므로 되돌리고, 카드 배경과 구분되도록 색도 따로 준다. */
+.track-card .level-track{flex:none;width:100%;height:5px;border-radius:3px;background:var(--bg);
+  border:1px solid var(--border)}
+.track-card .level-track span{background:var(--track-color,var(--primary))}
+.uc-gain{font-size:11px;color:var(--text-secondary)}
+.uc-unlock{font-size:11px;line-height:1.5;color:var(--dim)}
+/* 세 번째 칸은 auto다 — 고정 폭을 주면 버튼이 제 칸보다 넓어져 카드 밖으로 삐져나간다.
+   칸이 버튼을 따라가게 두고, 대신 버튼 폭을 글자와 여백으로 묶는다. */
+.track-card>button{align-self:stretch;width:78px;min-height:56px;padding:8px 4px;border-radius:11px;
+  font-size:13px;font-weight:800;line-height:1.25}
+.track-card>button small{display:block;margin-top:3px;font-size:10px;font-weight:800;opacity:1}
+/* 골드가 모자란 카드는 버튼만 죽이지 않고 카드 전체를 한 단계 물린다 — 여섯 장을 훑을 때
+   지금 누를 수 있는 것이 무엇인지가 한눈에 갈린다. */
+.track-card.poor{opacity:.72}
+.track-card.poor>button small{color:var(--danger);opacity:1}
+@media(max-width:365px){
+  .track-card{grid-template-columns:32px minmax(0,1fr) auto;gap:9px;padding:10px}
+  .uc-icon,.uc-icon .module-mini{width:32px;height:32px}
+  .track-card>button{width:70px}
+  .uc-skill-icon{width:30px;height:30px;font-size:16px}
+}
+
+/* [2026-09-18] 마일스톤 12줄 — 재화별 머리글. 카드 사이에 끼어 목록을 두 덩이로 가른다. */
+.milestone-group{display:flex;align-items:center;gap:6px;margin:16px 2px 8px;
+  font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--dim)}
+.milestone-group:first-child{margin-top:4px}
+.milestone-group .ui-icon{width:14px;height:14px}
+/* [2026-09-18] 스킬 상세 — 성급 버튼만 남아 반 칸으로 서 있었다. 한 줄을 다 쓴다. */
+.skill-detail-actions{display:flex;gap:9px}
+.skill-detail-actions>button{flex:1}
+/* 효과 수치(b)와 쿨타임 설명(small)이 한 줄에 붙어 "400%쿨타임 24초"로 읽혔다. */
+.skill-detail-meta{display:block;margin-top:5px}
