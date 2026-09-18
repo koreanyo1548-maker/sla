@@ -1355,6 +1355,11 @@ class WaveSystem {
     const cfg = this.currentWaveCfg;
     this.game.currentWaveCfg = cfg;
     $('#wave-label').textContent = `WAVE ${cfg.wave} / ${RunConfig.waves().length}`;
+    // [2026-09-18 확정(인철)] WAVE 시작 보너스 — waveStartBonusFromWave번째 WAVE부터
+    // WAVE가 시작될 때마다 점수를 지급한다(WAVE 1은 제외).
+    if(cfg.wave >= CONFIG.scoring.waveStartBonusFromWave){
+      this.game.scoreSystem.add(CONFIG.scoring.waveStartBonus);
+    }
     // [2026-09-17] WAVE 시작 float 텍스트는 없애고 전장 좌상단 배지에 상시 표기한다.
     const label = waveTypeName(cfg,'label');
     this.renderWaveTypeBadge(cfg, idx>0);
