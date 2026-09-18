@@ -136,6 +136,7 @@ class TutorialSystem {
   setStep(step){
     if(!this.active) return;
     this.step=step;
+    Analytics.track('tutorial_step',{step,skipped:0});
     this.render();
   }
   clearFocus(){
@@ -194,6 +195,7 @@ class TutorialSystem {
     const layer=$('#tutorial-layer');
     if(layer) layer.hidden=true;
     this.game.host.completeTutorial();
+    Analytics.track('tutorial_step',{step:'done',skipped:skipped?1:0});
     if(!skipped) logAction('튜토리얼 완료!');
   }
 }

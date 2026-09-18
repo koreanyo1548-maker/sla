@@ -294,7 +294,9 @@ const GrowthRules={
     return Math.round(mul*1e9)/1e9;
   },
   // select(next)는 저장 사본에서 성장 대상 항목을 고른다(없으면 거래하지 않는다).
-  transact(campaign,select,action,{costs,shardCost}){
+  // kind·id는 분석 이벤트용이다. 캐릭터·스킬 × 레벨업·승급 네 조합이 모두 이 한 곳을 지나므로
+  // level_up·star_up을 여기서 한 번만 부른다.
+  transact(campaign,select,action,{costs,shardCost,kind,id}){
     if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active)return false;
     const next=cloneConfig(campaign.state),x=select(next);
     if(!this.allowed(x,action))return false;
@@ -305,7 +307,10 @@ const GrowthRules={
       const need=shardCost(x);if(!(need>0)||(Number(x.shards)||0)<need)return false;
       x.shards-=need;x.star++;
     }
-    if(!campaign.commit(next))return false;campaign.render();return true;
+    if(!campaign.commit(next))return false;
+    if(action==='levelUp') Analytics.track('level_up',{kind,id,level:x.level});
+    else Analytics.track('star_up',{kind,id,star:x.star});
+    campaign.render();return true;
   },
 };
 const SkillGrowthSystem={
@@ -330,7 +335,7 @@ const SkillGrowthSystem={
   shardCost(x){return Number(CONFIG.meta.skill.shardSteps[x.star-1])||0;},
   allowed(x,action){return GrowthRules.allowed(x,action);},
   transact(campaign,key,action){
-    return GrowthRules.transact(campaign,next=>SKILL_KEYS.includes(key)?next.skillInventory.skills[key]:null,action,{costs:x=>this.costs(x),shardCost:x=>this.shardCost(x)});
+    return GrowthRules.transact(campaign,next=>SKILL_KEYS.includes(key)?next.skillInventory.skills[key]:null,action,{kind:'skill',id:key,costs:x=>this.costs(x),shardCost:x=>this.shardCost(x)});
   },
   equip(campaign,key,slot){
     if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active||!campaign.state.skillInventory.skills[key]?.owned||!Number.isInteger(slot)||slot<0||slot>=CONFIG.skillPickCount)return false;
@@ -377,7 +382,7 @@ const CharacterGrowthSystem={
     const need=this.shardCost(id,x);return need>0&&(Number(x.shards)||0)>=need;
   },
   transact(campaign,id,action){
-    return GrowthRules.transact(campaign,next=>CharacterTable[id]?next.characterInventory.characters[id]:null,action,{costs:x=>this.costs(id,x,'levelUp'),shardCost:x=>this.shardCost(id,x)});
+    return GrowthRules.transact(campaign,next=>CharacterTable[id]?next.characterInventory.characters[id]:null,action,{kind:'character',id,costs:x=>this.costs(id,x,'levelUp'),shardCost:x=>this.shardCost(id,x)});
   },
   assign(campaign,id){
     if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active||!campaign.state.characterInventory.characters[id]?.owned)return false;
@@ -481,6 +486,7 @@ const GachaSystem={
     for(let i=0;i<count;i++){const r=this.rollOne(next);if(r.error)return r;results.push(r);}
     next.gachaCount=(Number(next.gachaCount)||0)+results.length;
     if(!campaign.commit(next)) return {error:'소환 결과를 저장하지 못했습니다.'};
+    Analytics.track('gacha',{count:next.gachaCount});
     return {results,price};
   },
 };

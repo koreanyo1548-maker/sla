@@ -60,13 +60,23 @@ const GameArt = {
     }
     return data;
   },
+  // [2026-09-18 세션 2] 픽셀 읽기가 막히면 원본 이미지를 그대로 돌려준다.
+  // file:// 로 열 때 파일에서 온 이미지는 캔버스를 오염시켜 getImageData가
+  // SecurityError를 던진다(cross-origin). 그때 게임이 멈추는 것보다 초록 배경이
+  // 보이는 게 낫다. 개발 진입점은 js/assets-dev.js가 이 3장을 인라인으로
+  // 덮어써서 이 경로로 떨어지지 않는다.
   prepareFighterAtlas(img){
     const canvas=document.createElement('canvas');
     canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
     const ctx=canvas.getContext('2d',{willReadFrequently:true});
     ctx.drawImage(img,0,0);
-    const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);
-    this.keyFighterPixels(pixels.data);ctx.putImageData(pixels,0,0);
+    try{
+      const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);
+      this.keyFighterPixels(pixels.data);ctx.putImageData(pixels,0,0);
+    }catch(e){
+      if(SLAGMA_DEV) console.warn('[art] 색키를 지울 수 없어 원본을 쓴다 — file:// 로 열면 캔버스가 오염된다:',e.name);
+      return img;
+    }
     canvas.complete=true;canvas.naturalWidth=canvas.width;canvas.naturalHeight=canvas.height;
     return canvas;
   },
@@ -103,12 +113,14 @@ const GameArt = {
   },
 };
 
-/* Short interface sounds only after a user gesture; preference is device-local. */
+/* Short interface sounds only after a user gesture; preference is device-local.
+   저장 키는 진행 데이터(slagma.campaign.v4)와 별도라 데이터 초기화에 영향받지 않는다. */
+const SOUND_PREF_KEY='slagma.sound';
 const GameAudio={
   enabled:false,context:null,
-  init(){try{this.enabled=localStorage.getItem('slagma.sound')==='on';}catch(_){}this.render();},
+  init(){try{this.enabled=SaveStorage.load(SOUND_PREF_KEY)==='on';}catch(_){}this.render();},
   render(){const b=document.getElementById('sound-toggle');if(b){b.setAttribute('aria-pressed',String(this.enabled));b.title=this.enabled?'효과음 끄기':'효과음 켜기';b.innerHTML=GameArt.icon('sound');b.classList.toggle('muted',!this.enabled);}},
-  toggle(){this.enabled=!this.enabled;try{localStorage.setItem('slagma.sound',this.enabled?'on':'off');}catch(_){}this.render();this.play('up');},
+  toggle(){this.enabled=!this.enabled;try{SaveStorage.save(SOUND_PREF_KEY,this.enabled?'on':'off');}catch(_){}this.render();this.play('up');},
   play(kind='tap'){
     if(!this.enabled)return;
     try{

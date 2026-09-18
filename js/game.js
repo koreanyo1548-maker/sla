@@ -202,6 +202,12 @@ class Game {
       : `스테이지 ${this.stageId} · WAVE ${this.currentWaveCfg?.wave||'?'}에서 종료`;
     if(!this.outcomeSettled) this.outcomeSettled=this.host.settle(this.runId,clear,this.milestoneMetrics());
     this.renderResultStats();
+    // 결과 화면 진입 = 게임플레이 구간 종료. 실제 전송·SDK 연결은 세션 7.
+    const durationSec=Math.max(0,Math.round(this.elapsedTime));
+    const wave=this.currentWaveCfg?.wave||0;
+    if(clear) Analytics.progression('complete',this.stageId,{wave,durationSec});
+    else Analytics.progression('fail',this.stageId,{wave,durationSec,reason:this.endReason==='quit'?'quit':'defeat'});
+    Platform.gameplayStop();
   }
   milestoneMetrics(){return {bosses:this.stats.bossesKilled,orders:this.stats.ordersCompleted,merges:this.stats.merges,skillsUsed:this.stats.skillsUsed};}
   addEnergy(n){ this.energy += n; this.updateEnergyUi(); }
@@ -399,6 +405,8 @@ class Game {
     this.beginEndSequence('clear');
   }
   onDefeat(immediate=false){
+    // immediate는 사용자가 누른 중도 종료 경로다(RunHost.defeat). 패배 연출을 건너뛴다.
+    this.endReason = immediate ? 'quit' : 'defeat';
     if(immediate) this.finishRun('defeat');
     else this.beginEndSequence('defeat');
   }
