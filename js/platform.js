@@ -14,17 +14,15 @@
    ByteBrew(Analytics)와 CrazyGames(Platform) 구현체로 갈아끼운다. 그때
    고치는 파일은 이 파일과 진입점(index.html)뿐이어야 한다.
 
-   구현체 선택은 진입점이 정한다 — 진입점이 스크립트 로딩 전에 세우는
-   window.SLAGMA_DEV로 기본값이 갈리고, 세션 7에서 실제 SDK를 꽂을 때는
-   진입점에서 installPlatform()을 부른다.
+   [2026-09-18] 개발 진입점(dev.html)을 없애면서 window.SLAGMA_DEV 분기도 걷어냈다.
+   기본 구현체는 무조건 무동작(Noop)이며, 다른 구현체는 진입점이 installPlatform()으로
+   꽂는다 — 세션 7에서 실제 SDK를 넣을 때도 같은 경로를 쓴다.
 
    [이름] 계획서는 저장 어댑터를 Storage로 적었지만 SaveStorage로 둔다.
    Storage는 브라우저 내장 인터페이스 이름이다(localStorage의 프로토타입).
    최상위 const Storage는 그 전역을 가려 버리므로 나중에 instanceof Storage
    같은 코드나 라이브러리가 들어오면 조용히 깨진다.
    ===================================================================== */
-
-const SLAGMA_DEV = globalThis.SLAGMA_DEV === true;
 
 /* --- 저장 -------------------------------------------------------------
    지금 구현체는 localStorage 그대로다. 예외를 삼키지 않고 그대로 올린다 —
@@ -45,6 +43,7 @@ const StorageLocal = {
    문자열만 쓴다. */
 const PROGRESSION_STATUSES = ['start','complete','fail'];
 
+// 콘솔 출력 구현체. 기본값이 아니며 installPlatform({analytics:AnalyticsConsole})로만 꽂힌다.
 const AnalyticsConsole = {
   track(name,params){ console.info('[analytics]',name,params||{}); },
   progression(status,stage,params){
@@ -70,7 +69,7 @@ const PlatformNoop = {
    let이라 installPlatform()이 다시 묶을 수 있다. 게임 코드는 호출 시점에
    현재 묶인 구현체를 본다. */
 let SaveStorage = StorageLocal;
-let Analytics   = SLAGMA_DEV ? AnalyticsConsole : AnalyticsNoop;
+let Analytics   = AnalyticsNoop;
 let Platform    = PlatformNoop;
 
 function installPlatform({storage,analytics,platform}={}){
