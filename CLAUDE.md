@@ -1,5 +1,7 @@
-# 작업 규칙
+# Work Rules
 
-1. 코드를 수정하면 그 코드를 설명하는 주석도 함께 수정한다. 수정 후 주석이 옛 수치·옛 동작을 가리키게 두지 않는다.
-2. 스모크 테스트(`node tools/smoke.mjs`)는 지시를 받았을 때만 수행한다. 간단한 변경 사항에는 진행하지 않는다.
-3. `balance-editor.html`은 업데이트하지 않는다. CONFIG 필드가 추가·변경·삭제돼도 이 파일은 손대지 않고 그대로 둔다 — 기능이 완전히 완성된 뒤 다시 만든다.
+1. When modifying code, also update any comments that describe that code. Do not leave comments referring to outdated values or behavior.
+2. Run the smoke test (`node tools/smoke.mjs`) only when explicitly instructed. Do not run it for simple changes.
+3. Do not update `balance-editor.html`. Even if CONFIG fields are added, changed, or removed, leave this file untouched until the feature is fully complete and the file is rebuilt.
+4. Do not perform any tests, validation, add debugging code, temporary hooks, logging, or refactoring unless explicitly requested by the user. Even if you believe they are necessary, do not perform them on your own.
+5. Modify only what is strictly necessary for the requested task. Do not improve, clean up, or change unrelated files, structures, or code. If additional work appears necessary, report it without making the change.
