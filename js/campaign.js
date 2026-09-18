@@ -200,7 +200,6 @@ const Campaign = {
     MilestoneUI.init(this);
     GachaLobbyUI.init(this);
     $('#prepare-btn').onclick=()=>this.prepare();
-    // 데이터 초기화 버튼은 개발 진입점에만 있다(js/dev.js). 출시 진입점에는 없다.
     const resetBtn=$('#reset-data-btn'); if(resetBtn) resetBtn.onclick=()=>this.resetData();
     $('#stamina-charge-btn').onclick=()=>this.chargeStamina();
     $('#back-lobby').onclick=()=>this.showLobby();
