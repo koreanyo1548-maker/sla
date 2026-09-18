@@ -24,7 +24,7 @@ lobby.nav.aria,로비 메뉴,Lobby menu
 lobby.nav.home,모험,Journey
 lobby.nav.characters,수호자,Guardians
 lobby.nav.skills,스킬,Skills
-lobby.nav.gacha,소환,Summon
+lobby.nav.upgrade,강화,Upgrade
 character.eyebrow,GUARDIANS,GUARDIANS
 character.title,수호자,Guardians
 character.count,{owned} / {total} 보유,{owned} / {total} owned
@@ -47,22 +47,19 @@ character.detail.specialty,{module} 특화,{module} specialist
 character.detail.statAtk,공격력,Attack
 character.detail.statDef,방어력,Defense
 character.detail.statHp,체력,HP
-character.detail.nextStat,다음 {value},Next {value}
 character.detail.rankUpStat,승급 시 {value},{value} at next star
 character.detail.baseStat,기본 능력치,Base stat
 character.detail.starPassive,성급 패시브 · {n}성 해금,Star passive · unlocks at {n}★
 character.detail.innatePassive,고정 패시브,Innate passive
-character.detail.shards,{name} 조각,{name} shards
-character.detail.recruitHint,영입에서 획득할 수 있습니다. {rarity} 등급 전체 확률 {pct}%,Available from summoning. {rarity} rarity chance {pct}%
-character.detail.levelUp,레벨 올리기,Level up
-character.detail.levelCost,{amount} 골드,{amount} gold
-character.detail.levelMax,레벨 상한,Max level
+character.detail.sharedLevel,레벨은 {module} 공용 레벨을 따릅니다 · 강화에서 올립니다,Level follows the shared {module} track · raise it in Upgrade
+character.detail.starfire,보유 별불,Starfire held
+character.detail.unlockHint,{module} 공용 레벨 {level}에서 해금됩니다.,Unlocks at shared {module} level {level}.
 character.detail.rankUp,성급 올리기,Star up
-character.detail.rankCost,조각 {n}개,{n} shards
+character.detail.rankCost,별불 {n},{n} starfire
 character.detail.rankMax,최대 성급,Max star
 character.detail.deployed,{module} 슬롯 출전 중,In {module} slot
 character.detail.deploy,출전 부대에 편성,Add to squad
-character.detail.goRecruit,영입하러 가기,Go to summon
+character.detail.goUpgrade,강화하러 가기,Go to Upgrade
 character.toast.grown,{name} 성장 완료,{name} grew stronger
 character.toast.deployed,{name} · {module} 편성 완료,{name} · {module} slot set
 passive.scopeAll,전체,All
@@ -82,7 +79,8 @@ skill.modal.closeAria,스킬 상세 닫기,Close skill details
 skill.equipped.title,장착 스킬 · 전투 능력치에 합산,Equipped skills · added to combat stats
 skill.slotName,{index}. {name},{index}. {name}
 skill.slotLine,Lv.{level} · {effect},Lv.{level} · {effect}
-skill.card.locked,소환에서 획득,From summoning
+skill.card.locked,스킬 슬롯 레벨로 해금,Unlocked by skill slot level
+skill.card.unequipped,미장착,Not equipped
 skill.detail.active,액티브 효과,Active effect
 skill.detail.cooldown,쿨타임 {sec}초 · {growth},Cooldown {sec}s · {growth}
 skill.detail.growthDuration,성급 상승 시 지속 +{sec}초,+{sec}s duration per star
@@ -92,15 +90,15 @@ skill.detail.stats,장착 능력치,Equip stats
 skill.detail.statAtk,공격,ATK
 skill.detail.statDef,방어,DEF
 skill.detail.statHp,체력,HP
-skill.detail.nextStat,다음 +{value},Next +{value}
-skill.detail.maxStat,현재 최대,At max
-skill.detail.shards,{name} 조각,{name} shards
-skill.detail.gachaHint,불씨 소환에서 획득할 수 있습니다.,Available from Ember Summon.
-skill.detail.levelUp,레벨 올리기,Level up
-skill.detail.levelCost,골드 {amount},{amount} gold
-skill.detail.levelMax,레벨 상한,Max level
+skill.detail.slotStat,슬롯 레벨 기준,At slot level
+skill.detail.sharedLevel,레벨은 {n}번 스킬 슬롯의 공용 레벨을 따릅니다 · 강화에서 올립니다,Level follows shared skill slot {n} · raise it in Upgrade
+skill.detail.unequippedLevel,장착하면 그 슬롯의 공용 레벨을 그대로 씁니다,Equip it to use that slot's shared level
+skill.detail.starfire,보유 별불,Starfire held
+skill.detail.unlockHint,두 스킬 슬롯 레벨 합계가 {need}가 되면 미보유 스킬 중 하나가 무작위로 열립니다. 현재 {current},"At a combined skill slot level of {need}, one unowned skill unlocks at random. Currently {current}"
+skill.detail.unlockDone,스킬을 모두 모았습니다.,Every combat skill is collected.
 skill.detail.rankUp,성급 올리기,Star up
-skill.detail.rankCost,조각 {n},{n} shards
+skill.detail.rankCost,별불 {n},{n} starfire
+skill.detail.rankMax,최대 성급,Max star
 skill.detail.slotEquipped,{n}번 장착 중,In slot {n}
 skill.detail.slotEquip,{n}번 슬롯 장착,Equip to slot {n}
 skill.effect.damage,공격력의 {pct}%,{pct}% of attack
@@ -147,7 +145,7 @@ milestone.strip.progress,{current} / {need},{current} / {need}
 milestone.tier,{n}단계,Tier {n}
 milestone.card.progress,{description} · {current} / {need},{description} · {current} / {need}
 milestone.card.reward,{currency} +{amount},{currency} +{amount}
-milestone.card.bulk, · {n}단계 한꺼번에, · {n} tiers at once
+milestone.card.bulk," · {n}단계 한꺼번에"," · {n} tiers at once"
 milestone.card.claim,받기,Claim
 milestone.card.inProgress,진행 중,In progress
 milestone.toast.claimed,{currency} +{amount} 획득,{currency} +{amount} received
@@ -163,49 +161,43 @@ milestone.orders.name,숙련된 제작자,Master Crafter
 milestone.orders.desc,주문서 완료,Orders completed
 milestone.merges.name,융합의 손길,Fusion Touch
 milestone.merges.desc,머지 성공,Merges made
-gacha.eyebrow,SUMMONING FORGE,SUMMONING FORGE
-gacha.title,불씨 소환,Ember Summon
-gacha.count,누적 {n}개 소환,{n} summoned in total
-gacha.stage.caption,상자에 수호자와 스킬이 함께 잠들어 있습니다,Guardians and skills sleep together in the chest
-gacha.stage.strong,새로운 전력을 깨우세요,Wake new power
-gacha.costLabel,소환 비용,Summon cost
-gacha.pull,불씨 소환,Ember Summon
-gacha.pulling,소환 완료,Summoned
-gacha.poor,별불이 부족합니다,Not enough starfire
-gacha.hint.poor,새로운 최고 스테이지를 클리어하고 마일스톤에서 별불을 받으세요. {n} 별불이 더 필요합니다.,Clear a new highest stage and claim starfire from milestones. {n} more starfire needed.
-gacha.hint.odds,수호자 {character}% · 스킬 {skill}%. 중복 결과는 각 조각으로 전환됩니다.,Guardian {character}% · Skill {skill}%. Duplicates turn into shards.
-gacha.details,소환 확률과 수집 현황,Summon odds and collection
-gacha.odds.title,카테고리·등급 확률,Category and rarity odds
-gacha.odds.character,수호자,Guardian
-gacha.odds.skill,스킬 · 희귀도 없음,Skill · no rarity
-gacha.odds.rarity,수호자 {rarity},Guardian {rarity}
-gacha.progress.title,보유 현황,Collection
-gacha.progress.skills,전투 스킬,Combat skills
-gacha.reveal.title,불씨 소환 · {n}개,Ember Summon · {n}
-gacha.reveal.cardAria,{n}번째 카드 공개,Reveal card {n}
-gacha.reveal.revealedAria,{name} · {label} · {state},{name} · {label} · {state}
-gacha.reveal.legendAria,빛 색상별 등급,Rarity by glow color
-gacha.reveal.legendSkill,스킬,Skill
-gacha.reveal.hint,카드를 눌러 한 장씩 공개하세요.,Tap a card to reveal it.
-gacha.reveal.skipAll,전체 공개,Reveal all
-gacha.reveal.next,다음 공개 ({n}),Reveal next ({n})
-gacha.reveal.summaryButton,결과 요약,Summary
-gacha.summary.title,소환 결과,Summon results
-gacha.summary.stats,신규 {fresh} · 조각 +{shards},New {fresh} · Shards +{shards}
-gacha.badge.dup,조각 +{n},Shards +{n}
-gacha.badge.new,NEW,NEW
-gacha.label.skill,전투 스킬,Combat skill
-gacha.label.character,{rarity} 수호자,{rarity} guardian
-gacha.state.dup,조각 +{n},shards +{n}
-gacha.state.new,신규,new
-gacha.recent.title,최근 소환 {n}개,Last {n} summons
-gacha.recent.body,신규 {fresh} · 조각 +{shards}{best},New {fresh} · Shards +{shards}{best}
-gacha.recent.best, · 최고 {rarity} {name}, · Best {rarity} {name}
-gacha.error.noCategory,소환 카테고리 확률이 모두 0입니다.,Every summon category chance is 0.
-gacha.error.noRarity,캐릭터 등급 확률이 모두 0입니다.,Every guardian rarity chance is 0.
-gacha.error.emptyPool,해당 등급의 캐릭터가 없습니다.,No guardian exists at that rarity.
-gacha.error.poor,별불이 부족합니다.,Not enough starfire.
-gacha.error.saveFailed,소환 결과를 저장하지 못했습니다.,Could not save the summon results.
+milestone.best_wave.name,최전선 갱신,New High Water Mark
+milestone.best_wave.desc,최고 WAVE 기록,Best wave reached
+milestone.module_levels.name,화력 정비,Ordnance Upkeep
+milestone.module_levels.desc,미사일 4종 레벨 합계,Combined missile track level
+milestone.skill_levels.name,전술 연마,Drill Practice
+milestone.skill_levels.desc,스킬 슬롯 레벨 합계,Combined skill slot level
+milestone.stars.name,별의 결정,Crystalized Stars
+milestone.stars.desc,보유 수호자 성급 합계,Combined stars of owned guardians
+milestone.guardians.name,불씨의 동료,Comrades of the Ember
+milestone.guardians.desc,수호자 해금,Guardians unlocked
+milestone.owned_skills.name,전술 수집,Tactics Collected
+milestone.owned_skills.desc,전투 스킬 해금,Combat skills unlocked
+upgrade.eyebrow,UPGRADE FORGE,UPGRADE FORGE
+upgrade.title,공용 강화,Shared Upgrade
+upgrade.count,누적 레벨 {total},{total} total levels
+upgrade.stage.caption,미사일과 스킬 슬롯은 레벨을 함께 씁니다,Missiles and skill slots share their levels
+upgrade.stage.strong,슬롯을 올리면 새 전력이 깨어납니다,Raise a slot to wake new power
+upgrade.track.skillSlot,{n}번 스킬 슬롯 · {name},Skill slot {n} · {name}
+upgrade.levelUp,레벨 올리기,Level up
+upgrade.cost,골드 {amount},{amount} gold
+upgrade.levelMax,레벨 상한,Max level
+upgrade.unlock.module,Lv.{level} 도달 시 {rarity} 수호자 해금,Unlocks a {rarity} guardian at Lv.{level}
+upgrade.unlock.moduleDone,이 미사일의 수호자를 모두 모았습니다,Every guardian of this missile is collected
+upgrade.unlock.skill,두 슬롯 합계 {need}에서 스킬 1종 무작위 해금 · 현재 {current},One random skill at a combined {need} · currently {current}
+upgrade.unlock.skillDone,전투 스킬을 모두 모았습니다,Every combat skill is collected
+upgrade.details,해금 현황,Unlock progress
+upgrade.progress.title,보유 현황,Collection
+upgrade.progress.skills,전투 스킬,Combat skills
+reveal.title,새로운 전력 해금,New Power Unlocked
+reveal.cardAria,카드 공개,Reveal card
+reveal.revealedAria,{name} · {label},{name} · {label}
+reveal.hint,카드를 눌러 공개하세요.,Tap the card to reveal it.
+reveal.open,공개하기,Reveal
+reveal.nextOne,다음 공개 ({n}),Next reveal ({n})
+reveal.badge.new,NEW,NEW
+reveal.label.skill,전투 스킬,Combat skill
+reveal.label.character,{module} · {rarity} 수호자,{module} · {rarity} guardian
 prepare.backAria,로비로 돌아가기,Back to lobby
 prepare.title,출전 준비,Prepare
 prepare.skills,장착 스킬,Equipped skills
@@ -228,7 +220,7 @@ battle.coreHp,용광로 핵 · {current} / {max},Forge core · {current} / {max}
 battle.energyAria,보유 에너지,Energy held
 battle.energyLabel,에너지,Energy
 battle.skillRowAria,전투 스킬,Combat skills
-battle.critPrefix,CRIT ,CRIT 
+battle.critPrefix,"CRIT ","CRIT "
 battle.pierce,관통 {damage},pierce {damage}
 battle.generator.initial,피스 생성,Make piece
 battle.generator.label,생성 <small>−{cost}</small>,Make <small>−{cost}</small>

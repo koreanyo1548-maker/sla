@@ -28,14 +28,13 @@
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow" data-i18n="character.eyebrow"></span><h2 data-i18n="character.title"></h2></div><span class="character-count" id="character-count"></span></div><div id="growth-list"></div></section>
       <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow" data-i18n="skill.eyebrow"></span><h2 data-i18n="skill.title"></h2></div><span class="character-count" id="skill-count"></span></div><div id="skill-lobby-content"></div></section>
-      <section id="lobby-gacha" class="lobby-page" hidden aria-labelledby="nav-gacha"><div class="character-page-head"><div><span class="eyebrow" data-i18n="gacha.eyebrow"></span><h2 data-i18n="gacha.title"></h2></div><span class="character-count" id="gacha-count"></span></div>
-        <div class="gacha-stage"><div class="summon-circle" aria-hidden="true"></div><div class="gacha-chest" data-sprite="11"></div><div class="gacha-stage-caption"><span data-i18n="gacha.stage.caption"></span><strong data-i18n="gacha.stage.strong"></strong></div></div>
-        <div class="gacha-hero"><div class="gacha-price"><span data-i18n="gacha.costLabel"></span><b><span data-ui-icon="starfire"></span><span id="gacha-cost">200</span></b></div><button id="gacha-pull-btn" class="primary" data-i18n="gacha.pull"></button><p class="meta-note" id="gacha-hint"></p></div>
-        <div id="gacha-result" class="gacha-result" hidden></div>
-        <details class="recruit-details"><summary><span data-i18n="gacha.details"></span> <span>⌄</span></summary><div class="character-modal-section"><strong data-i18n="gacha.odds.title"></strong><div id="gacha-odds" class="gacha-odds"></div></div><div class="character-modal-section"><strong data-i18n="gacha.progress.title"></strong><div id="gacha-progress" class="gacha-odds"></div></div></details>
+      <section id="lobby-upgrade" class="lobby-page" hidden aria-labelledby="nav-upgrade"><div class="character-page-head"><div><span class="eyebrow" data-i18n="upgrade.eyebrow"></span><h2 data-i18n="upgrade.title"></h2></div><span class="character-count" id="upgrade-count"></span></div>
+        <div class="gacha-stage"><div class="summon-circle" aria-hidden="true"></div><div class="gacha-chest" data-sprite="11"></div><div class="gacha-stage-caption"><span data-i18n="upgrade.stage.caption"></span><strong data-i18n="upgrade.stage.strong"></strong></div></div>
+        <div id="upgrade-list" class="upgrade-list"></div>
+        <details class="recruit-details"><summary><span data-i18n="upgrade.details"></span> <span>⌄</span></summary><div class="character-modal-section"><strong data-i18n="upgrade.progress.title"></strong><div id="upgrade-progress" class="gacha-odds"></div></div></details>
       </section>
     </div>
-    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-gacha" data-lobby-nav="gacha"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.gacha"></b><i id="gacha-nav-dot" hidden></i></button></nav>
+    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-upgrade" data-lobby-nav="upgrade"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.upgrade"></b><i id="upgrade-nav-dot" hidden></i></button></nav>
   </div>
 
   <div id="character-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-character-close></div><section class="character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-modal-title"><button class="character-modal-close" data-character-close data-i18n-aria="character.modal.closeAria">×</button><div id="character-modal-content"></div></section></div>
@@ -143,7 +142,7 @@
     </div>
   </div>
 
-  <div id="recruit-modal" class="reveal-overlay" hidden><section class="reveal-dialog" role="dialog" aria-modal="true" aria-labelledby="reveal-title"><div id="reveal-content"></div><div class="reveal-actions"><button id="reveal-skip" class="secondary" hidden data-i18n="gacha.reveal.skipAll"></button><button id="reveal-close" class="primary" data-i18n="common.continue"></button></div></section></div>
+  <div id="recruit-modal" class="reveal-overlay" hidden><section class="reveal-dialog" role="dialog" aria-modal="true" aria-labelledby="reveal-title"><div id="reveal-content"></div><div class="reveal-actions"><button id="reveal-close" class="primary" data-i18n="common.continue"></button></div></section></div>
   <!-- [2026-09-18 연출 세션 B] 승급으로 성급 패시브가 열리면 이 카드가 아래에서
        올라온다. 해금 시점(3성) 판단은 PassiveUnlockTable을 읽는 쪽이 한다. -->
   <div id="passive-reveal" hidden role="dialog" aria-modal="true" data-i18n-aria="growth.passiveUnlocked">
