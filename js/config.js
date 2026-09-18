@@ -621,6 +621,8 @@ const DEFAULT_CONFIG = {
   // levelCostMul — 레벨업 골드 배율. 뽑기 총액과 레벨업 총액이 비슷해지도록 맞췄다.
   //                (2026-09-16 소환이 별불로 바뀌어 이 근거는 더 이상 성립하지 않는다 — openItems 메타 경제)
   // gachaWeight  — 등급 가중치(합 100). 등급 안에서는 캐릭터를 균등 추첨한다.
+  // [2026-09-18] 확정(인철): 한 등급이 바로 위 등급의 정확히 2배가 되도록 잡는다.
+  //                노말:매직:레어:에픽:전설 = 16:8:4:2:1을 합 100으로 환산한 값이다.
   // duplicateShards — 이미 가진 캐릭터가 또 나왔을 때 주는 조각 수.
   // shardSteps      — 1→2·2→3·3→4·4→5·5→6성에 필요한 조각 수.
   // [2026-09-16 v0916_7] 캐릭터와 스킬이 같은 성장 형식을 쓴다 — starStepPct(성급 상승률)·shardSteps·duplicateShards.
@@ -665,11 +667,11 @@ const DEFAULT_CONFIG = {
       growthCurve:{ blend:0.35, expBase:1.030 },
     },
     rarity: {
-      normal:{ statMul:1.00, levelCostMul:1.00, gachaWeight:35, duplicateShards:1, shardSteps:[2,3,4,6,8] },
-      magic: { statMul:1.15, levelCostMul:1.05, gachaWeight:27, duplicateShards:1, shardSteps:[2,3,4,5,7] },
-      rare:  { statMul:1.32, levelCostMul:1.10, gachaWeight:21, duplicateShards:1, shardSteps:[1,2,3,5,6] },
-      epic:  { statMul:1.52, levelCostMul:1.15, gachaWeight:11, duplicateShards:1, shardSteps:[1,2,3,4,5] },
-      legend:{ statMul:1.75, levelCostMul:1.20, gachaWeight:6,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
+      normal:{ statMul:1.00, levelCostMul:1.00, gachaWeight:51.6129, duplicateShards:1, shardSteps:[2,3,4,6,8] },
+      magic: { statMul:1.15, levelCostMul:1.05, gachaWeight:25.8065, duplicateShards:1, shardSteps:[2,3,4,5,7] },
+      rare:  { statMul:1.32, levelCostMul:1.10, gachaWeight:12.9032, duplicateShards:1, shardSteps:[1,2,3,5,6] },
+      epic:  { statMul:1.52, levelCostMul:1.15, gachaWeight:6.4516,  duplicateShards:1, shardSteps:[1,2,3,4,5] },
+      legend:{ statMul:1.75, levelCostMul:1.20, gachaWeight:3.2258,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
     },
   },
 };
