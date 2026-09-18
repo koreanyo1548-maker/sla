@@ -341,13 +341,14 @@ I18N.register("ko", "한국어", {
   "tools.soundOn": "효과음 켜기",
   "tools.soundOff": "효과음 끄기",
   "tools.quitTitle": "전투 종료",
-  "tools.manualTitle": "게임 설명서",
-  "tools.resetTitle": "데이터 초기화",
-  "tools.languageTitle": "언어",
 
   /* ── options ── */
+  "options.title": "옵션",
   "options.language.title": "언어",
   "options.language.note": "전투 중에는 바꿀 수 없습니다.",
+  "options.manual": "게임 설명서",
+  "options.reset": "데이터 초기화",
+  "options.reset.note": "로비에서만 초기화할 수 있습니다.",
 
   /* ── notice ── */
   "notice.read.error": "진행 데이터를 읽지 못했습니다. 브라우저 저장 설정을 확인한 뒤 새로고침해 주세요.",

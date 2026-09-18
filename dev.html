@@ -120,18 +120,27 @@
   <button id="tools-toggle" data-i18n-title="tools.toggleTitle" data-i18n-aria="tools.openAria">⚙</button>
   <button id="sound-toggle" class="tool-button" data-i18n-aria="tools.soundAria" aria-pressed="false"></button>
   <button id="quit-run" class="tool-button" data-i18n-title="tools.quitTitle" hidden>⏻</button>
-  <button id="manual-toggle" class="tool-button" data-i18n-title="tools.manualTitle">❓</button>
-  <button id="reset-data-btn" class="tool-button" data-i18n-title="tools.resetTitle">↻</button>
-<button id="lang-toggle" class="tool-button" data-i18n-title="tools.languageTitle" data-i18n-aria="tools.languageTitle">🌐</button>
+  <button id="options-toggle" class="tool-button" data-i18n-title="options.title" data-i18n-aria="options.title">☰</button>
 
-  <!-- [2026-09-18 세션 3] 언어 선택. 목록은 등록된 언어 파일에서 만들어지므로
-       i18n/ 에 파일이 하나 늘면 버튼도 하나 는다 — 이 마크업은 손대지 않는다. -->
-  <div id="lang-panel" hidden role="dialog" aria-modal="true" data-i18n-aria="options.language.title">
-    <div class="lang-card">
-      <h2 data-i18n="options.language.title"></h2>
-      <div id="lang-list" class="lang-list"></div>
-      <p class="lang-note" data-i18n="options.language.note"></p>
-      <button id="lang-close" data-i18n="common.close"></button>
+  <!-- [2026-09-18] 옵션 팝업 — 언어 · 게임 설명서 · 데이터 초기화.
+       셋 다 원래 도구 메뉴(⚙)에 아이콘 버튼으로 흩어져 있었고, 아이콘만으로는
+       무엇을 하는 버튼인지 알 수 없었다. 한 곳에 이름과 함께 모은다.
+       언어 목록은 등록된 언어 파일에서 만들어지므로 i18n/ 에 파일이 하나 늘면
+       버튼도 하나 는다 — 이 마크업은 손대지 않는다. -->
+  <div id="options-panel" hidden role="dialog" aria-modal="true" data-i18n-aria="options.title">
+    <div class="options-card">
+      <h2 data-i18n="options.title"></h2>
+      <section class="options-section">
+        <h3 data-i18n="options.language.title"></h3>
+        <div id="lang-list" class="lang-list"></div>
+        <p class="options-note" id="options-language-note" data-i18n="options.language.note"></p>
+      </section>
+      <section class="options-section">
+        <button id="options-manual" class="options-item" data-i18n="options.manual"></button>
+        <button id="options-reset" class="options-item danger" data-i18n="options.reset"></button>
+        <p class="options-note" id="options-reset-note" data-i18n="options.reset.note"></p>
+      </section>
+      <button id="options-close" data-i18n="common.close"></button>
     </div>
   </div>
 

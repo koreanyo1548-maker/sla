@@ -400,22 +400,29 @@ h2.reveal-kicker{margin-top:0}
 }
 
 /* =========================================================================
-   [세션 3 2026-09-18] 언어 선택 — 도구 메뉴 네 번째 칸(⚙ → 🌐)과 목록 팝업.
-   목록은 등록된 언어 파일에서 만들어지므로 언어가 늘어도 이 스타일은 그대로다.
+   [세션 3 2026-09-18] 옵션 팝업 — 언어 · 게임 설명서 · 데이터 초기화.
+   도구 메뉴(⚙)에 아이콘으로 흩어져 있던 셋을 한 장에 이름과 함께 모았다.
+   언어 목록은 등록된 언어 파일에서 만들어지므로 언어가 늘어도 이 스타일은 그대로다.
    ========================================================================= */
-#lang-toggle{position:fixed;top:199px;bottom:auto;left:auto;font-size:16px}
-#lang-panel{position:fixed;inset:0;z-index:210;display:grid;place-items:center;padding:20px;
+#options-panel{position:fixed;inset:0;z-index:210;display:grid;place-items:center;padding:20px;
   background:color-mix(in srgb, var(--bg) 72%, transparent)}
-#lang-panel[hidden]{display:none!important}
-.lang-card{width:min(320px,100%);border:1px solid var(--primary);border-radius:14px;
+#options-panel[hidden]{display:none!important}
+.options-card{width:min(340px,100%);max-height:calc(100% - 24px);overflow-y:auto;
+  border:1px solid var(--primary);border-radius:14px;
   background:var(--surface);color:var(--text-primary);padding:18px;
   box-shadow:0 8px 24px color-mix(in srgb, var(--bg) 73%, transparent)}
-.lang-card h2{margin:0 0 14px;font-size:17px}
+.options-card h2{margin:0 0 16px;font-size:17px}
+.options-section{padding-top:14px;margin-top:14px;border-top:1px solid var(--border);display:grid;gap:8px}
+.options-section:first-of-type{padding-top:0;margin-top:0;border-top:0}
+.options-section h3{margin:0 0 2px;font-size:12px;color:var(--text-secondary);letter-spacing:.02em}
 .lang-list{display:grid;gap:8px}
-.lang-list button{width:100%;min-height:46px;padding:10px 14px;text-align:left;
+.lang-list button,.options-item{width:100%;min-height:46px;padding:10px 14px;text-align:left;
   border:1px solid var(--border);border-radius:9px;background:var(--surface-2);
-  color:var(--text-primary);font:600 14px system-ui}
+  color:var(--text-primary);font:600 14px system-ui;cursor:pointer}
 .lang-list button[aria-current="true"]{border-color:var(--primary);background:var(--border)}
-.lang-note{margin:12px 0 0;font-size:11px;color:var(--text-secondary)}
-#lang-close{width:100%;min-height:44px;margin-top:14px;border:1px solid var(--border);
-  border-radius:9px;background:var(--surface-2);color:var(--text-primary);font:600 13px system-ui}
+.lang-list button:disabled,.options-item:disabled{opacity:.45;cursor:default}
+.options-item.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 45%, var(--border))}
+.options-note{margin:0;font-size:11px;color:var(--text-secondary)}
+.options-note[hidden]{display:none!important}
+#options-close{width:100%;min-height:44px;margin-top:18px;border:1px solid var(--border);
+  border-radius:9px;background:var(--surface-2);color:var(--text-primary);font:600 13px system-ui;cursor:pointer}

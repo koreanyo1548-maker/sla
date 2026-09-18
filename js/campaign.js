@@ -32,7 +32,10 @@ const RunHost = {
 };
 
 /* =====================================================================
-   [도구 버튼 가시성] 전투 중에는 종료만, 그 밖에는 데이터 초기화만 낸다
+   [도구 버튼 가시성] 전투 종료 버튼은 전투 중에만 낸다
+   ---------------------------------------------------------------------
+   [2026-09-18] 데이터 초기화는 옵션 팝업(OptionsUI)으로 옮겨 도구 메뉴에서
+   빠졌다. 이 함수가 맡는 것은 #quit-run 하나뿐이다.
    ---------------------------------------------------------------------
    [2026-09-18 세션 4 항목을 세션 2에서 처리] 이 두 줄은 원래 ⚙(#tools-toggle)
    click 처리기 안에만 있었다. 그런데 ⚙는 css/base.css에서 display:none이고
@@ -57,8 +60,7 @@ const RunHost = {
    진행돼 클리어가 패배로 정산된다.
    ===================================================================== */
 function syncToolButtons(){
-  const quit=$('#quit-run');        if(quit)  quit.hidden  = !RunHost.running;
-  const reset=$('#reset-data-btn'); if(reset) reset.hidden = RunHost.running;
+  const quit=$('#quit-run'); if(quit) quit.hidden = !RunHost.running;
 }
 
 /* =====================================================================
@@ -204,7 +206,6 @@ const Campaign = {
     MilestoneUI.init(this);
     GachaLobbyUI.init(this);
     $('#prepare-btn').onclick=()=>this.prepare();
-    const resetBtn=$('#reset-data-btn'); if(resetBtn) resetBtn.onclick=()=>this.resetData();
     $('#stamina-charge-btn').onclick=()=>this.chargeStamina();
     $('#back-lobby').onclick=()=>this.showLobby();
     $('#quit-run').onclick=()=>{
@@ -358,28 +359,39 @@ const Campaign = {
 
 
 /* =====================================================================
-   [LanguageUI] 언어 선택 팝업 — 도구 메뉴의 🌐
+   [OptionsUI] 옵션 팝업 — 언어 · 게임 설명서 · 데이터 초기화
    ---------------------------------------------------------------------
-   [2026-09-18 세션 3] 목록은 I18N.languages()에서 만든다. i18n/ 에 언어 파일이
-   하나 늘면 버튼도 하나 늘고, 이 코드는 손대지 않는다. 각 언어는 자기 이름을
-   자기 언어로 표시한다(한국어 · English).
+   [2026-09-18] 셋 다 도구 메뉴(⚙)에 아이콘 버튼으로 흩어져 있었다. 아이콘만
+   보고는 무엇을 하는 버튼인지 알 수 없어 한 장에 이름과 함께 모았다. 도구
+   메뉴에 남는 것은 효과음과 전투 종료뿐이다.
 
-   전투 중에는 막는다 — 전투 화면은 매 프레임 갱신되는 요소가 많아 중간에
-   다시 그리면 연출 타이밍이 어긋난다. 로비·출전 준비·결과에서만 연다.
+   언어 목록은 I18N.languages()에서 만든다. i18n/ 에 언어 파일이 하나 늘면
+   버튼도 하나 늘고, 이 코드는 손대지 않는다. 각 언어는 자기 이름을 자기
+   언어로 표시한다(한국어 · English).
+
+   두 항목은 화면에 따라 잠긴다:
+     언어      전투 화면에서 막는다. 전투 화면은 Screens.rerender()가 다시
+               그리는 대상이 아니라 바꿔도 이전 언어가 남는다.
+     데이터 초기화  Campaign.resetData()가 로비에서만 도는 규칙을 그대로 따른다.
    ===================================================================== */
-const LanguageUI = {
+const OptionsUI = {
   lastFocus:null,
-  // 전투 화면 전체를 막는다. RunHost.running만 보면 승패 연출 구간(awaitResult가
-  // running=false로 만든 뒤 "터치해서 결과 보기"가 떠 있는 동안)이 열려 버리는데,
-  // 그 화면은 Screens.rerender()가 다시 그리는 대상이 아니라 이전 언어로 남는다.
-  available(){ return GameState.current!=='playing'; },
+  languageAvailable(){ return GameState.current!=='playing'; },
+  resetAvailable(){ return GameState.current==='lobby' && !RunHost.running; },
   init(){
-    const toggle=$('#lang-toggle'); if(!toggle) return;
+    const toggle=$('#options-toggle'); if(!toggle) return;
     toggle.onclick=()=>{ $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙'; this.open(); };
-    $('#lang-close').onclick=()=>this.close();
-    $('#lang-panel').onclick=event=>{ if(event.target===$('#lang-panel')) this.close(); };
+    $('#options-close').onclick=()=>this.close();
+    $('#options-manual').onclick=()=>{
+      this.close();
+      ManualPanel.build();
+      $('#manual-panel').classList.add('open');
+    };
+    // resetData()가 확인 창을 띄우고, 취소하거나 조건이 안 맞으면 false를 돌려준다.
+    $('#options-reset').onclick=()=>{ if(Campaign.resetData()) this.close(); };
+    $('#options-panel').onclick=event=>{ if(event.target===$('#options-panel')) this.close(); };
     document.addEventListener('keydown',event=>{
-      const panel=$('#lang-panel');
+      const panel=$('#options-panel');
       if(panel.hidden) return;
       if(event.key==='Escape'){ event.preventDefault(); this.close(); }
       // 다른 모달(캐릭터·주문서·소환)과 같이 Tab을 팝업 안에 가둔다.
@@ -400,25 +412,26 @@ const LanguageUI = {
   },
   render(){
     const list=$('#lang-list'); if(!list) return;
-    // 전투 중에는 버튼을 잠근다 — 눌러도 아무 일이 없는 것보다 낫다.
-    const blocked=!this.available();
+    const languageBlocked=!this.languageAvailable(), resetBlocked=!this.resetAvailable();
     list.innerHTML=I18N.languages().map(({code,label})=>
-      `<button data-lang="${code}" aria-current="${code===I18N.current}"${blocked?' disabled':''}>${label}</button>`).join('');
+      `<button data-lang="${code}" aria-current="${code===I18N.current}"${languageBlocked?' disabled':''}>${label}</button>`).join('');
     $$('[data-lang]',list).forEach(button=>button.onclick=()=>{
-      if(!this.available()) return;
+      if(!this.languageAvailable()) return;
       I18N.setLanguage(button.dataset.lang);
       this.close();
     });
-    $('#lang-panel .lang-note').hidden=!blocked;
+    $('#options-language-note').hidden=!languageBlocked;
+    $('#options-reset').disabled=resetBlocked;
+    $('#options-reset-note').hidden=!resetBlocked;
   },
   open(){
     this.lastFocus=document.activeElement;
     this.render();
-    $('#lang-panel').hidden=false;
-    $('#lang-close').focus();
+    $('#options-panel').hidden=false;
+    $('#options-close').focus();
   },
   close(){
-    $('#lang-panel').hidden=true;
+    $('#options-panel').hidden=true;
     if(this.lastFocus?.isConnected) this.lastFocus.focus();
     this.lastFocus=null;
   },
@@ -479,7 +492,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
     const open=app.classList.toggle('tools-open');
     $('#tools-toggle').textContent=open?'×':'⚙';
     $('#tools-toggle').setAttribute('aria-label',t(open?'tools.closeAria':'tools.openAria'));
-    // 전투 중에는 종료만, 로비에서는 데이터 초기화만 낸다 — 전투 중 초기화는 사고다.
     syncToolButtons();
   });
 
@@ -518,12 +530,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   window.addEventListener('blur',()=>RunHost.holdStop());
   $('#retry-btn').addEventListener('click', ()=>Campaign.showLobby());
 
-  LanguageUI.init();
-
-  $('#manual-toggle').addEventListener('click', ()=>{
-    $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙';
-    ManualPanel.build();
-    $('#manual-panel').classList.add('open');
-  });
+  OptionsUI.init();
 });
 

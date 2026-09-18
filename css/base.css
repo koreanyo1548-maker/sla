@@ -328,7 +328,7 @@
      겹쳐서 그 칸의 피스를 드래그/클릭할 수 없었다(치명적 버그). 보드가 닿지 않는
      상단 우측 코너로 옮겨 모든 화면(시작/게임/결과)에서 항상 접근 가능하면서
      보드를 가리지 않게 했다. */
-  #tools-toggle,#manual-toggle{position:fixed;right:10px;width:38px;height:38px;border-radius:50%;
+  #tools-toggle{position:fixed;right:10px;width:38px;height:38px;border-radius:50%;
     background:rgba(25,29,36,.9);border:1px solid var(--border);color:var(--text);font-size:15px;
     cursor:pointer;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.4);}
   /* [2026-09-18] 폭에 관계없이 낸다. 원래 display:none이고 아래 @media (max-width:600px)에서만
@@ -341,7 +341,6 @@
      실측해 문제 없음으로 확정했다 — 1280 폭에서 x=829(열 400~880), 1920 폭에서 x=1149
      (열 720~1200). 가로 레이아웃이 취소돼 더 손댈 것이 없다. */
   #tools-toggle{display:block;top:44px;}
-  #manual-toggle{top:8px;}
   /* [2026-09-02] 게임 설명서 — 기획서(기획서.md, 개발/기획 결정 로그)와는 별개로, 플레이어가
      "어떻게 하면 되는지"만 보는 순수 플레이 가이드. 인철 요청: "기획서 말고 별도로
      내부 메뉴로 설명서를 만들어봐. 게임 설명서" (2026-09-02). 밸런스 에디터(⚙)는
@@ -363,13 +362,11 @@
   .editor-buttons{display:flex;gap:10px;margin:14px 0 30px;flex-wrap:wrap;}
   .editor-buttons button{padding:10px 16px;border-radius:8px;border:none;font-weight:600;
     font-size:13px;cursor:pointer;}
-  #reset-data-btn{margin-top:8px;background:var(--surface);color:var(--text-primary);border:1px solid var(--border);}
 
   /* 브라우저 주소창을 제외한 실제 가용 높이에 맞춰 전투 영역만 유동 축소한다. */
   @media (max-width:600px){
     .tool-button{opacity:0;pointer-events:none;transform:translateY(-8px) scale(.9);transition:.16s ease;}
     #app.tools-open .tool-button{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
-    #app.tools-open #manual-toggle{top:88px;}
     #hud{padding:6px 8px;gap:7px;}
     #hud .wave-label{font-size:11px;}
     #hud .run-metrics{font-size:8.5px;gap:6px;}
@@ -512,7 +509,6 @@
 .lobby-party-member span,.lobby-party-member b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lobby-party-member span{font-size:14px}.lobby-party-member b{margin-top:3px;font-size:9.5px;color:var(--text-primary)}
 #prepare-btn{min-height:58px;font-size:16px;box-shadow:0 8px 22px color-mix(in srgb, var(--danger) 13%, transparent)}
-#reset-data-btn{margin-top:10px}
 #lobby-nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 12px max(8px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--border);z-index:20}
 #lobby-nav button{min-height:52px;border:0;border-radius:11px;background:transparent;color:var(--text-secondary);font-size:11px;font-weight:800;cursor:pointer}
 #lobby-nav button span{display:block;margin-bottom:3px;font-size:18px;line-height:1}
