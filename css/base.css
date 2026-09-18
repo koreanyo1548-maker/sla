@@ -46,9 +46,9 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
-    font-family:"Gothic A1","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;}
+    font-family:"Noto Sans KR",system-ui,sans-serif;}
   .num, .hud .wave-label, #pick-count, .tier, .hp-label, #energy-display, #result-title{
-    font-family:"Orbitron","Gothic A1",sans-serif;
+    font-family:"Orbitron","Noto Sans KR",sans-serif;
     font-variant-numeric:tabular-nums;
   }
   button, input{ font-family:inherit; }
@@ -86,7 +86,7 @@
     justify-content:center;background:color-mix(in srgb,var(--skill-accent,var(--arcane)) 22%,var(--bg));font-size:15px;}
   .skill-pick-meta{display:flex;gap:5px;margin-top:8px;}
   .skill-pick-meta span{border:1px solid var(--border);background:var(--bg);border-radius:9px;padding:2px 7px;
-    font:700 10px "Orbitron","Gothic A1",sans-serif;color:var(--text);}
+    font:700 10px "Orbitron","Noto Sans KR",sans-serif;color:var(--text);}
   .skill-pick-card .pick-check{position:absolute;right:10px;top:10px;color:var(--skill-accent,var(--arcane));
     opacity:0;transform:scale(.6);transition:.15s;font-weight:800;}
   .skill-pick-card.selected .pick-check{opacity:1;transform:scale(1);}
@@ -107,7 +107,7 @@
   #hud .run-metrics{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px;
     color:var(--dim);font-size:9px;font-weight:700;line-height:1;white-space:nowrap;}
   #hud .run-metric{display:inline-flex;align-items:center;gap:4px;min-width:0;}
-  #hud .run-metric strong{font:800 10px "Orbitron","Gothic A1",sans-serif;color:var(--text);
+  #hud .run-metric strong{font:800 10px "Orbitron","Noto Sans KR",sans-serif;color:var(--text);
     font-variant-numeric:tabular-nums;letter-spacing:.02em;}
   #hud #run-score{color:var(--energy);}
   #hud .hp-wrap{flex:none;width:100%;height:16px;background:var(--bg);border-radius:8px;overflow:hidden;position:relative;}
@@ -144,7 +144,7 @@
     filter:drop-shadow(0 4px 14px var(--bg));opacity:0;}
   #cinematic-layer.active #cinematic-card{animation:cinematicCard var(--cinematic-duration,.9s) cubic-bezier(.2,.8,.2,1) both;}
   #cinematic-kicker{display:block;color:var(--danger);font:800 10px "Orbitron",sans-serif;letter-spacing:.34em;}
-  #cinematic-title{display:block;margin:7px 0 5px;color:var(--text-primary);font:900 clamp(28px,8vw,46px) "Orbitron","Gothic A1",sans-serif;
+  #cinematic-title{display:block;margin:7px 0 5px;color:var(--text-primary);font:900 clamp(28px,8vw,46px) "Orbitron","Noto Sans KR",sans-serif;
     letter-spacing:.08em;text-shadow:0 0 18px rgba(255,73,73,.75);}
   #cinematic-sub{display:block;color:var(--text-primary);font-size:12px;font-weight:700;letter-spacing:.04em;}
   #cinematic-layer.final-boss::after{background:linear-gradient(90deg,transparent,rgba(105,53,0,.9) 20%,rgba(34,18,3,.97) 50%,rgba(105,53,0,.9) 80%,transparent);border-color:rgba(255,207,77,.85);}
@@ -218,12 +218,12 @@
     background:linear-gradient(90deg,var(--bg),var(--surface),var(--bg));color:var(--energy);}
   .energy-status-label{font-size:12px;font-weight:700;}
   #energy-display{display:inline-flex;align-items:center;justify-content:center;
-    font:800 18px "Orbitron","Gothic A1",sans-serif;color:var(--energy);white-space:nowrap;
+    font:800 18px "Orbitron","Noto Sans KR",sans-serif;color:var(--energy);white-space:nowrap;
     min-width:32px;text-align:center;font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(255,207,77,.35);}
   #energy-display.fx-gain{animation:energyCountGain .65s ease-out;}
   #energy-status-row.fx-gain{animation:energyRowGain .65s ease-out;}
   .energy-gain-pop{position:absolute;right:4px;top:-23px;z-index:8;color:var(--energy);
-    font:800 16px "Orbitron","Gothic A1",sans-serif;text-shadow:0 0 10px rgba(255,207,77,.8),0 2px 3px var(--bg);
+    font:800 16px "Orbitron","Noto Sans KR",sans-serif;text-shadow:0 0 10px rgba(255,207,77,.8),0 2px 3px var(--bg);
     pointer-events:none;animation:energyPop .85s ease-out forwards;}
 
   /* [2026-09-05] 주문서 관련 상태를 카드 바로 위의 얇은 한 줄에 모은다. */
@@ -276,7 +276,7 @@
     color:var(--primary-text);font-weight:700;font-size:15px;cursor:pointer;}
   #result-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:min(310px,100%);}
   .result-stat{padding:9px 8px;border:1px solid var(--border);border-radius:9px;background:rgba(25,29,36,.9);}
-  .result-stat strong{display:block;font:800 17px "Orbitron","Gothic A1",sans-serif;color:var(--energy);}
+  .result-stat strong{display:block;font:800 17px "Orbitron","Noto Sans KR",sans-serif;color:var(--energy);}
   .result-stat span{display:block;margin-top:2px;color:var(--dim);font-size:10px;}
 
   /* ---------- Floating damage numbers ---------- */
@@ -288,10 +288,10 @@
   .float-num.enhance{color:var(--energy);font-size:15px;}
   .damage-stack{position:absolute;z-index:7;display:flex;flex-direction:column;align-items:center;gap:1px;
     pointer-events:none;animation:damageStackUp .72s ease-out forwards;}
-  .damage-value{font:800 12px "Orbitron","Gothic A1",sans-serif;line-height:1;
+  .damage-value{font:800 12px "Orbitron","Noto Sans KR",sans-serif;line-height:1;
     text-shadow:0 1px 3px var(--bg),0 0 5px currentColor;white-space:nowrap;}
   .damage-value.critical{font-size:14px;color:var(--primary)!important;transform:scale(1.06);}
-  .damage-value em{font:800 9px "Gothic A1",sans-serif;color:var(--energy);font-style:normal;margin-left:3px;}
+  .damage-value em{font:800 9px "Noto Sans KR",sans-serif;color:var(--energy);font-style:normal;margin-left:3px;}
   @keyframes floatUp{from{transform:translateY(0);opacity:1;}to{transform:translateY(-30px);opacity:0;}}
   @keyframes damageStackUp{from{transform:translate(-50%,-50%);opacity:1;}to{transform:translate(-50%,-50%) translateY(-30px);opacity:0;}}
   @keyframes combatShake{0%,100%{transform:translate(0)}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-2px,-1px)}}
@@ -516,7 +516,7 @@
 #lobby-nav button span{display:block;margin-bottom:3px;font-size:18px;line-height:1}
 #lobby-nav button[aria-current="page"]{color:var(--text-primary);background:var(--surface);box-shadow:inset 0 2px var(--accent)}
 .character-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:2px 0 12px}
-.character-page-head h2{margin:0;font:800 20px "Orbitron","Gothic A1",sans-serif;color:var(--text-primary)}
+.character-page-head h2{margin:0;font:800 20px "Orbitron","Noto Sans KR",sans-serif;color:var(--text-primary)}
 .character-page-head p{margin:4px 0 0;color:var(--dim);font-size:10px}.character-count{font:700 10px "Orbitron",sans-serif;color:var(--energy)}
   /* ---------- 영입(뽑기)·희귀도 ---------- */
   .gacha-hero{padding:16px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--bg));text-align:center}

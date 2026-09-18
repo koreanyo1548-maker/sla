@@ -553,3 +553,39 @@ h2.reveal-kicker{margin-top:0}
 .skill-detail-actions>button{flex:1}
 /* 효과 수치(b)와 쿨타임 설명(small)이 한 줄에 붙어 "400%쿨타임 24초"로 읽혔다. */
 .skill-detail-meta{display:block;margin-top:5px}
+
+/* =====================================================================
+   [2026-09-18 세션 6] 영문 넘침 정리
+   ---------------------------------------------------------------------
+   영문은 같은 뜻을 한글보다 넓게 쓴다 — 짧은 라벨에서 시각 폭이 2배를
+   넘는다(분쇄창 → Crushing Lance 2.75배, 모험 → Journey 2.06배).
+   글자 크기를 줄이면 한국어까지 같이 작아지므로, 먼저 줄바꿈과 말줄임으로
+   받아낸다. 폰트를 Noto Sans KR로 고정했으므로(css/fonts.css) 여기서 잡은
+   폭은 기기가 바뀌어도 유지된다.
+   ===================================================================== */
+
+/* 1. 인플레이 스킬 버튼 — 가로 한 줄에 버튼 4~5개가 이름과 함께 선다.
+      nowrap 이름이 줄을 밀어내 화면 밖으로 나가던 것을 버튼이 줄어들며
+      이름만 말줄임되게 바꾼다(min-width:0 이 없으면 flex가 줄지 않는다). */
+#combat-wrap>#skill-row{max-width:100%;min-width:0}
+#combat-wrap>#skill-row .skill-btn{min-width:0}
+#combat-wrap>#skill-row .sk-name{min-width:0;overflow:hidden;text-overflow:ellipsis}
+
+/* 2. 주문서 카드 제목 — height:17px·nowrap 한 줄이다("화염: 공격속도" →
+      "Flame: Attack speed"). 글자 중간이 잘리지 않게 말줄임으로 받는다. */
+.order-card .oc-title{overflow:hidden;text-overflow:ellipsis}
+
+/* 3. 웨이브 종류 배지 — 전장 위에 떠 있어 넘치면 전장을 가린다.
+      폭을 묶고 두 줄까지 허용한다(이름 자체가 정보라 말줄임은 쓰지 않는다). */
+#combat-wrap>#wave-type-badge{max-width:44vw}
+#combat-wrap>#wave-type-badge #wave-type-name{white-space:normal;text-align:center;
+  line-height:1.15;overflow-wrap:break-word}
+
+/* 4. 보유 주문서 줄 — 제목이 flex:none 이라 줄지 않아 게이지를 밀어냈다. */
+.order-status-title{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+
+/* 5. 로비 내비 4칸 — 칸이 좁아 긴 단어 하나가 칸을 넘길 수 있다.
+      한국어는 어절 단위를 지키고(keep-all), 칸보다 긴 단어만 끊는다. */
+#lobby-nav button{min-width:0;word-break:keep-all}
+#lobby-nav button b{display:block;min-width:0;line-height:1.15;overflow-wrap:anywhere}
