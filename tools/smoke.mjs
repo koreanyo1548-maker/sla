@@ -137,17 +137,16 @@ async function playthrough(browser, entry, viewport) {
 
     await step('중도 종료 → 결과', async () => {
       if (!await page.evaluate(() => document.getElementById('screen-result')?.classList.contains('active'))) {
-        // 도구 메뉴(⚙)는 CSS에서 max-width:600px 안에서만 display:block이다. 넓은 화면에서는
-        // 메뉴가 없어 #quit-run의 hidden이 풀리지 않는다 — 데스크톱에서 런을 끝낼 수 없다.
-        // 세션 4의 알려진 구멍이다(개발계획서 세션 4). 그 전까지는 버튼이 부르는 함수를
-        // 직접 불러 결과·정산·로비 복귀까지는 계속 검사한다. 세션 4에서 버튼이 닿으면
-        // 이 분기는 저절로 UI 경로를 탄다.
+        // 정상 경로는 ⚙ 메뉴다. 아래 else는 안전망으로 남긴다 — 넓은 화면에서 ⚙가
+        // display:none이라 메뉴가 통째로 막혀 있던 버그를 이 검사가 잡았고
+        // (기획서 v0918_3), 고친 뒤로는 네 조합 모두 UI 경로를 탄다. 다시 막히면
+        // note가 찍히므로 조용히 지나가지 않는다.
         if (await page.locator('#tools-toggle').isVisible().catch(() => false)) {
           await page.locator('#tools-toggle').click();
           await page.waitForTimeout(250);
           await page.locator('#quit-run').click();
         } else {
-          notes.push('⚙ 도구 메뉴가 이 폭에서 보이지 않아 RunHost.defeat()로 종료했다 (세션 4 항목)');
+          notes.push('⚙ 도구 메뉴가 이 폭에서 보이지 않아 RunHost.defeat()로 종료했다 — 회귀 의심');
           await page.evaluate(() => RunHost.defeat());
         }
       }

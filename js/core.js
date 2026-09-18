@@ -133,6 +133,9 @@ const GameState = {
     $$('.screen').forEach(s=>s.classList.remove('active'));
     const screen=this.SCREENS[state];
     if(screen) $(screen).classList.add('active');
+    // 도구 버튼(종료·초기화)의 hidden을 화면에 맞춘다. campaign.js에 있고
+    // 호출 시점은 항상 로딩 이후다. 이유는 그쪽 주석에 적었다.
+    syncToolButtons();
   }
 };
 

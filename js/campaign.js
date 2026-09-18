@@ -32,6 +32,36 @@ const RunHost = {
 };
 
 /* =====================================================================
+   [도구 버튼 가시성] 전투 중에는 종료만, 그 밖에는 데이터 초기화만 낸다
+   ---------------------------------------------------------------------
+   [2026-09-18 세션 4 항목을 세션 2에서 처리] 이 두 줄은 원래 ⚙(#tools-toggle)
+   click 처리기 안에만 있었다. 그런데 ⚙는 css/base.css에서 display:none이고
+   @media (max-width:600px) 안에서만 display:block이었다 — 폭이 600px을 넘으면
+   처리기가 아예 돌지 않아 #quit-run의 hidden이 풀리지 않았고, 데스크톱에서는
+   런을 끝낼 방법이 없었다(세션 2 스모크가 잡았다). ⚙ 쪽은 css/base.css에서
+   모든 폭에 내도록 고쳤고, 이 함수는 갱신 시점 문제를 맡는다.
+
+   갱신을 ⚙에서 떼어내 상태가 바뀌는 지점마다 부른다:
+     - GameState.set()      화면 전환 (로비·출전 준비·전투·결과)
+     - Game.start() 끝       running=true 가 세워진 뒤
+     - Game.awaitResult()   승패 연출로 running=false 가 된 뒤
+     - ⚙ click 처리기        메뉴를 여닫을 때 (기존 동작 유지)
+
+   화면 전환만으로는 부족하다 — Game.start()는 맨 위에서 GameState.set('playing')을
+   부르는데 running=true는 함수 끝에서 세운다. running이 바뀌는 두 지점에서도 불러야
+   판정이 맞는다.
+
+   판정은 RunHost.running 그대로다 — 기존 의미를 바꾸지 않는다. 특히 승패 연출
+   구간(awaitResult)에서는 화면이 아직 playing이지만 running이 false여서 종료
+   버튼이 숨는다. 연출 중에 종료를 누르면 finishRun이 this.ending 때문에 그대로
+   진행돼 클리어가 패배로 정산된다.
+   ===================================================================== */
+function syncToolButtons(){
+  const quit=$('#quit-run');        if(quit)  quit.hidden  = !RunHost.running;
+  const reset=$('#reset-data-btn'); if(reset) reset.hidden = RunHost.running;
+}
+
+/* =====================================================================
    [CampaignStore] 진행 저장 — 저장 어댑터 입출력과 형식 검증만
    ---------------------------------------------------------------------
    [2026-09-14] 이전에는 Campaign 한 객체가 저장·경제 규칙·로비 UI·런 생명주기를
@@ -348,8 +378,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     $('#tools-toggle').textContent=open?'×':'⚙';
     $('#tools-toggle').setAttribute('aria-label',open?'도구 메뉴 닫기':'도구 메뉴 열기');
     // 전투 중에는 종료만, 로비에서는 데이터 초기화만 낸다 — 전투 중 초기화는 사고다.
-    $('#quit-run').hidden = !RunHost.running;
-    const reset=$('#reset-data-btn'); if(reset) reset.hidden = RunHost.running;
+    syncToolButtons();
   });
 
   // [2026-09-07] 화면 크기가 바뀌면 표시 배율만 다시 계산한다. 판정 좌표(CONFIG.field)는
