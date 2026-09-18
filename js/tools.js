@@ -23,7 +23,7 @@ function buildGameManual(){
   const sc=CONFIG.scoring, gen=CONFIG.generator, og=CONFIG.orderGauge, board=CONFIG.board;
   const killsPerGrant=Math.max(1,Math.ceil(sc.pointsPerGrant/Math.max(1,sc.normalKill)));
   const maxLevel=CharacterGrowthRules.maxLevel;
-  const gacha=CONFIG.meta.gacha, stamina=CAMPAIGN_CONFIG;
+  const growth=CONFIG.meta.growth, stamina=CAMPAIGN_CONFIG;
   const stageWaves=[1,2,3].map(id=>campaignStage(id).waves).join('·');
   const travel=ENEMY_TYPE_KEYS.map(k=>`${t(ENEMY_TYPE_NAME_KEYS[k])} ${CONFIG.enemy.types[k].travelTimeSec}초`).join(' · ');
   const loop=ARCHETYPE_LOOP.map(k=>t(k===BOSS_SLOT?BOSS_WAVE_NAMES.midboss.shortKey:WAVE_ARCHETYPES[k].shortKey)).join(' → ');
@@ -67,9 +67,10 @@ function buildGameManual(){
     ]},
     { title: '⑤ 로비에서 키우기', body: [
       `스테이지는 ${stageWaves} WAVE로 길어지고 이후는 ${campaignStage(3).waves} WAVE다. 입장에 행동력 ${stamina.entryCost}를 쓰며 ${Math.round(stamina.recoveryMs/60000)}분마다 1씩 최대 ${stamina.staminaMax}까지 찬다.`,
-      `수호자 4인과 스킬 ${CONFIG.skillPickCount}종을 미리 편성한다. 레벨은 골드로, 성급은 조각으로 올리며 서로 독립적이다 — 레벨 Lv.${maxLevel}, 성급 ${CharacterGrowthRules.maxStars}성이 각각의 상한이다.`,
-      `소환은 ${gacha.currencyId==='starfire'?'별불':'골드'} ${gacha.cost}에 결과 ${gacha.resultsPerPull}개이며, 결과마다 수호자 ${gacha.characterWeight}% · 스킬 ${gacha.skillWeight}%로 나온다. 중복은 조각이 된다.`,
-      '통과한 WAVE만큼 골드를 받고 마일스톤이 추가 보상을 준다. 새 스테이지를 처음 클리어할 때만 별불이 나온다.',
+      `수호자 4인과 스킬 ${CONFIG.skillPickCount}종을 미리 편성한다. <b>레벨은 수호자가 아니라 슬롯이 갖는다</b> — 미사일 ${MISSILE_KEYS.length}종과 스킬 슬롯 ${CONFIG.skillPickCount}칸, 모두 ${LEVEL_TRACKS.length}개의 공용 레벨을 골드로 올린다(상한 Lv.${maxLevel}). 누구를 꽂아도 그 슬롯의 레벨을 그대로 쓰므로 교체해도 다시 키울 필요가 없다.`,
+      `성급은 수호자·스킬마다 따로 올리며 재료는 별불이다(상한 ${CharacterGrowthRules.maxStars}성). 레벨과 성급은 서로의 조건이 아니다.`,
+      `새 수호자는 그 미사일의 공용 레벨이 ${growth.moduleUnlockLevels.join('·')}에 닿을 때 등급이 낮은 쪽부터 하나씩 열린다. 스킬은 두 스킬 슬롯 레벨의 합계가 ${growth.skillUnlockStart}을 넘고 ${growth.skillUnlockStep}씩 오를 때마다 못 가진 것 중 하나가 무작위로 열린다.`,
+      '통과한 WAVE만큼 골드를 받고 마일스톤이 추가 보상을 준다. 별불은 전부 마일스톤에서 나온다.',
     ]},
   ],
   tips: [

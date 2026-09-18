@@ -1,7 +1,7 @@
 /* ===== characters.js ===== */
 /* 캠페인 경제 가안 수치. 전투 CONFIG와 분리한다. */
 const CAMPAIGN_CONFIG = {
-  saveKey:'slagma.campaign.v4', staminaMax:30, entryCost:5, recoveryMs:300000,
+  saveKey:'slagma.campaign.v5', staminaMax:30, entryCost:5, recoveryMs:300000,
   // 표시 이름은 문자열 테이블에 있다. 여기에는 키만 둔다(세션 3B).
   stageNameKeys:['stage.1','stage.2','stage.3','stage.4','stage.5'],
 };
@@ -61,36 +61,51 @@ const LevelGrowthFactor={
   },
   at(level){ const table=this.table(); return table[Math.max(1,Math.min(table.length-1,Math.floor(level)||1))]||0; },
 };
-// [2026-09-14] 확정(인철): 캐릭터는 뽑기로 연다. 다만 미사일 4슬롯을 채우지 못하면 전투
-// 자체가 불가능하므로, 노말 4명(미사일 1명씩)만 처음부터 지급한다.
+// [2026-09-18] 확정(인철): 뽑기를 없앤다. 수호자는 해당 미사일의 공용 레벨이 임계에 닿을 때
+// 등급 오름차순으로 열리고, 노말 4명(미사일 1명씩)만 처음부터 지급한다 — 미사일 4슬롯을
+// 채우지 못하면 전투 자체가 불가능하기 때문이다.
 const CharacterGrowthRules={maxStars:6,levelsPerStar:10,freeRarityId:'normal'};
-// [2026-09-18] 확정(인철): 레벨업과 성급 돌파를 서로 독립으로 뗀다 — 레벨은 성급과 무관하게
-// 전역 상한(maxLevel)까지 바로 올릴 수 있고, 성급도 레벨 상한 도달 없이 조각만 있으면 올린다.
+// [2026-09-18] 확정(인철): 레벨과 성급의 소유자를 서로 다르게 둔다 — 레벨은 공용 트랙(LEVEL_TRACKS)이,
+// 성급은 캐릭터·스킬 개인이 갖는다. 그래서 둘은 완전히 독립이며 서로의 선행 조건이 아니다.
 // 예전에는 성급별 상한(1성=Lv.10, 2성=Lv.20 …)에 도달해야 다음 레벨업·승급이 열렸다(StarTable).
 CharacterGrowthRules.maxLevel=CharacterGrowthRules.maxStars*CharacterGrowthRules.levelsPerStar;
+/* =====================================================================
+   [LEVEL_TRACKS] 공용 레벨 6종 — 미사일 4 + 스킬 슬롯 2
+   ---------------------------------------------------------------------
+   [2026-09-18] 확정(인철): 레벨을 캐릭터·스킬 개인에게서 떼어 슬롯이 갖게 한다. 연쇄 슬롯에
+   누구를 꽂든 연쇄 트랙 레벨을 그대로 쓰므로 수호자를 바꿔도 다시 키울 필요가 없다.
+   trackId는 저장 키이자 UI 식별자다 — 미사일은 미사일 키를 그대로 쓰고, 스킬은 슬롯 번호를 붙인다.
+   ===================================================================== */
+const LEVEL_TRACKS=[
+  ...MISSILE_KEYS.map(id=>({trackId:id,kind:'module',moduleId:id,slot:null})),
+  ...Array.from({length:DEFAULT_CONFIG.skillPickCount},(_,i)=>({trackId:`skill${i+1}`,kind:'skill',moduleId:null,slot:i})),
+];
+const TRACK_KEYS=LEVEL_TRACKS.map(track=>track.trackId);
 const DEFAULT_EQUIPPED_SKILLS=['strong_single','defense'];
 // [2026-09-16] 확정(인철): 스킬 레벨업은 캐릭터와 같은 골드 비용표를 쓴다.
+// [2026-09-18] 그 비용표는 이제 스킬 슬롯 트랙이 쓴다 — 스킬마다 따로 청구하지 않는다.
 const SKILL_COST_GROUP_ID='standard';
 const SkillInventorySystem={
-  blank(key){return {owned:DEFAULT_EQUIPPED_SKILLS.includes(key),level:1,star:1,shards:0};},
+  // [2026-09-18] 레벨은 슬롯 트랙이, 조각은 사라졌다 — 스킬이 개인으로 갖는 건 보유 여부와 성급뿐이다.
+  blank(key){return {owned:DEFAULT_EQUIPPED_SKILLS.includes(key),star:1};},
   fresh(){return {equipped:[...DEFAULT_EQUIPPED_SKILLS],skills:Object.fromEntries(SKILL_KEYS.map(key=>[key,this.blank(key)]))};},
   migrate(data){
     if(!data||typeof data!=='object')data=this.fresh();
-    data.skills??={};SKILL_KEYS.forEach(key=>{data.skills[key]??=this.blank(key);if(!Number.isInteger(data.skills[key].shards)||data.skills[key].shards<0)data.skills[key].shards=0;});
+    data.skills??={};SKILL_KEYS.forEach(key=>{data.skills[key]??=this.blank(key);delete data.skills[key].level;delete data.skills[key].shards;});
     data.equipped=Array.isArray(data.equipped)?data.equipped.filter((key,i,a)=>SKILL_KEYS.includes(key)&&data.skills[key]?.owned&&a.indexOf(key)===i).slice(0,CONFIG.skillPickCount):[];
     DEFAULT_EQUIPPED_SKILLS.forEach(key=>{data.skills[key].owned=true;if(data.equipped.length<CONFIG.skillPickCount&&!data.equipped.includes(key))data.equipped.push(key);});
     return data;
   },
-  validate(data){return !!data&&Array.isArray(data.equipped)&&data.equipped.length===CONFIG.skillPickCount&&new Set(data.equipped).size===data.equipped.length&&data.equipped.every(key=>data.skills?.[key]?.owned)&&SKILL_KEYS.every(key=>{const x=data.skills?.[key];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.level)&&x.level>=1&&x.level<=CharacterGrowthRules.maxLevel&&Number.isInteger(x.star)&&x.star>=1&&x.star<=CharacterGrowthRules.maxStars&&Number.isInteger(x.shards)&&x.shards>=0;});},
+  validate(data){return !!data&&Array.isArray(data.equipped)&&data.equipped.length===CONFIG.skillPickCount&&new Set(data.equipped).size===data.equipped.length&&data.equipped.every(key=>data.skills?.[key]?.owned)&&SKILL_KEYS.every(key=>{const x=data.skills?.[key];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.star)&&x.star>=1&&x.star<=CharacterGrowthRules.maxStars;});},
 };
-// [2026-09-14] 확정(인철): 성급 상승은 골드가 아니라 동일 캐릭터 조각으로 한다.
-// 그래서 rankUp 골드 행을 없앴다. 아래는 레벨업 기준 비용이며, 실제 청구액은
-// 희귀도별 levelCostMul을 곱한 값이다(CharacterGrowthSystem.costs 참고).
+// [2026-09-18] 확정(인철): 성급 상승은 조각이 아니라 별불로 한다(rarity.starfireSteps).
+// 그래서 이 표에는 레벨업 행만 남는다. 레벨은 공용 트랙 6종이 가지므로 등급 배율도 붙지 않고,
+// 여섯 트랙이 모두 이 표를 그대로 쓴다(LevelTrackSystem.costs).
 // [2026-09-17] 확정(인철): 레벨업 골드 = (28 + 3x + 38×floor(x/10)) × 1.046^x  (x = 올리기 전 레벨)
 // 선형(3x) + 성급 경계 계단(10레벨마다 +38) + 지수(1.046^x)를 겹친 3단 복합 곡선이다.
-//   - 초반을 싸게 둬 새로 얻은 수호자를 바로 굴려볼 수 있게 한다(Lv.1 = 32골드).
-//   - 계단 주기를 승급 주기(10레벨)와 맞춰 돌파 지점이 리듬으로 느껴지게 한다.
-//   - 후반 지수가 한 명 몰빵을 손해로 만들어, 규칙 없이도 4인 균등 육성이 유리해진다.
+//   - 초반을 싸게 둬 새 트랙을 바로 굴려볼 수 있게 한다(Lv.1 = 32골드).
+//   - 계단 주기를 수호자 해금 주기(10레벨)와 맞춰 돌파 지점이 리듬으로 느껴지게 한다.
+//   - 후반 지수가 한 트랙 몰빵을 손해로 만들어, 규칙 없이도 4미사일 균등 육성이 유리해진다.
 // 기존 50+(x-1)×25(선형)는 초반이 비싸 4일차 등반이 11스테이지에서 멈췄다.
 function levelUpGold(x){ return Math.max(1,Math.round((28+3*x+38*Math.floor(x/10))*Math.pow(1.046,x))); }
 const GrowthCostTable=[
@@ -244,13 +259,14 @@ const DEFAULT_FORMATION={chain:'CHR_001',explosion:'CHR_002',scatter:'CHR_003',l
 const CharacterInventorySystem={
   // [2026-09-14] 캐릭터가 늘어나면 기존 저장에는 그 항목이 없어 validate가 통째로 실패한다.
   // 저장을 버리는 대신 빠진 캐릭터만 신규 기본값으로 채운다(보유 진행은 그대로 유지).
-  blank(c){return {owned:c.rarityId===CharacterGrowthRules.freeRarityId,level:1,star:1,tier:0,awakening:0,shards:0};},
+  // [2026-09-18] 레벨은 공용 트랙이, 조각은 사라졌다 — 캐릭터가 개인으로 갖는 건 보유·성급·단계뿐이다.
+  blank(c){return {owned:c.rarityId===CharacterGrowthRules.freeRarityId,star:1,tier:0,awakening:0};},
   migrate(data){
     if(!data||typeof data!=='object'||!data.characters) return data;
     CharacterRepository.list().forEach(c=>{
       const x=data.characters[c.characterId];
       if(!x){ data.characters[c.characterId]=this.blank(c); return; }
-      if(!Number.isInteger(x.shards)||x.shards<0) x.shards=0;   // 조각 필드 신설 보정
+      delete x.level; delete x.shards;   // 공용 레벨 전환·조각 폐지 보정
     });
     // 미사일 4슬롯을 채울 수 없는 저장은 기본 지급 캐릭터로 되돌린다(전투 불가 방지).
     CONFIG.moduleKeys.forEach(module=>{
@@ -270,7 +286,7 @@ const CharacterInventorySystem={
     return new Set(CONFIG.moduleKeys.map(module=>data.formation[module])).size===CONFIG.moduleKeys.length;
   },
   validate(data){return !!data&&this.validateFormation(data)&&CharacterRepository.list().every(c=>{
-    const x=data.characters[c.characterId];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.star)&&x.star>=1&&x.star<=CharacterGrowthRules.maxStars&&Number.isInteger(x.level)&&x.level>=1&&x.level<=CharacterGrowthRules.maxLevel&&Number.isInteger(x.tier)&&x.tier>=0&&Number.isInteger(x.awakening)&&x.awakening>=0&&Number.isInteger(x.shards)&&x.shards>=0;
+    const x=data.characters[c.characterId];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.star)&&x.star>=1&&x.star<=CharacterGrowthRules.maxStars&&Number.isInteger(x.tier)&&x.tier>=0&&Number.isInteger(x.awakening)&&x.awakening>=0;
   });},
 };
 // Gold remains in the existing campaign field for reward compatibility; new currencies
@@ -283,16 +299,14 @@ const WalletSystem={
   spend(s,costs){if(!this.canPay(s,costs))return false;for(const [id,n] of Object.entries(this.totals(costs))){const d=CurrencyTable[id];if(d.storageKey)s[d.storageKey]-=n;else{ s.balances??={};s.balances[id]=(s.balances[id]||0)-n;}}return true;},
 };
 /* =====================================================================
-   [GrowthRules] 캐릭터·스킬 공통 성장 규칙
+   [GrowthRules] 캐릭터·스킬 공통 성급 규칙
    ---------------------------------------------------------------------
    [2026-09-16 v0916_7] 두 시스템에 같은 코드로 복제돼 있던 허용 판정·거래 절차·성급 배율을 모았다.
-   레벨업은 골드 비용표, 승급은 조각으로 한다. 대상별 차이(비용·조각 수)만 인자로 받는다.
-   [2026-09-18] 확정(인철): 레벨업과 성급 돌파를 서로 독립으로 뗀다. 레벨업은 성급과 무관하게
-   전역 상한(CharacterGrowthRules.maxLevel)까지, 승급은 레벨 조건 없이 다음 성급이 남아있고
-   조각이 있으면 바로 연다 — 조각 보유 여부는 transact()가 별도로 확인한다.
+   [2026-09-18 개편] 레벨업이 공용 트랙(LevelTrackSystem)으로 빠져나가면서 여기에는 승급만 남았다.
+   승급 재료는 조각이 아니라 별불이며, 레벨 조건 없이 다음 성급이 남아 있고 별불이 있으면 바로 연다.
    ===================================================================== */
 const GrowthRules={
-  allowed(x,action){return x?.owned&&(action==='levelUp'?x.level<CharacterGrowthRules.maxLevel:action==='rankUp'&&x.star<CharacterGrowthRules.maxStars);},
+  allowed(x){return !!x?.owned&&x.star<CharacterGrowthRules.maxStars;},
   // 누적 성급 배율. 부동소수 누적 오차가 반올림 경계를 흔들지 않도록 소수 9자리에서 정리한다.
   starMultiplier(steps,star){
     const n=Math.max(1,Number(star)||1);
@@ -300,24 +314,123 @@ const GrowthRules={
     for(let i=1;i<n;i++) mul*=(1+(Number(steps?.[i])||0));
     return Math.round(mul*1e9)/1e9;
   },
-  // select(next)는 저장 사본에서 성장 대상 항목을 고른다(없으면 거래하지 않는다).
-  // kind·id는 분석 이벤트용이다. 캐릭터·스킬 × 레벨업·승급 네 조합이 모두 이 한 곳을 지나므로
-  // level_up·star_up을 여기서 한 번만 부른다.
-  transact(campaign,select,action,{costs,shardCost,kind,id}){
+  // select(next)는 저장 사본에서 승급 대상 항목을 고른다(없으면 거래하지 않는다).
+  // kind·id는 분석 이벤트용이다. 캐릭터·스킬 두 경로가 모두 이 한 곳을 지나므로 star_up을 여기서 한 번만 부른다.
+  rankUp(campaign,select,{cost,kind,id}){
     if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active)return false;
     const next=cloneConfig(campaign.state),x=select(next);
-    if(!this.allowed(x,action))return false;
-    if(action==='levelUp'){
-      const c=costs(x);if(!c.length||!WalletSystem.spend(next,c))return false;
-      x.level++;
-    } else {
-      const need=shardCost(x);if(!(need>0)||(Number(x.shards)||0)<need)return false;
-      x.shards-=need;x.star++;
-    }
+    if(!this.allowed(x))return false;
+    const need=cost(x);
+    if(!(need>0)||!WalletSystem.spend(next,[{currencyId:CONFIG.meta.growth.starfireCurrencyId,amount:need}]))return false;
+    x.star++;
     if(!campaign.commit(next))return false;
-    if(action==='levelUp') Analytics.track('level_up',{kind,id,level:x.level});
-    else Analytics.track('star_up',{kind,id,star:x.star});
+    Analytics.track('star_up',{kind,id,star:x.star});
     campaign.render();return true;
+  },
+};
+/* =====================================================================
+   [LevelTrackSystem] 공용 레벨 6종의 저장·비용·레벨업
+   ---------------------------------------------------------------------
+   [2026-09-18] 확정(인철): 예전 뽑기 창이 이 여섯 트랙을 올리는 창이 됐다. 트랙 하나를 올리면
+   골드를 쓰고, 그 결과로 수호자·스킬이 열릴 수 있다(UnlockSystem). 해금까지 한 거래로 묶어
+   저장이 레벨만 오르고 해금은 빠지는 어긋난 상태가 생기지 않게 한다.
+   ===================================================================== */
+const LevelTrackSystem={
+  track(trackId){return LEVEL_TRACKS.find(x=>x.trackId===trackId)||null;},
+  fresh(){return Object.fromEntries(TRACK_KEYS.map(key=>[key,1]));},
+  migrate(data){
+    const out=(data&&typeof data==='object'&&!Array.isArray(data))?data:{};
+    TRACK_KEYS.forEach(key=>{
+      const n=Number(out[key]);
+      out[key]=Number.isSafeInteger(n)?Math.max(1,Math.min(CharacterGrowthRules.maxLevel,n)):1;
+    });
+    Object.keys(out).forEach(key=>{if(!TRACK_KEYS.includes(key))delete out[key];});
+    return out;
+  },
+  validate(data){return !!data&&typeof data==='object'&&!Array.isArray(data)&&TRACK_KEYS.every(key=>Number.isInteger(data[key])&&data[key]>=1&&data[key]<=CharacterGrowthRules.maxLevel);},
+  level(state,trackId){const n=Number(state?.trackLevels?.[trackId]);return Number.isSafeInteger(n)&&n>=1?n:1;},
+  moduleLevel(state,moduleId){return this.level(state,moduleId);},
+  slotLevel(state,slot){return this.level(state,`skill${(Number(slot)||0)+1}`);},
+  // 장착하지 않은 스킬에는 트랙이 없다 — 상세 화면은 1번 슬롯에 넣었을 때를 미리 보여준다.
+  skillLevel(state,key){const slot=state?.skillInventory?.equipped?.indexOf(key);return slot>=0?this.slotLevel(state,slot):this.slotLevel(state,0);},
+  // 스킬 해금 판정에 쓰는 두 슬롯 레벨 합계.
+  skillLevelTotal(state){return LEVEL_TRACKS.filter(x=>x.kind==='skill').reduce((sum,x)=>sum+this.level(state,x.trackId),0);},
+  moduleLevelTotal(state){return MISSILE_KEYS.reduce((sum,id)=>sum+this.level(state,id),0);},
+  allowed(level){return level<CharacterGrowthRules.maxLevel;},
+  costs(level){return GrowthCostTable.filter(r=>r.costGroupId===SKILL_COST_GROUP_ID&&r.action==='levelUp'&&r.step===level).map(r=>({...r}));},
+  cost(level){return this.costs(level)[0]?.amount||0;},
+  payable(state,level){const c=this.costs(level);return !!c.length&&WalletSystem.canPay(state,c);},
+  // 성공하면 이번 레벨업으로 열린 대상 목록을 돌려준다(없으면 빈 배열). 실패는 null이다.
+  levelUp(campaign,trackId){
+    const track=this.track(trackId);
+    if(!track||GameState.current!=='lobby'||!campaign.read()||campaign.state.active)return null;
+    const next=cloneConfig(campaign.state),level=this.level(next,trackId);
+    if(!this.allowed(level))return null;
+    const costs=this.costs(level);
+    if(!costs.length||!WalletSystem.spend(next,costs))return null;
+    next.trackLevels[trackId]=level+1;
+    const unlocked=UnlockSystem.apply(next);
+    if(!campaign.commit(next))return null;
+    Analytics.track('level_up',{kind:track.kind,id:trackId,level:level+1});
+    campaign.render();
+    return unlocked;
+  },
+};
+/* =====================================================================
+   [UnlockSystem] 트랙 레벨이 여는 수호자·스킬
+   ---------------------------------------------------------------------
+   [2026-09-18] 확정(인철): 수호자는 자기 미사일 트랙 레벨이 임계에 닿으면 등급 오름차순으로
+   순서대로 열린다(무작위 없음). 스킬은 두 슬롯 레벨의 합계가 임계를 넘을 때마다 미보유 스킬
+   중 하나를 무작위로 열며, 이미 가진 스킬은 다시 나오지 않는다.
+
+   해금 상태는 저장(owned)에 남기지만, 몇 명이 열려 있어야 하는지는 언제나 레벨에서 다시
+   계산할 수 있다. 그래서 apply()는 레벨을 기준으로 빠진 것만 채우는 방식이며, 해금을 놓친
+   저장이나 임계값을 바꾼 뒤의 저장도 다음 호출에서 저절로 맞춰진다.
+   스킬만은 무작위라 되돌릴 수 없으므로, 열린 개수(quota)만 맞추고 무엇이 열렸는지는 저장을 따른다.
+   ===================================================================== */
+const UnlockSystem={
+  roster(moduleId){return CharacterRepository.list().filter(c=>c.specialtyMissileId===moduleId);},
+  // 레벨 L에서 열려 있어야 하는 인원 = 무료 1명 + 임계를 넘긴 수.
+  moduleQuota(level){return 1+(CONFIG.meta.growth.moduleUnlockLevels||[]).filter(n=>level>=n).length;},
+  // 그 미사일에서 index번째(0부터) 수호자가 열리는 레벨. 0번은 처음부터 지급이라 1이다.
+  moduleUnlockLevel(index){return index<=0?1:Number((CONFIG.meta.growth.moduleUnlockLevels||[])[index-1])||0;},
+  // 아직 안 열린 수호자가 열리는 레벨(전부 열렸으면 0).
+  nextUnlockLevel(state,moduleId){
+    const roster=this.roster(moduleId),owned=state?.characterInventory?.characters||{};
+    const index=roster.findIndex(c=>!owned[c.characterId]?.owned);
+    return index<0?0:this.moduleUnlockLevel(index);
+  },
+  skillQuota(total){
+    const g=CONFIG.meta.growth,start=Number(g.skillUnlockStart)||0,step=Math.max(1,Number(g.skillUnlockStep)||1);
+    return total<start?0:Math.floor((total-start)/step)+1;
+  },
+  nextSkillTotal(state){
+    const g=CONFIG.meta.growth,start=Number(g.skillUnlockStart)||0,step=Math.max(1,Number(g.skillUnlockStep)||1);
+    const opened=SKILL_KEYS.filter(key=>state?.skillInventory?.skills?.[key]?.owned).length-DEFAULT_EQUIPPED_SKILLS.length;
+    return opened>=SKILL_KEYS.length-DEFAULT_EQUIPPED_SKILLS.length?0:start+Math.max(0,opened)*step;
+  },
+  // next(저장 사본)에 레벨이 여는 것들을 채우고, 이번에 새로 열린 목록을 돌려준다.
+  // 결과 항목은 공개 연출(RevealUI)이 그대로 쓰는 형식이다.
+  apply(next){
+    const opened=[];
+    MISSILE_KEYS.forEach(moduleId=>{
+      const roster=this.roster(moduleId),quota=Math.min(roster.length,this.moduleQuota(LevelTrackSystem.moduleLevel(next,moduleId)));
+      roster.slice(0,quota).forEach(c=>{
+        const x=next.characterInventory.characters[c.characterId];
+        if(!x||x.owned)return;
+        x.owned=true;
+        opened.push({type:'character',characterId:c.characterId,nameKey:c.nameKey,rarityId:c.rarityId,moduleId});
+      });
+    });
+    const quota=Math.min(SKILL_KEYS.length-DEFAULT_EQUIPPED_SKILLS.length,this.skillQuota(LevelTrackSystem.skillLevelTotal(next)));
+    for(let i=SKILL_KEYS.filter(key=>next.skillInventory.skills[key]?.owned).length-DEFAULT_EQUIPPED_SKILLS.length;i<quota;i++){
+      const pool=SKILL_KEYS.filter(key=>!next.skillInventory.skills[key]?.owned);
+      if(!pool.length)break;
+      const key=choice(pool);
+      next.skillInventory.skills[key].owned=true;
+      opened.push({type:'skill',skillKey:key,nameKey:CONFIG.skills[key].nameKey});
+    }
+    return opened;
   },
 };
 const SkillGrowthSystem={
@@ -333,16 +446,18 @@ const SkillGrowthSystem={
     const max=d.durationSec+(CharacterGrowthRules.maxStars-1)*(Number(d.durationPerStar)||0);
     return Math.round(max/(1-clamp(Number(CONFIG.meta.skill.durationUptimeGap)||0,0,0.9))*10)/10;
   },
+  // [2026-09-18] 표시·계산에 쓰는 스킬 한 벌. 저장에 없는 레벨을 슬롯 트랙에서 붙여 준다 —
+  // 이 한 곳만 지나면 stats()·effectText() 같은 기존 호출부를 고치지 않아도 된다.
+  view(state,key){return {...state.skillInventory.skills[key],level:LevelTrackSystem.skillLevel(state,key)};},
   stats(key,x){
     const d=CONFIG.skills[key],level=Math.max(1,x?.level||1);
     return Object.fromEntries(['atk','def','hp'].map(stat=>{const value=(Number(d.stats.base[stat])||0)+(level-1)*(Number(d.stats.perLevel[stat])||0);return [stat,stat==='def'?Math.round(value*10)/10:Math.round(value)];}));
   },
-  costs(x){return GrowthCostTable.filter(r=>r.costGroupId===SKILL_COST_GROUP_ID&&r.action==='levelUp'&&r.step===x.level).map(r=>({...r}));},
-  levelCost(x){return this.costs(x)[0]?.amount||0;},
-  shardCost(x){return Number(CONFIG.meta.skill.shardSteps[x.star-1])||0;},
-  allowed(x,action){return GrowthRules.allowed(x,action);},
-  transact(campaign,key,action){
-    return GrowthRules.transact(campaign,next=>SKILL_KEYS.includes(key)?next.skillInventory.skills[key]:null,action,{kind:'skill',id:key,costs:x=>this.costs(x),shardCost:x=>this.shardCost(x)});
+  starfireCost(x){return Number(CONFIG.meta.skill.starfireSteps[x.star-1])||0;},
+  allowed(x){return GrowthRules.allowed(x);},
+  payable(state,x){const need=this.starfireCost(x);return need>0&&WalletSystem.balance(state,CONFIG.meta.growth.starfireCurrencyId)>=need;},
+  rankUp(campaign,key){
+    return GrowthRules.rankUp(campaign,next=>SKILL_KEYS.includes(key)?next.skillInventory.skills[key]:null,{kind:'skill',id:key,cost:x=>this.starfireCost(x)});
   },
   equip(campaign,key,slot){
     if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active||!campaign.state.skillInventory.skills[key]?.owned||!Number.isInteger(slot)||slot<0||slot>=CONFIG.skillPickCount)return false;
@@ -356,7 +471,8 @@ const SkillGrowthSystem={
 const SkillCombatAdapter={
   snapshot(state){
     const inv=state.skillInventory;
-    const equipped=inv.equipped.map(key=>{const owned=inv.skills[key];return {key,nameKey:CONFIG.skills[key].nameKey,level:owned.level,star:owned.star,effect:SkillGrowthSystem.effect(key,owned),duration:SkillGrowthSystem.duration(key,owned),cooldownSec:SkillGrowthSystem.cooldown(key),stats:SkillGrowthSystem.stats(key,owned)};});
+    // 장착 슬롯의 공용 레벨이 곧 그 스킬의 레벨이다 — 어떤 스킬을 꽂아도 슬롯 레벨을 그대로 쓴다.
+    const equipped=inv.equipped.map((key,slot)=>{const owned={...inv.skills[key],level:LevelTrackSystem.slotLevel(state,slot)};return {key,nameKey:CONFIG.skills[key].nameKey,level:owned.level,star:owned.star,effect:SkillGrowthSystem.effect(key,owned),duration:SkillGrowthSystem.duration(key,owned),cooldownSec:SkillGrowthSystem.cooldown(key),stats:SkillGrowthSystem.stats(key,owned)};});
     const stats=equipped.reduce((sum,item)=>{for(const key of ['atk','def','hp'])sum[key]+=item.stats[key];return sum;},{atk:0,def:0,hp:0});
     return {equipped,stats};
   },
@@ -369,6 +485,9 @@ const CharacterGrowthSystem={
   // [2026-09-18] 전속 미사일 배율. CONFIG.attackModules[key].baseDamageMul에 있던 값을 옮긴 것이라
   // 공격력에만 곱한다(방어력·체력은 종전대로 건드리지 않는다).
   moduleMul(id){ return Number(CONFIG.meta.character.moduleAtkMul?.[CharacterTable[id]?.specialtyMissileId])||1; },
+  // [2026-09-18] 표시·계산에 쓰는 수호자 한 벌. 레벨은 전속 미사일 트랙에서 온다 —
+  // 같은 슬롯의 수호자끼리는 등급·성급만 다르고 레벨은 언제나 같다.
+  view(state,id){return {...state.characterInventory.characters[id],level:LevelTrackSystem.moduleLevel(state,CharacterTable[id]?.specialtyMissileId)};},
   stats(id,owned){
     const c=CharacterTable[id],g=GrowthProfileTable[c.growthProfileId],mul=rarityConf(c.rarityId).statMul;
     const star=this.starMul(owned?.star);
@@ -376,24 +495,15 @@ const CharacterGrowthSystem={
     const module=this.moduleMul(id);
     return Object.fromEntries(['atk','def','hp'].map(k=>[k,Math.round((c.baseStats[k]+grown*g[k])*mul*star*(k==='atk'?module:1))]));
   },
-  // 레벨업은 골드, 승급은 조각이다.
-  costs(id,x,action){
-    if(action!=='levelUp')return [];
-    const mul=rarityConf(CharacterTable[id].rarityId).levelCostMul;
-    return GrowthCostTable.filter(r=>r.costGroupId===CharacterTable[id].costGroupId&&r.action==='levelUp'&&r.step===x.level)
-      .map(r=>({...r,amount:Math.max(1,Math.round(r.amount*mul))}));
-  },
-  shardCost(id,x){
-    const steps=rarityConf(CharacterTable[id].rarityId).shardSteps||[];
+  // 승급은 별불이다. 등급이 높을수록 비싸다(레벨은 공용 트랙이라 여기서 관여하지 않는다).
+  starfireCost(id,x){
+    const steps=rarityConf(CharacterTable[id].rarityId).starfireSteps||[];
     return Number(steps[x.star-1])||0;
   },
-  allowed(x,action){return GrowthRules.allowed(x,action);},
-  payable(campaign,id,x,action){
-    if(action==='levelUp'){const c=this.costs(id,x,action);return !!c.length&&WalletSystem.canPay(campaign.state,c);}
-    const need=this.shardCost(id,x);return need>0&&(Number(x.shards)||0)>=need;
-  },
-  transact(campaign,id,action){
-    return GrowthRules.transact(campaign,next=>CharacterTable[id]?next.characterInventory.characters[id]:null,action,{kind:'character',id,costs:x=>this.costs(id,x,'levelUp'),shardCost:x=>this.shardCost(id,x)});
+  allowed(x){return GrowthRules.allowed(x);},
+  payable(state,id,x){const need=this.starfireCost(id,x);return need>0&&WalletSystem.balance(state,CONFIG.meta.growth.starfireCurrencyId)>=need;},
+  rankUp(campaign,id){
+    return GrowthRules.rankUp(campaign,next=>CharacterTable[id]?next.characterInventory.characters[id]:null,{kind:'character',id,cost:x=>this.starfireCost(id,x)});
   },
   assign(campaign,id){
     if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active||!campaign.state.characterInventory.characters[id]?.owned)return false;
@@ -401,105 +511,6 @@ const CharacterGrowthSystem={
     const next=cloneConfig(campaign.state);next.characterInventory.formation[character.specialtyMissileId]=id;
     if(!CharacterInventorySystem.validateFormation(next.characterInventory))return false;
     if(!campaign.commit(next))return false;campaign.render();return true;
-  },
-};
-/* =====================================================================
-   [GachaSystem] 별불 소환 — 1회 가격은 고정이고, 중복은 조각이 된다
-   ---------------------------------------------------------------------
-   [2026-09-14] 확정(인철): 캐릭터를 모두 열어 두지 않고 뽑기로 연다.
-   [2026-09-16] 확정(인철): 소환 재화를 별불로 바꾸고 가격을 200개로 고정했다(누적 증가 제거). 등급 가중치로 희귀도를 먼저 뽑고, 그 등급 안에서 캐릭터를 균등 추첨한다.
-   이미 가진 캐릭터가 나오면 승급 재료인 조각으로 바뀐다.
-   ===================================================================== */
-/* =====================================================================
-   [ShardLedger] 조각 장부 — 예약분과 과잉분을 가른다
-   ---------------------------------------------------------------------
-   [2026-09-17] 확정(인철): 중복 조각을 전 등급 1개로 고정하고, 과잉은 그대로 둔다.
-   대신 어느 대상에 조각이 얼마나 남는지를 저장에 남겨 나중에 다른 재화로 쓸 수 있게 한다.
-
-   보유량(x.shards)과 성급(x.star)은 이미 저장되므로 과잉분은 언제나 여기서 다시 계산할 수
-   있다. 별도 필드로 복제해 두면 승급·초기화 경로마다 같이 고쳐야 하고 어긋나면 재화가
-   틀어지므로, 장부는 저장값에서 파생시키고 저장에는 누적 집계(lifetime.shardsGained)만 둔다.
-   ===================================================================== */
-const ShardLedger={
-  // 남은 승급에 필요한 조각 합계. 이미 최고 성급이면 0이다.
-  required(steps,star){
-    const from=Math.max(1,Math.floor(Number(star)||1));
-    return (Array.isArray(steps)?steps:[]).slice(from-1).reduce((a,v)=>a+(Number(v)||0),0);
-  },
-  // 한 대상의 장부. surplus는 모든 승급을 마치고도 남는, 즉 성급으로는 쓸 수 없는 몫이다.
-  entry(steps,x){
-    const held=Math.max(0,Number(x?.shards)||0),need=this.required(steps,x?.star);
-    return {held,required:need,earmarked:Math.min(held,need),surplus:Math.max(0,held-need)};
-  },
-  character(id,x){ return this.entry(rarityConf(CharacterTable[id]?.rarityId).shardSteps,x); },
-  skill(x){ return this.entry(CONFIG.meta.skill.shardSteps,x); },
-  // 저장 상태 전체의 과잉분. 대상별 내역과 합계를 함께 돌려준다.
-  summary(state){
-    const characters=[],skills=[];
-    let total=0;
-    Object.entries(state?.characterInventory?.characters||{}).forEach(([id,x])=>{
-      if(!CharacterTable[id]||!x?.owned)return;
-      const e=this.character(id,x);
-      if(e.surplus>0){characters.push({id,nameKey:CharacterTable[id].nameKey,rarityId:CharacterTable[id].rarityId,...e});total+=e.surplus;}
-    });
-    Object.entries(state?.skillInventory?.skills||{}).forEach(([key,x])=>{
-      if(!CONFIG.skills[key]||!x?.owned)return;
-      const e=this.skill(x);
-      if(e.surplus>0){skills.push({key,nameKey:CONFIG.skills[key].nameKey,...e});total+=e.surplus;}
-    });
-    return {characters,skills,total};
-  },
-};
-const GachaSystem={
-  // gachaCount는 가격에 쓰지 않고 통계로만 남긴다.
-  cost(){
-    return Math.max(0,Math.round(Number(CONFIG.meta.gacha.cost)||0));
-  },
-  // 등급 가중치 → 등급 안 균등. 가중치가 전부 0이면 뽑지 않는다.
-  rollRarity(){
-    const weights=RARITY_KEYS.map(k=>Math.max(0,Number(rarityConf(k).gachaWeight)||0));
-    const total=weights.reduce((a,b)=>a+b,0);
-    if(total<=0) return null;
-    let r=Math.random()*total;
-    for(let i=0;i<RARITY_KEYS.length;i++){ r-=weights[i]; if(r<0) return RARITY_KEYS[i]; }
-    return RARITY_KEYS[RARITY_KEYS.length-1];
-  },
-  odds(){
-    const weights=RARITY_KEYS.map(k=>Math.max(0,Number(rarityConf(k).gachaWeight)||0));
-    const total=weights.reduce((a,b)=>a+b,0)||1,category=Math.max(0,Number(CONFIG.meta.gacha.characterWeight)||0),skill=Math.max(0,Number(CONFIG.meta.gacha.skillWeight)||0),categoryTotal=category+skill||1;
-    return RARITY_KEYS.map((k,i)=>({rarityId:k,pct:weights[i]/total*category/categoryTotal*100,conditionalPct:weights[i]/total*100}));
-  },
-  rollCategory(){
-    const character=Math.max(0,Number(CONFIG.meta.gacha.characterWeight)||0),skill=Math.max(0,Number(CONFIG.meta.gacha.skillWeight)||0),total=character+skill;
-    if(total<=0)return null;return Math.random()*total<character?'character':'skill';
-  },
-  // 결과 1개를 next에 반영한다. 같은 묶음에서 두 번째로 나온 대상은 이미 보유 상태이므로 조각이 된다.
-  rollOne(next){
-    // error는 문구가 아니라 문자열 키다 — 표시하는 쪽(campaign-ui.js)이 t()로 바꾼다.
-    const type=this.rollCategory();if(!type)return {error:'gacha.error.noCategory'};
-    if(type==='skill'){
-      const skillKey=choice(SKILL_KEYS),def=CONFIG.skills[skillKey],x=next.skillInventory.skills[skillKey],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(CONFIG.meta.skill.duplicateShards)||0):0;
-      if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
-      return {type,skillKey,nameKey:def.nameKey,duplicate,gained,shards:x.shards,need:SkillGrowthSystem.shardCost(x),surplus:ShardLedger.skill(x).surplus};
-    }
-    const rarityId=this.rollRarity();if(!rarityId)return {error:'gacha.error.noRarity'};
-    const pool=CharacterRepository.list().filter(c=>c.rarityId===rarityId);if(!pool.length)return {error:'gacha.error.emptyPool'};
-    const c=choice(pool),x=next.characterInventory.characters[c.characterId],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(rarityConf(rarityId).duplicateShards)||0):0;
-    if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
-    return {type,characterId:c.characterId,nameKey:c.nameKey,rarityId,duplicate,gained,shards:x.shards,need:CharacterGrowthSystem.shardCost(c.characterId,x),surplus:ShardLedger.character(c.characterId,x).surplus};
-  },
-  // [2026-09-16] 확정(인철): 별불 200개에 결과 10개. 결과 전체를 한 번에 저장한 뒤 공개 연출을 시작한다.
-  pull(campaign){
-    if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active) return null;
-    const next=cloneConfig(campaign.state);
-    const price=this.cost(),count=Math.max(1,Math.round(Number(CONFIG.meta.gacha.resultsPerPull)||1));
-    if(!WalletSystem.spend(next,[{currencyId:CONFIG.meta.gacha.currencyId,amount:price}])) return {error:'gacha.error.poor'};
-    const results=[];
-    for(let i=0;i<count;i++){const r=this.rollOne(next);if(r.error)return r;results.push(r);}
-    next.gachaCount=(Number(next.gachaCount)||0)+results.length;
-    if(!campaign.commit(next)) return {error:'gacha.error.saveFailed'};
-    Analytics.track('gacha',{count:next.gachaCount});
-    return {results,price};
   },
 };
 const PartyCombatAdapter={
@@ -516,7 +527,8 @@ const PartyCombatAdapter={
   snapshot(state){
     const inv=state.characterInventory,factors={global:{},modules:{}},members=[],effects=[],moduleRules={};
     CONFIG.moduleKeys.forEach(module=>{
-      const id=inv.formation[module],c=CharacterTable[id],owned=inv.characters[id],stats=CharacterGrowthSystem.stats(id,owned);
+      // 레벨은 편성한 수호자가 아니라 그 미사일 트랙이 갖는다(CharacterGrowthSystem.view).
+      const id=inv.formation[module],c=CharacterTable[id],owned=CharacterGrowthSystem.view(state,id),stats=CharacterGrowthSystem.stats(id,owned);
       members.push({characterId:id,nameKey:c.nameKey,identityId:c.identityId,raceId:c.raceId,specialtyMissileId:module,level:owned.level,star:owned.star,stats,passiveIds:this.unlockedPassiveIds(c,owned)});
     });
     const passiveIds=new Set(members.flatMap(m=>m.passiveIds));

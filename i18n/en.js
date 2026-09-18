@@ -59,8 +59,8 @@ I18N.register("en", "English", {
   "lobby.nav.characters": "Guardians",
   // 스킬
   "lobby.nav.skills": "Skills",
-  // 소환
-  "lobby.nav.gacha": "Summon",
+  // 강화
+  "lobby.nav.upgrade": "Upgrade",
 
   /* ── character ── */
   // GUARDIANS
@@ -107,8 +107,6 @@ I18N.register("en", "English", {
   "character.detail.statDef": "Defense",
   // 체력
   "character.detail.statHp": "HP",
-  // 다음 {value}
-  "character.detail.nextStat": "Next {value}",
   // 승급 시 {value}
   "character.detail.rankUpStat": "{value} at next star",
   // 기본 능력치
@@ -117,28 +115,24 @@ I18N.register("en", "English", {
   "character.detail.starPassive": "Star passive · unlocks at {n}★",
   // 고정 패시브
   "character.detail.innatePassive": "Innate passive",
-  // {name} 조각
-  "character.detail.shards": "{name} shards",
-  // 영입에서 획득할 수 있습니다. {rarity} 등급 전체 확률 {pct}%
-  "character.detail.recruitHint": "Available from summoning. {rarity} rarity chance {pct}%",
-  // 레벨 올리기
-  "character.detail.levelUp": "Level up",
-  // {amount} 골드
-  "character.detail.levelCost": "{amount} gold",
-  // 레벨 상한
-  "character.detail.levelMax": "Max level",
+  // 레벨은 {module} 공용 레벨을 따릅니다 · 강화에서 올립니다
+  "character.detail.sharedLevel": "Level follows the shared {module} track · raise it in Upgrade",
+  // 보유 별불
+  "character.detail.starfire": "Starfire held",
+  // {module} 공용 레벨 {level}에서 해금됩니다.
+  "character.detail.unlockHint": "Unlocks at shared {module} level {level}.",
   // 성급 올리기
   "character.detail.rankUp": "Star up",
-  // 조각 {n}개
-  "character.detail.rankCost": "{n} shards",
+  // 별불 {n}
+  "character.detail.rankCost": "{n} starfire",
   // 최대 성급
   "character.detail.rankMax": "Max star",
   // {module} 슬롯 출전 중
   "character.detail.deployed": "In {module} slot",
   // 출전 부대에 편성
   "character.detail.deploy": "Add to squad",
-  // 영입하러 가기
-  "character.detail.goRecruit": "Go to summon",
+  // 강화하러 가기
+  "character.detail.goUpgrade": "Go to Upgrade",
   // {name} 성장 완료
   "character.toast.grown": "{name} grew stronger",
   // {name} · {module} 편성 완료
@@ -181,8 +175,10 @@ I18N.register("en", "English", {
   "skill.slotName": "{index}. {name}",
   // Lv.{level} · {effect}
   "skill.slotLine": "Lv.{level} · {effect}",
-  // 소환에서 획득
-  "skill.card.locked": "From summoning",
+  // 스킬 슬롯 레벨로 해금
+  "skill.card.locked": "Unlocked by skill slot level",
+  // 미장착
+  "skill.card.unequipped": "Not equipped",
   // 액티브 효과
   "skill.detail.active": "Active effect",
   // 쿨타임 {sec}초 · {growth}
@@ -201,24 +197,24 @@ I18N.register("en", "English", {
   "skill.detail.statDef": "DEF",
   // 체력
   "skill.detail.statHp": "HP",
-  // 다음 +{value}
-  "skill.detail.nextStat": "Next +{value}",
-  // 현재 최대
-  "skill.detail.maxStat": "At max",
-  // {name} 조각
-  "skill.detail.shards": "{name} shards",
-  // 불씨 소환에서 획득할 수 있습니다.
-  "skill.detail.gachaHint": "Available from Ember Summon.",
-  // 레벨 올리기
-  "skill.detail.levelUp": "Level up",
-  // 골드 {amount}
-  "skill.detail.levelCost": "{amount} gold",
-  // 레벨 상한
-  "skill.detail.levelMax": "Max level",
+  // 슬롯 레벨 기준
+  "skill.detail.slotStat": "At slot level",
+  // 레벨은 {n}번 스킬 슬롯의 공용 레벨을 따릅니다 · 강화에서 올립니다
+  "skill.detail.sharedLevel": "Level follows shared skill slot {n} · raise it in Upgrade",
+  // 장착하면 그 슬롯의 공용 레벨을 그대로 씁니다
+  "skill.detail.unequippedLevel": "Equip it to use that slot's shared level",
+  // 보유 별불
+  "skill.detail.starfire": "Starfire held",
+  // 두 스킬 슬롯 레벨 합계가 {need}가 되면 미보유 스킬 중 하나가 무작위로 열립니다. 현재 {current}
+  "skill.detail.unlockHint": "At a combined skill slot level of {need}, one unowned skill unlocks at random. Currently {current}",
+  // 스킬을 모두 모았습니다.
+  "skill.detail.unlockDone": "Every combat skill is collected.",
   // 성급 올리기
   "skill.detail.rankUp": "Star up",
-  // 조각 {n}
-  "skill.detail.rankCost": "{n} shards",
+  // 별불 {n}
+  "skill.detail.rankCost": "{n} starfire",
+  // 최대 성급
+  "skill.detail.rankMax": "Max star",
   // {n}번 장착 중
   "skill.detail.slotEquipped": "In slot {n}",
   // {n}번 슬롯 장착
@@ -345,94 +341,84 @@ I18N.register("en", "English", {
   "milestone.merges.name": "Fusion Touch",
   // 머지 성공
   "milestone.merges.desc": "Merges made",
+  // 최전선 갱신
+  "milestone.best_wave.name": "New High Water Mark",
+  // 최고 WAVE 기록
+  "milestone.best_wave.desc": "Best wave reached",
+  // 화력 정비
+  "milestone.module_levels.name": "Ordnance Upkeep",
+  // 미사일 4종 레벨 합계
+  "milestone.module_levels.desc": "Combined missile track level",
+  // 전술 연마
+  "milestone.skill_levels.name": "Drill Practice",
+  // 스킬 슬롯 레벨 합계
+  "milestone.skill_levels.desc": "Combined skill slot level",
+  // 별의 결정
+  "milestone.stars.name": "Crystalized Stars",
+  // 보유 수호자 성급 합계
+  "milestone.stars.desc": "Combined stars of owned guardians",
+  // 불씨의 동료
+  "milestone.guardians.name": "Comrades of the Ember",
+  // 수호자 해금
+  "milestone.guardians.desc": "Guardians unlocked",
+  // 전술 수집
+  "milestone.owned_skills.name": "Tactics Collected",
+  // 전투 스킬 해금
+  "milestone.owned_skills.desc": "Combat skills unlocked",
 
-  /* ── gacha ── */
-  // SUMMONING FORGE
-  "gacha.eyebrow": "SUMMONING FORGE",
-  // 불씨 소환
-  "gacha.title": "Ember Summon",
-  // 누적 {n}개 소환
-  "gacha.count": "{n} summoned in total",
-  // 상자에 수호자와 스킬이 함께 잠들어 있습니다
-  "gacha.stage.caption": "Guardians and skills sleep together in the chest",
-  // 새로운 전력을 깨우세요
-  "gacha.stage.strong": "Wake new power",
-  // 소환 비용
-  "gacha.costLabel": "Summon cost",
-  // 불씨 소환
-  "gacha.pull": "Ember Summon",
-  // 소환 완료
-  "gacha.pulling": "Summoned",
-  // 별불이 부족합니다
-  "gacha.poor": "Not enough starfire",
-  // 새로운 최고 스테이지를 클리어하고 마일스톤에서 별불을 받으세요. {n} 별불이 더 필요합니다.
-  "gacha.hint.poor": "Clear a new highest stage and claim starfire from milestones. {n} more starfire needed.",
-  // 수호자 {character}% · 스킬 {skill}%. 중복 결과는 각 조각으로 전환됩니다.
-  "gacha.hint.odds": "Guardian {character}% · Skill {skill}%. Duplicates turn into shards.",
-  // 소환 확률과 수집 현황
-  "gacha.details": "Summon odds and collection",
-  // 카테고리·등급 확률
-  "gacha.odds.title": "Category and rarity odds",
-  // 수호자
-  "gacha.odds.character": "Guardian",
-  // 스킬 · 희귀도 없음
-  "gacha.odds.skill": "Skill · no rarity",
-  // 수호자 {rarity}
-  "gacha.odds.rarity": "Guardian {rarity}",
+  /* ── upgrade (공용 레벨업 6종) ── */
+  // UPGRADE FORGE
+  "upgrade.eyebrow": "UPGRADE FORGE",
+  // 공용 강화
+  "upgrade.title": "Shared Upgrade",
+  // 누적 레벨 {total}
+  "upgrade.count": "{total} total levels",
+  // 미사일과 스킬 슬롯은 레벨을 함께 씁니다
+  "upgrade.stage.caption": "Missiles and skill slots share their levels",
+  // 슬롯을 올리면 새 전력이 깨어납니다
+  "upgrade.stage.strong": "Raise a slot to wake new power",
+  // {n}번 스킬 슬롯 · {name}
+  "upgrade.track.skillSlot": "Skill slot {n} · {name}",
+  // 레벨 올리기
+  "upgrade.levelUp": "Level up",
+  // 골드 {amount}
+  "upgrade.cost": "{amount} gold",
+  // 레벨 상한
+  "upgrade.levelMax": "Max level",
+  // Lv.{level} 도달 시 {rarity} 수호자 해금
+  "upgrade.unlock.module": "Unlocks a {rarity} guardian at Lv.{level}",
+  // 이 미사일의 수호자를 모두 모았습니다
+  "upgrade.unlock.moduleDone": "Every guardian of this missile is collected",
+  // 두 슬롯 합계 {need}에서 스킬 1종 무작위 해금 · 현재 {current}
+  "upgrade.unlock.skill": "One random skill at a combined {need} · currently {current}",
+  // 전투 스킬을 모두 모았습니다
+  "upgrade.unlock.skillDone": "Every combat skill is collected",
+  // 해금 현황
+  "upgrade.details": "Unlock progress",
   // 보유 현황
-  "gacha.progress.title": "Collection",
+  "upgrade.progress.title": "Collection",
   // 전투 스킬
-  "gacha.progress.skills": "Combat skills",
-  // 불씨 소환 · {n}개
-  "gacha.reveal.title": "Ember Summon · {n}",
-  // {n}번째 카드 공개
-  "gacha.reveal.cardAria": "Reveal card {n}",
-  // {name} · {label} · {state}
-  "gacha.reveal.revealedAria": "{name} · {label} · {state}",
-  // 빛 색상별 등급
-  "gacha.reveal.legendAria": "Rarity by glow color",
-  // 스킬
-  "gacha.reveal.legendSkill": "Skill",
-  // 카드를 눌러 한 장씩 공개하세요.
-  "gacha.reveal.hint": "Tap a card to reveal it.",
-  // 전체 공개
-  "gacha.reveal.skipAll": "Reveal all",
+  "upgrade.progress.skills": "Combat skills",
+
+  /* ── reveal (해금 공개 연출) ── */
+  // 새로운 전력 해금
+  "reveal.title": "New Power Unlocked",
+  // 카드 공개
+  "reveal.cardAria": "Reveal card",
+  // {name} · {label}
+  "reveal.revealedAria": "{name} · {label}",
+  // 카드를 눌러 공개하세요.
+  "reveal.hint": "Tap the card to reveal it.",
+  // 공개하기
+  "reveal.open": "Reveal",
   // 다음 공개 ({n})
-  "gacha.reveal.next": "Reveal next ({n})",
-  // 결과 요약
-  "gacha.reveal.summaryButton": "Summary",
-  // 소환 결과
-  "gacha.summary.title": "Summon results",
-  // 신규 {fresh} · 조각 +{shards}
-  "gacha.summary.stats": "New {fresh} · Shards +{shards}",
-  // 조각 +{n}
-  "gacha.badge.dup": "Shards +{n}",
+  "reveal.nextOne": "Next reveal ({n})",
   // NEW
-  "gacha.badge.new": "NEW",
+  "reveal.badge.new": "NEW",
   // 전투 스킬
-  "gacha.label.skill": "Combat skill",
-  // {rarity} 수호자
-  "gacha.label.character": "{rarity} guardian",
-  // 조각 +{n}
-  "gacha.state.dup": "shards +{n}",
-  // 신규
-  "gacha.state.new": "new",
-  // 최근 소환 {n}개
-  "gacha.recent.title": "Last {n} summons",
-  // 신규 {fresh} · 조각 +{shards}{best}
-  "gacha.recent.body": "New {fresh} · Shards +{shards}{best}",
-  //  · 최고 {rarity} {name}
-  "gacha.recent.best": " · Best {rarity} {name}",
-  // 소환 카테고리 확률이 모두 0입니다.
-  "gacha.error.noCategory": "Every summon category chance is 0.",
-  // 캐릭터 등급 확률이 모두 0입니다.
-  "gacha.error.noRarity": "Every guardian rarity chance is 0.",
-  // 해당 등급의 캐릭터가 없습니다.
-  "gacha.error.emptyPool": "No guardian exists at that rarity.",
-  // 별불이 부족합니다.
-  "gacha.error.poor": "Not enough starfire.",
-  // 소환 결과를 저장하지 못했습니다.
-  "gacha.error.saveFailed": "Could not save the summon results.",
+  "reveal.label.skill": "Combat skill",
+  // {module} · {rarity} 수호자
+  "reveal.label.character": "{module} · {rarity} guardian",
 
   /* ── prepare ── */
   // 로비로 돌아가기

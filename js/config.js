@@ -617,28 +617,33 @@ const DEFAULT_CONFIG = {
     finalType: 'tank',
   },
   // WAVE 구성과 보스 체력용 가상 구성은 설정값이 아니라 입장한 스테이지의 WAVE 수로 매번 생성한다(RunConfig.battle).
-  // [2026-09-14] 메타 성장 — 희귀도 5단계, 골드 뽑기, 동일 캐릭터 조각 승급.
-  // ASSUMPTION: 아래 수치는 전부 Claude 초기값이다(인철 확정 전). 근거는 시뮬레이션이며
-  // implNotes의 "메타 성장 v3" 항목에 목표별 예상 뽑기 횟수·골드·판수를 적어 두었다.
-  // statMul  — 노말을 1.00으로 두어 기존 전투 밸런스(기본 공격력 1,000)를 그대로 보존한다.
-  // levelCostMul — 레벨업 골드 배율. 뽑기 총액과 레벨업 총액이 비슷해지도록 맞췄다.
-  //                (2026-09-16 소환이 별불로 바뀌어 이 근거는 더 이상 성립하지 않는다 — openItems 메타 경제)
-  // gachaWeight  — 등급 가중치(합 100). 등급 안에서는 캐릭터를 균등 추첨한다.
-  // [2026-09-18] 확정(인철): 한 등급이 바로 위 등급의 정확히 2배가 되도록 잡는다.
-  //                노말:매직:레어:에픽:전설 = 16:8:4:2:1을 합 100으로 환산한 값이다.
-  // duplicateShards — 이미 가진 캐릭터가 또 나왔을 때 주는 조각 수.
-  // shardSteps      — 1→2·2→3·3→4·4→5·5→6성에 필요한 조각 수.
-  // [2026-09-16 v0916_7] 캐릭터와 스킬이 같은 성장 형식을 쓴다 — starStepPct(성급 상승률)·shardSteps·duplicateShards.
+  // [2026-09-18] 메타 성장 전면 개편 — 확정(인철): 뽑기를 없애고 성장 축을 셋으로 나눈다.
+  //   1) 레벨   — 캐릭터·스킬 개인이 아니라 공용 트랙 6종(미사일 4 + 스킬 슬롯 2)이 갖는다. 재화는 골드.
+  //   2) 성급   — 캐릭터·스킬마다 따로 올리며, 재화는 조각이 아니라 별불이다.
+  //   3) 해금   — 수호자는 해당 미사일 트랙 레벨로, 스킬은 스킬 트랙 레벨 합계로 열린다.
+  // statMul     — 노말을 1.00으로 두어 기존 전투 밸런스(기본 공격력 1,000)를 그대로 보존한다.
+  // starfireSteps — 1→2·2→3·3→4·4→5·5→6성에 드는 별불. 등급이 높을수록 비싸다(노말 합계 2,000 기준 ×1.3씩).
+  //                 조각(shardSteps)과 달리 별불은 공용 재화라, 강한 등급일수록 더 든다.
+  // [2026-09-16 v0916_7] 캐릭터와 스킬이 같은 성장 형식을 쓴다 — starStepPct(성급 상승률)·starfireSteps.
   // starStepPct[i] = i성에서 (i+1)성으로 올릴 때의 상승률이며 0번은 쓰지 않는다. 누적 배율은 GrowthRules.starMultiplier.
   meta: {
-    // [2026-09-16] 확정(인철): 별불은 소환 전용 재화다. 소환 가격은 별불 200개로 고정하고 초기 별불은 0이다.
-    // [2026-09-16] 확정(인철): 소환 1회(별불 200)에 결과 10개가 나온다.
-    gacha: { cost:200, currencyId:'starfire', startStarfire:0, resultsPerPull:10, characterWeight:70, skillWeight:30 },
+    // [2026-09-18] 확정(인철): 별불은 소환 재화가 아니라 성급 돌파 전용 재화다. 시작 보유량은 0이며
+    // 공급은 전부 마일스톤에서 나온다(아래 milestones의 별불 6줄).
+    growth: {
+      startStarfire:0,
+      starfireCurrencyId:'starfire',
+      // 미사일 트랙이 이 레벨에 닿을 때마다 그 속성의 다음 수호자가 등급 오름차순으로 열린다.
+      // 미사일마다 수호자가 정확히 6명(노말→매직→레어→에픽→전설→전설)이고 노말은 처음부터 주므로 5단계다.
+      moduleUnlockLevels:[10,20,30,40,50],
+      // 스킬은 두 슬롯 트랙의 레벨 합계가 아래 값을 넘을 때마다 미보유 스킬 중 하나를 무작위로 연다.
+      // 시작 합계는 2(각 Lv.1)이고 상한은 120이라, 20부터 10마다면 기본 지급 2종을 뺀 9종이 딱 맞는다.
+      skillUnlockStart:20, skillUnlockStep:10,
+    },
     // [2026-09-16] 확정(인철): 스킬 레벨업은 캐릭터와 같은 골드 비용표(GrowthCostTable standard)를 쓴다.
-    // 스킬은 희귀도가 없어 배율 없이 그대로 청구한다. 성급은 조각으로 올린다.
+    // [2026-09-18] 레벨은 슬롯 트랙이 가지므로 스킬별 비용 배율은 없다. 성급만 스킬별로 올린다.
     skill: {
-      duplicateShards:1,
-      shardSteps:[2,3,5,7,10],
+      // 스킬은 등급이 없고 미사일 4종 전부에 얹히므로, 캐릭터 레어 등급과 비슷한 총액(2,800)으로 둔다.
+      starfireSteps:[200,340,480,700,1080],
       // 액티브 효과 성급 상승률. 기존 누적 배율 1.00/1.15/1.30/1.45/1.60/1.80(Claude 가안)을 캐릭터와 같은
       // 단계 상승률로 환산한 값이라 누적 배율은 그대로다(openItems: 값 정리 여부).
       starStepPct:[0,0.15,0.130434783,0.115384615,0.103448276,0.125],
@@ -646,27 +651,35 @@ const DEFAULT_CONFIG = {
       // 없어 현재 참조자가 없으며, 계산 경로(SkillGrowthSystem.cooldown)와 함께 되돌릴 수 있도록 남겨 둔다.
       durationUptimeGap:0.15,
     },
-    // [2026-09-16] 반복형 마일스톤. 확정(인철): 별불은 스테이지 돌파에만 250개, 나머지는 골드.
-    // n번째 단계(0부터)의 간격 = target + targetStep×n, 보상 = reward + rewardStep×n (rewardCap>0이면 상한).
+    // [2026-09-16] 반복형 마일스톤. n번째 단계(0부터)의 간격 = target + targetStep×n,
+    // 보상 = reward + rewardStep×n (rewardCap>0이면 상한).
     // targetStep·rewardStep이 0이면 같은 간격을 반복하는 B형, 0보다 크면 목표가 커지는 A형이다.
-    // ASSUMPTION: A/B 배치와 골드 수치는 Claude 가안(인철 위임). 근거는 implNotes v0916_3 자동 플레이 실측.
+    // [2026-09-18] 확정(인철): 별불이 성급 전용 재화가 되면서 공급처가 스테이지 돌파 한 줄로는 모자라
+    // 12줄로 분화했다 — 앞 6줄이 별불, 뒤 6줄이 골드다. 골드 줄은 기존 수치를 그대로 유지한다.
+    // 별불 수요는 편성 4인 + 스킬 2종을 6성까지 올릴 때 약 19,000이고, 아래 공급은 60스테이지 기준 약 22,000이다.
     milestones: {
-      stage_clear:{ target:1,  targetStep:0,  reward:250, rewardStep:0,  rewardCap:0 },
-      waves:      { target:20, targetStep:0,  reward:50,  rewardStep:0,  rewardCap:0 },
-      bosses:     { target:5,  targetStep:0,  reward:50,  rewardStep:0,  rewardCap:0 },
-      skills_used:{ target:25, targetStep:0,  reward:40,  rewardStep:0,  rewardCap:0 },
-      orders:     { target:25, targetStep:10, reward:40,  rewardStep:10, rewardCap:200 },
-      merges:     { target:50, targetStep:25, reward:40,  rewardStep:10, rewardCap:200 },
+      stage_clear:  { target:1,  targetStep:0,  reward:250, rewardStep:0,  rewardCap:0 },
+      best_wave:    { target:5,  targetStep:0,  reward:60,  rewardStep:0,  rewardCap:0 },
+      module_levels:{ target:20, targetStep:0,  reward:120, rewardStep:0,  rewardCap:0 },
+      skill_levels: { target:10, targetStep:0,  reward:80,  rewardStep:0,  rewardCap:0 },
+      stars:        { target:4,  targetStep:0,  reward:200, rewardStep:0,  rewardCap:0 },
+      guardians:    { target:2,  targetStep:0,  reward:300, rewardStep:0,  rewardCap:0 },
+      waves:        { target:20, targetStep:0,  reward:50,  rewardStep:0,  rewardCap:0 },
+      bosses:       { target:5,  targetStep:0,  reward:50,  rewardStep:0,  rewardCap:0 },
+      skills_used:  { target:25, targetStep:0,  reward:40,  rewardStep:0,  rewardCap:0 },
+      orders:       { target:25, targetStep:10, reward:40,  rewardStep:10, rewardCap:200 },
+      merges:       { target:50, targetStep:25, reward:40,  rewardStep:10, rewardCap:200 },
+      owned_skills: { target:1,  targetStep:0,  reward:60,  rewardStep:0,  rewardCap:0 },
     },
     // [2026-09-15] 확정(인철): 성급 상승 때 능력치 배율을 준다(이전에는 레벨 상한만 열었다).
     // 승급 상승률을 15/10/10/10/20%로 고정해 레벨과 무관하게 같은 체감을 준다.
-    // 승급은 상한 레벨에서만 가능하므로 시점이 고정돼 예측 가능하다.
     character: {
       starStepPct:[0,0.15,0.10,0.10,0.10,0.20],
       // [2026-09-17] 확정(인철): 레벨당 능력치 증가폭에 비용 곡선과 같은 형태를 섞는다.
       // 비용은 지수인데 증가폭이 +100 고정이라 후반 레벨의 골드당 가치가 무너졌다.
       // blend 만큼만 섞어(나머지는 기존 선형) 초반 체감은 유지하고 후반만 무겁게 한다.
-      // blend를 1에 가깝게 올리면 몰빵이 유리해져 4인 균등 육성 유인이 사라진다.
+      // [2026-09-18] 레벨이 공용 트랙이 되면서 "한 명 몰빵" 자체가 불가능해졌지만, 후반 레벨을
+      // 무겁게 두는 목적(등반과 레벨의 보조를 맞춘다)은 그대로라 곡선은 손대지 않는다.
       growthCurve:{ blend:0.35, expBase:1.030 },
       // [2026-09-18] 확정(인철): 미사일별 피해 격차를 캐릭터 공격력 계수로 옮겼다.
       // CONFIG.attackModules[key].baseDamageMul은 전부 1.00이 되어 피해에 관여하지 않는다.
@@ -677,11 +690,11 @@ const DEFAULT_CONFIG = {
       moduleAtkMul:{ chain:1.20, explosion:1.00, scatter:1.00, laser:1.20 },
     },
     rarity: {
-      normal:{ statMul:1.00, levelCostMul:1.00, gachaWeight:51.6129, duplicateShards:1, shardSteps:[2,3,4,6,8] },
-      magic: { statMul:1.15, levelCostMul:1.05, gachaWeight:25.8065, duplicateShards:1, shardSteps:[2,3,4,5,7] },
-      rare:  { statMul:1.32, levelCostMul:1.10, gachaWeight:12.9032, duplicateShards:1, shardSteps:[1,2,3,5,6] },
-      epic:  { statMul:1.52, levelCostMul:1.15, gachaWeight:6.4516,  duplicateShards:1, shardSteps:[1,2,3,4,5] },
-      legend:{ statMul:1.75, levelCostMul:1.20, gachaWeight:3.2258,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
+      normal:{ statMul:1.00, starfireSteps:[150,250,350,500,750] },
+      magic: { statMul:1.15, starfireSteps:[195,325,455,650,975] },
+      rare:  { statMul:1.32, starfireSteps:[250,420,590,850,1270] },
+      epic:  { statMul:1.52, starfireSteps:[330,550,770,1100,1650] },
+      legend:{ statMul:1.75, starfireSteps:[430,715,1000,1430,2145] },
     },
   },
 };

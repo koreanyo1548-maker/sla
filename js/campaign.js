@@ -75,14 +75,16 @@ const CampaignStore = {
   // 문구가 아니라 키를 돌려준다 — 표시 시점(Campaign.warn)에 현재 언어로 바꾼다.
   READ_ERROR:'notice.read.error',
   WRITE_ERROR:'notice.write.error',
-  fresh(){return {version:4,gold:0,balances:{starfire:CONFIG.meta.gacha.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),gachaCount:0,stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},best:{wave:0,score:0},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0,shardsGained:0},active:null,lastResult:null};},
+  // [2026-09-18] 성장 개편으로 저장 형식이 v5가 됐다 — 캐릭터·스킬에서 레벨과 조각이 빠지고
+  // 공용 레벨 6종(trackLevels)이 들어왔다. 뽑기 폐지로 gachaCount·lifetime.shardsGained도 없앴다.
+  fresh(){return {version:5,gold:0,balances:{starfire:CONFIG.meta.growth.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),trackLevels:LevelTrackSystem.fresh(),stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},best:{wave:0,score:0},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0},active:null,lastResult:null};},
   validate(s){
     const integer=(n,min,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
-    if(s.version!==4||!integer(s.gold,0)||!integer(s.stamina,0,CAMPAIGN_CONFIG.staminaMax)||!integer(s.staminaChargeClicks,0)||typeof s.tutorialCompleted!=='boolean'||!integer(s.unlocked,1,9999)||!Number.isFinite(s.recoveredAt)||s.recoveredAt<0||
+    if(s.version!==5||!integer(s.gold,0)||!integer(s.stamina,0,CAMPAIGN_CONFIG.staminaMax)||!integer(s.staminaChargeClicks,0)||typeof s.tutorialCompleted!=='boolean'||!integer(s.unlocked,1,9999)||!Number.isFinite(s.recoveredAt)||s.recoveredAt<0||
       !Array.isArray(s.cleared)||!s.cleared.every(n=>integer(n,1,9999))||
       !s.milestoneClaims||typeof s.milestoneClaims!=='object'||Array.isArray(s.milestoneClaims)||!Object.values(s.milestoneClaims).every(n=>integer(n,0))||!s.lifetime||!Object.values(s.lifetime).every(n=>integer(n,0))||
       (s.active&&(!integer(s.active.stageId,1,9999)||!integer(s.active.completed,0,DEFAULT_STAGE_COUNT)||s.active.completed>campaignStage(s.active.stageId).waves||typeof s.active.id!=='string'))) return false;
-    if(!integer(s.gachaCount,0)) return false;
+    if(!LevelTrackSystem.validate(s.trackLevels)) return false;
     if(!CharacterInventorySystem.validate(s.characterInventory)||!SkillInventorySystem.validate(s.skillInventory)||!s.balances||!Object.values(s.balances).every(n=>integer(n,0))) return false;
     return true;
   },
@@ -92,11 +94,11 @@ const CampaignStore = {
   migrate(s){
     if(!s||typeof s!=='object')return s;
     const base=this.fresh(),int0=n=>Number.isSafeInteger(n)&&n>=0;
-    if(!int0(s.gachaCount))s.gachaCount=0;
     if(!s.balances||typeof s.balances!=='object'||Array.isArray(s.balances))s.balances={...base.balances};
     if(!int0(s.balances.starfire))s.balances.starfire=0;
     if(!s.lifetime||typeof s.lifetime!=='object')s.lifetime={};
     Object.keys(base.lifetime).forEach(k=>{if(!int0(s.lifetime[k]))s.lifetime[k]=0;});
+    Object.keys(s.lifetime).forEach(k=>{if(!(k in base.lifetime))delete s.lifetime[k];});   // 조각 누적(shardsGained) 같은 폐지 항목을 걷어낸다
     if(!s.milestoneClaims||typeof s.milestoneClaims!=='object'||Array.isArray(s.milestoneClaims))s.milestoneClaims={};
     // [2026-09-18 연출 세션 B] 결과 화면 NEW BEST 판정용 최고 기록. 이전 저장에는
     // 없으므로 0으로 채운다 — 첫 판이 곧 최고 기록이 된다.
@@ -104,8 +106,12 @@ const CampaignStore = {
     if(!int0(s.best.wave))s.best.wave=0;
     if(!int0(s.best.score))s.best.score=0;
     delete s.claimedMilestones;   // 1회성 수령 기록은 반복형 단계와 호환되지 않아 버린다.
+    delete s.gachaCount;          // 뽑기 폐지로 사라진 누적 집계
+    s.trackLevels=LevelTrackSystem.migrate(s.trackLevels);
     s.characterInventory=CharacterInventorySystem.migrate(s.characterInventory);
     s.skillInventory=SkillInventorySystem.migrate(s.skillInventory);
+    // 임계값을 바꿨거나 해금을 놓친 저장도 여기서 레벨 기준으로 다시 맞춘다.
+    if(s.characterInventory?.characters&&s.skillInventory?.skills)UnlockSystem.apply(s);
     return s;
   },
   read(){
@@ -215,7 +221,7 @@ const Campaign = {
     CharacterLobbyUI.init(this);
     SkillLobbyUI.init(this);
     MilestoneUI.init(this);
-    GachaLobbyUI.init(this);
+    UpgradeLobbyUI.init(this);
     $('#prepare-btn').onclick=()=>this.prepare();
     $('#stamina-charge-btn').onclick=()=>this.chargeStamina();
     $('#back-lobby').onclick=()=>this.showLobby();
@@ -237,7 +243,7 @@ const Campaign = {
     });
   },
   navigate(name){
-    if(!['home','characters','skills','gacha'].includes(name))name='home';
+    if(!['home','characters','skills','upgrade'].includes(name))name='home';
     this.currentLobbyPage=name;
     $('#app').dataset.lobbyPage=name;
     if(name!=='characters')CharacterLobbyUI.close();
@@ -252,14 +258,14 @@ const Campaign = {
     CONFIG=cloneConfig(DEFAULT_CONFIG);
     RunConfig.clear();CharacterLobbyUI.filter='all';CharacterLobbyUI.close();SkillLobbyUI.close();
     if(!this.commit(this.fresh())) return false;
-    this.selectedStage=1;GachaLobbyUI.lastResult=null;
+    this.selectedStage=1;
     this.render();
     CampaignView.notice(t('notice.reset.done'));
     return true;
   },
   showLobby(){
     RunHost.halt();
-    this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();GachaLobbyUI.lastResult=null;GameState.set('lobby');this.render();
+    this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();RevealUI.close();GameState.set('lobby');this.render();
     if(this.pendingUnlockFx){ this.pendingUnlockFx=false; restartCssAnimation($('.journey-scene'),'fx-unlock'); GameAudio.play('stage_unlock'); }
   },
   chargeStamina(){
@@ -290,8 +296,8 @@ const Campaign = {
     CharacterLobbyUI.render(this);
     SkillLobbyUI.render(this);
     MilestoneUI.render(this);
-    GachaLobbyUI.render(this);
-    CampaignView.lobbyPage(['characters','skills','gacha'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
+    UpgradeLobbyUI.render(this);
+    CampaignView.lobbyPage(['characters','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
   },
   prepare(){
     if(!this.read()||this.state.active||this.selectedStage!==this.state.unlocked)return;
