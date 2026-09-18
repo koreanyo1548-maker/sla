@@ -12,6 +12,7 @@ I18N.register("ko", "한국어", {
   "common.continue": "계속하기",
   "common.level": "Lv.{n}",
   "common.notOwned": "미보유",
+  "common.confirm": "확인",
 
   /* ── lobby ── */
   "lobby.stamina.chargeAria": "행동력 {n} 충전",
@@ -332,6 +333,8 @@ I18N.register("ko", "한국어", {
   "result.reward.done": "보상 지급 완료",
   "result.reward.failed": "보상을 저장하지 못했습니다.",
   "result.reward.retrySave": "보상 저장 재시도",
+  "result.milestoneHint": "로비 마일스톤에서 보상 {n}개를 받을 수 있습니다.",
+  "result.starfireHint": "새 스테이지를 처음 클리어했습니다 — 마일스톤에서 별불을 받으세요.",
 
   /* ── tools ── */
   "tools.toggleTitle": "설정 및 도구",
@@ -539,6 +542,10 @@ I18N.register("ko", "한국어", {
   "wave.midboss.label": "보스전",
   "wave.finalboss.short": "최종보스",
   "wave.finalboss.label": "최종보스전",
+
+  /* ── growth ── */
+  "growth.passiveUnlocked": "패시브 해금",
+  "growth.newBest": "NEW BEST",
 
   /* ── rotate ── */
   "rotate.title": "화면을 세로로 돌려주세요",

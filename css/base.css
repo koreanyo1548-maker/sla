@@ -458,6 +458,7 @@
   #passive-codex-wrap[hidden]{display:none!important;}
   #lobby-notice,#save-status{font-size:12px;line-height:1.6;color:var(--energy);}
   #save-status:empty,#lobby-notice:empty{display:none;}
+  #lobby-notice{color:inherit;}
   #save-status{background:var(--surface);padding:8px;flex:none;z-index:15;}
   #stage-brief{padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:12px 0;font-size:12px;line-height:1.8;}
   #back-lobby{width:auto;align-self:flex-start;margin:10px 0;padding:9px 12px;font-size:12px;}

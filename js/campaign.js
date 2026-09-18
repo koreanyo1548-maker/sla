@@ -75,7 +75,7 @@ const CampaignStore = {
   // 문구가 아니라 키를 돌려준다 — 표시 시점(Campaign.warn)에 현재 언어로 바꾼다.
   READ_ERROR:'notice.read.error',
   WRITE_ERROR:'notice.write.error',
-  fresh(){return {version:4,gold:0,balances:{starfire:CONFIG.meta.gacha.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),gachaCount:0,stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0,shardsGained:0},active:null,lastResult:null};},
+  fresh(){return {version:4,gold:0,balances:{starfire:CONFIG.meta.gacha.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),gachaCount:0,stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},best:{wave:0,score:0},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0,shardsGained:0},active:null,lastResult:null};},
   validate(s){
     const integer=(n,min,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
     if(s.version!==4||!integer(s.gold,0)||!integer(s.stamina,0,CAMPAIGN_CONFIG.staminaMax)||!integer(s.staminaChargeClicks,0)||typeof s.tutorialCompleted!=='boolean'||!integer(s.unlocked,1,9999)||!Number.isFinite(s.recoveredAt)||s.recoveredAt<0||
@@ -98,6 +98,11 @@ const CampaignStore = {
     if(!s.lifetime||typeof s.lifetime!=='object')s.lifetime={};
     Object.keys(base.lifetime).forEach(k=>{if(!int0(s.lifetime[k]))s.lifetime[k]=0;});
     if(!s.milestoneClaims||typeof s.milestoneClaims!=='object'||Array.isArray(s.milestoneClaims))s.milestoneClaims={};
+    // [2026-09-18 연출 세션 B] 결과 화면 NEW BEST 판정용 최고 기록. 이전 저장에는
+    // 없으므로 0으로 채운다 — 첫 판이 곧 최고 기록이 된다.
+    if(!s.best||typeof s.best!=='object'||Array.isArray(s.best))s.best={wave:0,score:0};
+    if(!int0(s.best.wave))s.best.wave=0;
+    if(!int0(s.best.score))s.best.score=0;
     delete s.claimedMilestones;   // 1회성 수령 기록은 반복형 단계와 호환되지 않아 버린다.
     s.characterInventory=CharacterInventorySystem.migrate(s.characterInventory);
     s.skillInventory=SkillInventorySystem.migrate(s.skillInventory);
@@ -150,6 +155,12 @@ const CampaignEconomy = {
     clear=!!clear&&run.completed===stage.waves;
     const waveGold=run.completed*stage.waveGold,bonus=clear?stage.clearGold:0;
     const result={id:run.id,stageId:stage.id,completed:run.completed,waveGold,bonus,total:waveGold+bonus,clear};
+    // [연출 세션 B] 최고 기록 갱신 여부. 결과 화면의 NEW BEST 스탬프가 이 값을 본다.
+    s.best??={wave:0,score:0};
+    const wave=Math.max(0,Math.floor(Number(metrics.wave)||0)),score=Math.max(0,Math.floor(Number(metrics.score)||0));
+    result.newBestWave=wave>s.best.wave; result.newBestScore=score>s.best.score;
+    s.best.wave=Math.max(s.best.wave,wave); s.best.score=Math.max(s.best.score,score);
+    result.firstClear=clear&&!s.cleared.includes(stage.id);
     s.gold+=result.total;s.active=null;s.lastResult=result;
     s.lifetime.waves+=run.completed;s.lifetime.clears+=clear?1:0;s.lifetime.bosses+=Number(metrics.bosses)||0;s.lifetime.orders+=Number(metrics.orders)||0;s.lifetime.merges+=Number(metrics.merges)||0;s.lifetime.skillsUsed+=Number(metrics.skillsUsed)||0;
     if(clear){s.unlocked=Math.max(s.unlocked,stage.id+1);if(!s.cleared.includes(stage.id))s.cleared.push(stage.id);}
@@ -165,7 +176,7 @@ const CampaignEconomy = {
    런 입장(RunConfig.battle 구성)·진행 저장·정산을 담당한다. 전투는 runHost()로만 요청한다.
    ===================================================================== */
 const Campaign = {
-  state:null,selectedStage:1,broken:false,currentLobbyPage:'home',
+  state:null,selectedStage:1,broken:false,currentLobbyPage:'home',pendingUnlockFx:false,
   // 지금 경고 줄에 떠 있는 문자열 키. 언어가 바뀌면 이 키로 다시 그린다.
   warnKey:'',
   fresh(){ return CampaignStore.fresh(); },
@@ -249,6 +260,7 @@ const Campaign = {
   showLobby(){
     RunHost.halt();
     this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();GachaLobbyUI.lastResult=null;GameState.set('lobby');this.render();
+    if(this.pendingUnlockFx){ this.pendingUnlockFx=false; restartCssAnimation($('.journey-scene'),'fx-unlock'); GameAudio.play('stage_unlock'); }
   },
   chargeStamina(){
     if(GameState.current!=='lobby'||!this.read()||this.state.active)return false;
@@ -350,9 +362,13 @@ const Campaign = {
       CampaignView.rewardFailure(()=>this.settle(id,clear,metrics));
       return false;
     }
+    // [연출 세션 B · B-6] 새 지역이 열렸으면 로비로 돌아갈 때 배너를 한 번 연다.
+    if(result.clear&&firstClear) this.pendingUnlockFx=true;
     // 저장이 된 뒤에 보고한다 — 커밋이 실패하면 남지 않은 클리어를 보고하게 된다.
     if(result.clear&&firstClear) Analytics.track('stage_clear_first',{stage:st.id});
-    CampaignView.reward(result);return true;
+    CampaignView.reward(result);
+    CampaignView.resultHint(this.state,result);
+    return true;
   },
 };
 
@@ -382,6 +398,9 @@ const OptionsUI = {
     const toggle=$('#options-toggle'); if(!toggle) return;
     toggle.onclick=()=>{ $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙'; this.open(); };
     $('#options-close').onclick=()=>this.close();
+    // [연출 세션 B] 패시브 해금 카드는 옵션과 무관하지만 여기서 한 번만 묶는다.
+    $('#passive-reveal-close').onclick=()=>GameFeedback.closePassiveReveal();
+    $('#passive-reveal').onclick=event=>{ if(event.target===$('#passive-reveal')) GameFeedback.closePassiveReveal(); };
     $('#options-manual').onclick=()=>{
       this.close();
       ManualPanel.build();

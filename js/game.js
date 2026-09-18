@@ -28,6 +28,7 @@ class Game {
     this.outcomeSettled = false;
     // 결과 화면을 다시 그릴 때 필요한 승패. null이면 아직 결과 화면이 아니다.
     this.resultOutcome = null;
+    this.resultRevealTimers = [];
     this.elapsedTime = 0;
     this.stats = {generated:0,merges:0,ordersCompleted:0,skillsUsed:0,energySpent:0,enemiesKilled:0,bossesKilled:0,damageDealt:0,criticalHits:0,pierceDamage:0};
     this.skillReadyState = {};
@@ -201,6 +202,7 @@ class Game {
     GameState.set(clear?'clear':'defeat');
     this.resultOutcome=outcome;
     this.renderResultScreen();
+    this.revealResultSequence();
     if(!this.outcomeSettled) this.outcomeSettled=this.host.settle(this.runId,clear,this.milestoneMetrics());
     // 결과 화면 진입 = 게임플레이 구간 종료. 실제 전송·SDK 연결은 세션 7.
     const durationSec=Math.max(0,Math.round(this.elapsedTime));
@@ -208,6 +210,32 @@ class Game {
     if(clear) Analytics.progression('complete',this.stageId,{wave,durationSec});
     else Analytics.progression('fail',this.stageId,{wave,durationSec,reason:this.endReason==='quit'?'quit':'defeat'});
     Platform.gameplayStop();
+  }
+  /* [연출 세션 B · B-3] 결과 화면을 위에서 아래로 한 단계씩 연다.
+     클리어만 순차로 열고, 패배는 한 번에 띄운 뒤 도달 WAVE를 강조한다.
+     어디든 탭하면 남은 단계가 즉시 전부 나온다. finishRun이 한 번만 부른다 —
+     언어 변경으로 다시 그릴 때는 renderResultScreen만 돌고 이 순서는 유지된다. */
+  static REVEAL_STEP_MS = 250;
+  revealResultSequence(){
+    const screen=$('#screen-result');
+    if(!screen) return;
+    this.resultRevealTimers?.forEach(clearTimeout);
+    this.resultRevealTimers=[];
+    const steps=[$('#result-title'),$('#result-sub'),$('#result-stats'),$('#result-reward'),$('#result-milestone-hint'),$('#retry-btn')].filter(Boolean);
+    // 지난 판의 shown이 남아 있으면 순서 없이 한꺼번에 보인다 — 먼저 걷어낸다.
+    steps.forEach(el=>{ el.classList.add('result-step'); el.classList.remove('shown'); });
+    screen.dataset.reveal='1';
+    screen.classList.toggle('defeat-result',this.resultOutcome!=='clear');
+    const showAll=()=>{
+      this.resultRevealTimers.forEach(clearTimeout);
+      this.resultRevealTimers=[];
+      steps.forEach(el=>el.classList.add('shown'));
+      screen.onclick=null;
+    };
+    if(this.resultOutcome!=='clear'||this.prefersReducedMotion()){ showAll(); return; }
+    steps.forEach((el,index)=>this.resultRevealTimers.push(
+      setTimeout(()=>el.classList.add('shown'),index*Game.REVEAL_STEP_MS)));
+    screen.onclick=showAll;
   }
   // 결과 화면의 문구 전부. finishRun이 한 번 부르고, 언어가 바뀌면 Screens가 다시 부른다.
   renderResultScreen(){
@@ -220,7 +248,10 @@ class Game {
       : t('result.subDefeat',{stage:this.stageId,wave:this.currentWaveCfg?.wave||'?'});
     this.renderResultStats();
   }
-  milestoneMetrics(){return {bosses:this.stats.bossesKilled,orders:this.stats.ordersCompleted,merges:this.stats.merges,skillsUsed:this.stats.skillsUsed};}
+  // wave·score는 마일스톤이 아니라 최고 기록(NEW BEST) 판정에 쓴다 — 정산이
+  // 한 번에 받아 가도록 같은 객체에 싣는다. [연출 세션 B]
+  milestoneMetrics(){return {bosses:this.stats.bossesKilled,orders:this.stats.ordersCompleted,merges:this.stats.merges,skillsUsed:this.stats.skillsUsed,
+    wave:this.currentWaveCfg?.wave||0,score:this.scoreSystem?.score||0};}
   addEnergy(n){ this.energy += n; this.updateEnergyUi(); }
   showEnergyGain(n){
     const display=$('#energy-display');

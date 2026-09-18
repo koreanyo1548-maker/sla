@@ -4,6 +4,7 @@ common.close,닫기,Close
 common.continue,계속하기,Continue
 common.level,Lv.{n},Lv.{n}
 common.notOwned,미보유,Not owned
+common.confirm,확인,OK
 lobby.stamina.chargeAria,행동력 {n} 충전,Recharge {n} stamina
 lobby.stamina.full,행동력 충전 완료,Stamina full
 lobby.stamina.timer,+1 회복 {time},+1 in {time}
@@ -302,6 +303,8 @@ result.reward.retryHint,수호자와 스킬을 성장시키고 다시 도전하�
 result.reward.done,보상 지급 완료,Rewards granted
 result.reward.failed,보상을 저장하지 못했습니다.,Could not save the rewards.
 result.reward.retrySave,보상 저장 재시도,Retry saving rewards
+result.milestoneHint,로비 마일스톤에서 보상 {n}개를 받을 수 있습니다.,{n} milestone rewards are ready in the lobby.
+result.starfireHint,새 스테이지를 처음 클리어했습니다 — 마일스톤에서 별불을 받으세요.,First clear of a new stage — claim your starfire from milestones.
 tools.toggleTitle,설정 및 도구,Settings and tools
 tools.openAria,도구 메뉴 열기,Open tool menu
 tools.closeAria,도구 메뉴 닫기,Close tool menu
@@ -475,5 +478,7 @@ wave.midboss.short,보스,Boss
 wave.midboss.label,보스전,Boss wave
 wave.finalboss.short,최종보스,Final
 wave.finalboss.label,최종보스전,Final boss wave
+growth.passiveUnlocked,패시브 해금,PASSIVE UNLOCKED
+growth.newBest,NEW BEST,NEW BEST
 rotate.title,화면을 세로로 돌려주세요,Please turn your screen upright
 rotate.body,이 게임은 세로 화면에 맞춰져 있습니다.,This game is built for a portrait screen.

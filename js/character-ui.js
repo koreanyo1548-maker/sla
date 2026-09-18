@@ -39,13 +39,25 @@ const CharacterLobbyUI={
       if(event.target.closest('[data-go-recruit]')){this.close();campaign.navigate('gacha');return;}
       const action=event.target.closest('[data-character-action]');
       if(action&&this.modalCharacterId){
-        const id=this.modalCharacterId;
-        if(CharacterGrowthSystem.transact(campaign,id,action.dataset.characterAction)){GameFeedback.burst($('#character-modal-content'));GameFeedback.toast(t('character.toast.grown',{name:t(CharacterTable[id].nameKey)}));}
+        const id=this.modalCharacterId,kind=action.dataset.characterAction;
+        // transact가 성공하면 그 안에서 campaign.render()가 돌아 모달이 새로 그려진다.
+        // 연출은 새 DOM에 얹어야 하므로 거래 전 값을 먼저 찍어 둔다. [연출 세션 B]
+        const owned=campaign.state.characterInventory.characters[id];
+        const before={stats:CharacterGrowthSystem.stats(id,owned),star:Number(owned?.star)||1};
+        if(CharacterGrowthSystem.transact(campaign,id,kind)){
+          this.playGrowthFx(campaign,id,kind,before);
+          GameFeedback.toast(t('character.toast.grown',{name:t(CharacterTable[id].nameKey)}));
+        }
         else campaign.render();return;
       }
       if(event.target.closest('[data-character-deploy]')&&this.modalCharacterId){
-        const c=CharacterTable[this.modalCharacterId];
-        if(CharacterGrowthSystem.assign(campaign,this.modalCharacterId)){GameAudio.play('up');this.close();GameFeedback.toast(t('character.toast.deployed',{name:t(c.nameKey),module:t(MISSILE_DEFS[c.specialtyMissileId].labelKey)}));}
+        const id=this.modalCharacterId,c=CharacterTable[id];
+        if(CharacterGrowthSystem.assign(campaign,id)){
+          GameAudio.play('up');this.close();
+          GameFeedback.toast(t('character.toast.deployed',{name:t(c.nameKey),module:t(MISSILE_DEFS[c.specialtyMissileId].labelKey)}));
+          // [연출 세션 B · B-6] 홈 파티 요약의 해당 슬롯이 바뀐 것을 알린다.
+          GameFeedback.burst($(`[data-home-hero="${id}"]`));
+        }
       }
     });
     document.addEventListener('keydown',event=>{
@@ -58,6 +70,33 @@ const CharacterLobbyUI={
         else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
       }
     });
+  },
+  /* [연출 세션 B · B-2] 레벨업 · 승급 · 패시브 해금을 눈으로 구분한다.
+     레벨업은 기존 growth-burst + 능력치 countUp, 승급은 별이 하나씩 채워지고
+     초상에 등급색 링이 퍼진다. 이번 승급으로 성급 패시브가 열렸으면 카드가
+     따로 올라온다 — 해금 단계는 PassiveUnlockTable에서 읽는다. */
+  playGrowthFx(campaign,id,kind,before){
+    const content=$('#character-modal-content');
+    const owned=campaign.state.characterInventory.characters[id];
+    const after=CharacterGrowthSystem.stats(id,owned);
+    $$('[data-stat]',content).forEach(el=>{
+      const key=el.dataset.stat;
+      GameFeedback.countUp(el,after[key],{from:before.stats[key]});
+    });
+    if(kind==='levelUp'){ GameFeedback.burst(content); return; }
+    GameFeedback.starUp({
+      stars:$('.character-stars',content),
+      hero:$('.character-modal-hero',content),
+      color:RarityTable[CharacterTable[id].rarityId].color,
+    });
+    const opened=PassiveUnlockTable.find(u=>u.characterId===id&&u.unlockType==='star'
+      &&u.unlockValue>before.star&&u.unlockValue<=(Number(owned?.star)||1));
+    if(!opened) return;
+    // 승급 연출이 끝난 뒤에 올린다 — 겹치면 둘 다 안 보인다.
+    setTimeout(()=>GameFeedback.passiveReveal({
+      name:t(PassiveTable[opened.passiveId].nameKey),
+      lines:this.passiveText(opened.passiveId).split(' / '),
+    }),700);
   },
   canGrow(campaign,id){const x=campaign.state.characterInventory.characters[id];return ['levelUp','rankUp'].some(action=>CharacterGrowthSystem.allowed(x,action)&&CharacterGrowthSystem.payable(campaign,id,x,action));},
   renderFormation(party){
@@ -72,7 +111,7 @@ const CharacterLobbyUI={
       .sort((a,b)=>Number(inv.characters[b.characterId].owned)-Number(inv.characters[a.characterId].owned)||(RarityTable[b.rarityId].order-RarityTable[a.rarityId].order)||a.sortOrder-b.sortOrder);
     return `<div class="roster-toolbar"><span>${t('character.roster.sort')}</span><button data-owned-toggle aria-pressed="${this.ownedOnly}">${this.ownedOnly?'☑':'☐'} ${t('character.roster.ownedOnly')}</button></div><div class="character-roster">${list.map(c=>{
       const x=inv.characters[c.characterId],deployed=inv.formation[c.specialtyMissileId]===c.characterId,r=RarityTable[c.rarityId];
-      return `<button data-character-id="${c.characterId}" class="${deployed?'chosen':''}${x.owned?'':' locked'}" style="--character-color:${r.color}" aria-label="${t('character.roster.aria',{name:t(c.nameKey),rarity:t(r.nameKey),state:x.owned?t('character.roster.levelState',{level:x.level}):t('common.notOwned')})}"><span class="roster-art-wrap">${GameArt.portrait(c.characterId)}<span class="roster-rarity">${t(r.shortKey)}</span>${deployed?`<span class="deployed-badge">${t('character.roster.deployed')}</span>`:''}${x.owned&&this.canGrow(campaign,c.characterId)?`<span class="growth-ready" aria-label="${t('character.roster.growable')}">↑</span>`:''}</span><div class="roster-copy"><b>${t(c.nameKey)}</b><small>${x.owned?`${'★'.repeat(x.star)} <span>${t('common.level',{n:x.level})}</span>`:t('common.notOwned')} </small>${GameArt.module(c.specialtyMissileId,'module-mini')}</div></button>`;
+      return `<button data-character-id="${c.characterId}" class="${deployed?'chosen':''}${x.owned?'':' locked'}" style="--character-color:${r.color}" aria-label="${t('character.roster.aria',{name:t(c.nameKey),rarity:t(r.nameKey),state:x.owned?t('character.roster.levelState',{level:x.level}):t('common.notOwned')})}"><span class="roster-art-wrap">${GameArt.portrait(c.characterId)}<span class="roster-rarity">${t(r.shortKey)}</span>${deployed?`<span class="deployed-badge">${t('character.roster.deployed')}</span>`:''}${x.owned&&this.canGrow(campaign,c.characterId)?`<span class="growth-ready" aria-label="${t('character.roster.growable')}">↑</span>`:''}</span><div class="roster-copy"><b>${t(c.nameKey)}</b><small>${x.owned?`${starMarkup(x.star)} <span>${t('common.level',{n:x.level})}</span>`:t('common.notOwned')} </small>${GameArt.module(c.specialtyMissileId,'module-mini')}</div></button>`;
     }).join('')}</div>`;
   },
   render(campaign){
@@ -110,7 +149,7 @@ const CharacterLobbyUI={
         :(x.star>=CharacterGrowthRules.maxStars?t('character.detail.rankMax'):t('character.detail.rankCost',{n:CharacterGrowthSystem.shardCost(id,x)}));
       return `<button class="primary" data-character-action="${action}" ${locked||!ok||!payable?'disabled':''}>${label}<small>${detail}</small></button>`;
     };
-    $('#character-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${t(r.nameKey)}</span><h2 id="character-modal-title">${t(c.nameKey)}</h2><span class="character-stars">${'★'.repeat(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${t(IdentityTable[c.identityId])}</span><span>${t(RaceTable[c.raceId])}</span><span style="color:${def.color}">${t('character.detail.specialty',{module:t(def.labelKey)})}</span></div><div class="character-level-bar"><b>${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</b><div class="level-track"><span style="width:${x.level/CharacterGrowthRules.maxLevel*100}%"></span></div><span>${CharacterGrowthRules.maxLevel}</span></div><div class="character-stats">${[['atk','character.detail.statAtk'],['def','character.detail.statDef'],['hp','character.detail.statHp']].map(([k,labelKey])=>`<div><small>${t(labelKey)}</small><b>${I18N.num(stats[k])}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?t('character.detail.nextStat',{value:next[k]}):canRank?t('character.detail.rankUpStat',{value:rankNext[k]}):t('character.detail.baseStat')}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?t('character.detail.starPassive',{n:pv.need}):t('character.detail.innatePassive')}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(line=>`<li>${line}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${t('character.detail.shards',{name:t(c.nameKey)})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div>`:`<p class="meta-note">${t('character.detail.recruitHint',{rarity:t(r.nameKey),pct:GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)})}</p>`}</div></div><div class="character-modal-footer">${x.owned?`<div class="character-actions">${button('levelUp',t('character.detail.levelUp'))}${button('rankUp',t('character.detail.rankUp'))}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?t('character.detail.deployed',{module:t(def.labelKey)}):t('character.detail.deploy')}</button>`:`<button class="primary character-deploy-button" data-go-recruit>${t('character.detail.goRecruit')}</button>`}</div>`;
+    $('#character-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${t(r.nameKey)}</span><h2 id="character-modal-title">${t(c.nameKey)}</h2><span class="character-stars">${starMarkup(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${t(IdentityTable[c.identityId])}</span><span>${t(RaceTable[c.raceId])}</span><span style="color:${def.color}">${t('character.detail.specialty',{module:t(def.labelKey)})}</span></div><div class="character-level-bar"><b>${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</b><div class="level-track"><span style="width:${x.level/CharacterGrowthRules.maxLevel*100}%"></span></div><span>${CharacterGrowthRules.maxLevel}</span></div><div class="character-stats">${[['atk','character.detail.statAtk'],['def','character.detail.statDef'],['hp','character.detail.statHp']].map(([k,labelKey])=>`<div><small>${t(labelKey)}</small><b data-stat="${k}">${I18N.num(stats[k])}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?t('character.detail.nextStat',{value:next[k]}):canRank?t('character.detail.rankUpStat',{value:rankNext[k]}):t('character.detail.baseStat')}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?t('character.detail.starPassive',{n:pv.need}):t('character.detail.innatePassive')}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(line=>`<li>${line}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${t('character.detail.shards',{name:t(c.nameKey)})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div>`:`<p class="meta-note">${t('character.detail.recruitHint',{rarity:t(r.nameKey),pct:GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)})}</p>`}</div></div><div class="character-modal-footer">${x.owned?`<div class="character-actions">${button('levelUp',t('character.detail.levelUp'))}${button('rankUp',t('character.detail.rankUp'))}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?t('character.detail.deployed',{module:t(def.labelKey)}):t('character.detail.deploy')}</button>`:`<button class="primary character-deploy-button" data-go-recruit>${t('character.detail.goRecruit')}</button>`}</div>`;
   },
 };
 
@@ -158,7 +197,10 @@ const MilestoneSystem={
     if(!WalletSystem.earn(next,row.currencyId,st.total))return false;
     if(!campaign.commit(next))return false;
     Analytics.track('milestone_claim',{id,tier:st.tier+st.count});
-    campaign.render();MilestoneUI.render(campaign);GameFeedback.toast(t('milestone.toast.claimed',{currency:t(CurrencyTable[row.currencyId].nameKey),amount:st.total}));return true;
+    campaign.render();MilestoneUI.render(campaign);
+    // [연출 세션 B · B-4] 수령한 행을 접고, 헤더 재화는 CampaignView.wallet의 countUp이 받는다.
+    $(`[data-claim-milestone="${id}"]`)?.closest('.milestone-card')?.classList.add('fx-claimed');
+    GameFeedback.toast(t('milestone.toast.claimed',{currency:t(CurrencyTable[row.currencyId].nameKey),amount:st.total}));return true;
   },
   claimableCount(state){return MILESTONE_TABLE.filter(row=>this.claimable(state,row)).length;},
 };
@@ -195,7 +237,7 @@ const SkillLobbyUI={
     const inv=campaign.state.skillInventory,equipped=inv.equipped;
     $('#skill-count').textContent=t('skill.count',{owned:SKILL_KEYS.filter(key=>inv.skills[key].owned).length,total:SKILL_KEYS.length});
     const slotHtml=equipped.map((key,index)=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-slot" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-icon">${m.icon}</span><b>${t('skill.slotName',{index:index+1,name:t(d.nameKey)})}</b><small>${t('skill.slotLine',{level:x.level,effect:this.effectText(key,x)})}</small></button>`;}).join('');
-    $('#skill-lobby-content').innerHTML=`<div class="skill-equipped-panel"><strong>${t('skill.equipped.title')}</strong><div class="skill-equipped-grid">${slotHtml}</div></div><div class="skill-card-grid">${SKILL_KEYS.map(key=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-card${x.owned?'':' locked'}${equipped.includes(key)?' equipped':''}" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-level">${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</span><span class="skill-icon">${m.icon}</span><b>${t(d.nameKey)}</b><small>${x.owned?this.effectText(key,x):t('skill.card.locked')}</small><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div></button>`;}).join('')}</div>`;
+    $('#skill-lobby-content').innerHTML=`<div class="skill-equipped-panel"><strong>${t('skill.equipped.title')}</strong><div class="skill-equipped-grid">${slotHtml}</div></div><div class="skill-card-grid">${SKILL_KEYS.map(key=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-card${x.owned?'':' locked'}${equipped.includes(key)?' equipped':''}" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-level">${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</span><span class="skill-icon">${m.icon}</span><b>${t(d.nameKey)}</b><small>${x.owned?this.effectText(key,x):t('skill.card.locked')}</small><div class="skill-stars">${starMarkup(x.star,CharacterGrowthRules.maxStars)}</div></button>`;}).join('')}</div>`;
     $$('[data-skill-open]').forEach(button=>button.onclick=()=>this.open(campaign,button.dataset.skillOpen,button));
     const ready=SKILL_KEYS.some(key=>{const x=inv.skills[key];return SkillGrowthSystem.allowed(x,'levelUp')&&SkillGrowthSystem.costs(x).length>0&&WalletSystem.canPay(campaign.state,SkillGrowthSystem.costs(x))||SkillGrowthSystem.allowed(x,'rankUp')&&x.shards>=SkillGrowthSystem.shardCost(x);});
     $('#skill-nav-dot').hidden=!ready;
@@ -207,8 +249,20 @@ const SkillLobbyUI={
   renderModal(campaign,key){
     const x=campaign.state.skillInventory.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key],stats=SkillGrowthSystem.stats(key,x),nextStats=SkillGrowthSystem.stats(key,{...x,level:x.level+1}),equipped=campaign.state.skillInventory.equipped;
     const levelAllowed=SkillGrowthSystem.allowed(x,'levelUp'),rankAllowed=SkillGrowthSystem.allowed(x,'rankUp'),levelCost=SkillGrowthSystem.levelCost(x),rankCost=SkillGrowthSystem.shardCost(x);
-    $('#skill-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${t(d.nameKey)}</h2><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div><small>${x.owned?t('skill.detail.levelOfMax',{level:x.level,max:CharacterGrowthRules.maxLevel}):t('common.notOwned')}</small></div></div><div class="character-modal-section"><strong>${t('skill.detail.active')}</strong><p>${t(m.descKey)}</p><b>${this.effectText(key,x)}</b><small>${t('skill.detail.cooldown',{sec:SkillGrowthSystem.cooldown(key),growth:d.growth==='duration'?t('skill.detail.growthDuration',{sec:d.durationPerStar}):t('skill.detail.growthEffect')})}</small></div><div class="character-modal-section"><strong>${t('skill.detail.stats')}</strong><div class="character-stats">${[['atk','skill.detail.statAtk'],['def','skill.detail.statDef'],['hp','skill.detail.statHp']].map(([s,labelKey])=>`<div><small>${t(labelKey)}</small><b>+${stats[s]}</b><small>${levelAllowed?t('skill.detail.nextStat',{value:nextStats[s]}):t('skill.detail.maxStat')}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${t('skill.detail.shards',{name:t(d.nameKey)})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div>`:`<p class="meta-note">${t('skill.detail.gachaHint')}</p>`}</div><div class="character-modal-footer">${x.owned?`<div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>${t('skill.detail.levelUp')}<small>${levelAllowed?t('skill.detail.levelCost',{amount:levelCost}):t('skill.detail.levelMax')}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>${t('skill.detail.rankUp')}<small>${t('skill.detail.rankCost',{n:rankCost})}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?t('skill.detail.slotEquipped',{n:slot+1}):t('skill.detail.slotEquip',{n:slot+1})}</button>`).join('')}</div>`:''}</div>`;
-    $$('[data-skill-action]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.transact(campaign,key,button.dataset.skillAction)){this.renderModal(campaign,key);MilestoneUI.render(campaign);}});
+    $('#skill-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${t(d.nameKey)}</h2><div class="skill-stars">${starMarkup(x.star,CharacterGrowthRules.maxStars)}</div><small>${x.owned?t('skill.detail.levelOfMax',{level:x.level,max:CharacterGrowthRules.maxLevel}):t('common.notOwned')}</small></div></div><div class="character-modal-section"><strong>${t('skill.detail.active')}</strong><p>${t(m.descKey)}</p><b>${this.effectText(key,x)}</b><small>${t('skill.detail.cooldown',{sec:SkillGrowthSystem.cooldown(key),growth:d.growth==='duration'?t('skill.detail.growthDuration',{sec:d.durationPerStar}):t('skill.detail.growthEffect')})}</small></div><div class="character-modal-section"><strong>${t('skill.detail.stats')}</strong><div class="character-stats">${[['atk','skill.detail.statAtk'],['def','skill.detail.statDef'],['hp','skill.detail.statHp']].map(([s,labelKey])=>`<div><small>${t(labelKey)}</small><b data-stat="${s}">+${stats[s]}</b><small>${levelAllowed?t('skill.detail.nextStat',{value:nextStats[s]}):t('skill.detail.maxStat')}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${t('skill.detail.shards',{name:t(d.nameKey)})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div>`:`<p class="meta-note">${t('skill.detail.gachaHint')}</p>`}</div><div class="character-modal-footer">${x.owned?`<div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>${t('skill.detail.levelUp')}<small>${levelAllowed?t('skill.detail.levelCost',{amount:levelCost}):t('skill.detail.levelMax')}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>${t('skill.detail.rankUp')}<small>${t('skill.detail.rankCost',{n:rankCost})}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?t('skill.detail.slotEquipped',{n:slot+1}):t('skill.detail.slotEquip',{n:slot+1})}</button>`).join('')}</div>`:''}</div>`;
+    $$('[data-skill-action]').forEach(button=>button.onclick=()=>{
+      // 수호자와 같은 연출을 쓴다 — 스킬에는 패시브가 없어 승급까지만 있다. [연출 세션 B]
+      const owned=campaign.state.skillInventory.skills[key];
+      const before={stats:SkillGrowthSystem.stats(key,owned),star:Number(owned?.star)||1};
+      if(!SkillGrowthSystem.transact(campaign,key,button.dataset.skillAction))return;
+      this.renderModal(campaign,key);MilestoneUI.render(campaign);
+      const content=$('#skill-modal-content'),next=campaign.state.skillInventory.skills[key];
+      const after=SkillGrowthSystem.stats(key,next);
+      $$('[data-stat]',content).forEach(el=>GameFeedback.countUp(el,after[el.dataset.stat],
+        {from:before.stats[el.dataset.stat],format:v=>`+${I18N.num(Math.round(v))}`}));
+      if(button.dataset.skillAction==='levelUp') GameFeedback.burst(content);
+      else GameFeedback.starUp({stars:$('.skill-stars',content),hero:$('.skill-detail-head',content),color:SKILL_DEFS[key].color});
+    });
     $$('[data-skill-slot]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.equip(campaign,key,Number(button.dataset.skillSlot)))this.renderModal(campaign,key);});
   },
 };
@@ -246,7 +300,9 @@ const MilestoneUI={
   },
   render(campaign){
     const state=campaign.state;if(!state)return;const count=MilestoneSystem.claimableCount(state);
-    $('#milestone-home-dot').hidden=!count;
+    // 점이 아니라 개수를 낸다 — 몇 개가 밀려 있는지가 보여야 들어간다. [연출 세션 B]
+    const dot=$('#milestone-home-dot');
+    dot.hidden=!count; dot.textContent=count?I18N.num(count):'';
     this.renderStrip(campaign);
     $('#milestone-list').innerHTML=MILESTONE_TABLE.map(row=>{const st=MilestoneSystem.status(state,row),cur=t(CurrencyTable[row.currencyId].nameKey),pct=Math.min(100,st.current/st.need*100);return `<article class="milestone-card${st.ready?' claimable':''}"><span class="milestone-icon">${row.icon}</span><div class="milestone-copy"><b>${t(row.nameKey)}<em class="milestone-tier">${t('milestone.tier',{n:st.tier+1})}</em></b><small>${t('milestone.card.progress',{description:t(row.descKey),current:st.current,need:st.need})}</small><div class="milestone-progress"><i style="width:${pct}%"></i></div><div class="milestone-reward">${t('milestone.card.reward',{currency:cur,amount:st.ready?st.total:st.reward})}${st.count>1?t('milestone.card.bulk',{n:st.count}):''}</div></div><button data-claim-milestone="${row.id}" ${st.ready?'':'disabled'}>${t(st.ready?'milestone.card.claim':'milestone.card.inProgress')}</button></article>`;}).join('');
     $$('[data-claim-milestone]').forEach(button=>button.onclick=()=>MilestoneSystem.claim(campaign,button.dataset.claimMilestone));

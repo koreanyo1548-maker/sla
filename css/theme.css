@@ -70,8 +70,11 @@ button:focus-visible{outline:3px solid var(--energy);outline-offset:3px}
 #lobby-nav button[aria-current=page]::after{content:"";position:absolute;top:-6px;left:30%;right:30%;height:3px;border-radius:2px;background:var(--text-primary);box-shadow:0 1px 8px color-mix(in srgb, var(--text-primary) 60%, transparent)}
 #lobby-nav .ui-icon{width:25px;height:25px}
 #lobby-nav i{position:absolute;top:7px;right:24%;width:7px;height:7px;background:var(--explosion);border:1px solid var(--text-primary);border-radius:50%;box-shadow:0 0 8px var(--explosion)}
-#lobby-notice{display:block;pointer-events:none;position:absolute;z-index:120;top:135px;left:24px;right:24px;min-height:0;text-align:center;padding:10px 14px;background:color-mix(in srgb, var(--bg) 93%, transparent);border:1px solid var(--border);border-radius:12px;box-shadow:0 7px 24px color-mix(in srgb, var(--bg) 53%, transparent);font-size:13px;color:var(--text-primary);opacity:0;transform:translateY(-10px);transition:.2s}
-#lobby-notice.visible{opacity:1;transform:translateY(0)}
+/* [2026-09-18 연출 세션 B] 토스트는 한 줄을 덮어쓰지 않고 쌓인다.
+   #lobby-notice는 자리만 잡는 통이고, 상자 모양은 .toast가 갖는다. */
+#lobby-notice{display:grid;gap:6px;pointer-events:none;position:absolute;z-index:120;top:135px;left:24px;right:24px;min-height:0}
+#lobby-notice .toast{text-align:center;padding:10px 14px;background:color-mix(in srgb, var(--bg) 93%, transparent);border:1px solid var(--border);border-radius:12px;box-shadow:0 7px 24px color-mix(in srgb, var(--bg) 53%, transparent);font-size:13px;color:var(--text-primary);opacity:0;transform:translateY(-10px);transition:.2s}
+#lobby-notice .toast.visible{opacity:1;transform:translateY(0)}
 #save-status{z-index:150;font-size:12px;background:var(--border)}
 .lobby-page[hidden]{display:none!important}
 #lobby-characters,#lobby-gacha{padding:20px 16px 18px;background:radial-gradient(ellipse at 70% 0,var(--surface-2),var(--surface) 75%);min-height:100%}

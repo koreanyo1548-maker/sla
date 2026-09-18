@@ -17,6 +17,8 @@ I18N.register("en", "English", {
   "common.level": "Lv.{n}",
   // 미보유
   "common.notOwned": "Not owned",
+  // 확인
+  "common.confirm": "OK",
 
   /* ── lobby ── */
   // 행동력 {n} 충전
@@ -635,6 +637,10 @@ I18N.register("en", "English", {
   "result.reward.failed": "Could not save the rewards.",
   // 보상 저장 재시도
   "result.reward.retrySave": "Retry saving rewards",
+  // 로비 마일스톤에서 보상 {n}개를 받을 수 있습니다.
+  "result.milestoneHint": "{n} milestone rewards are ready in the lobby.",
+  // 새 스테이지를 처음 클리어했습니다 — 마일스톤에서 별불을 받으세요.
+  "result.starfireHint": "First clear of a new stage — claim your starfire from milestones.",
 
   /* ── tools ── */
   // 설정 및 도구
@@ -1015,6 +1021,12 @@ I18N.register("en", "English", {
   "wave.finalboss.short": "Final",
   // 최종보스전
   "wave.finalboss.label": "Final boss wave",
+
+  /* ── growth ── */
+  // 패시브 해금
+  "growth.passiveUnlocked": "PASSIVE UNLOCKED",
+  // NEW BEST
+  "growth.newBest": "NEW BEST",
 
   /* ── rotate ── */
   // 화면을 세로로 돌려주세요

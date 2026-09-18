@@ -114,6 +114,7 @@
     <div id="result-title"></div>
     <div id="result-sub" style="color:var(--dim);font-size:13px;"></div>
     <div id="result-stats"></div><div id="result-reward" aria-live="polite"></div>
+    <p id="result-milestone-hint"></p>
     <button id="retry-btn" data-i18n="result.retry"></button>
   </div>
 
@@ -145,6 +146,16 @@
   </div>
 
   <div id="recruit-modal" class="reveal-overlay" hidden><section class="reveal-dialog" role="dialog" aria-modal="true" aria-labelledby="reveal-title"><div id="reveal-content"></div><div class="reveal-actions"><button id="reveal-skip" class="secondary" hidden data-i18n="gacha.reveal.skipAll"></button><button id="reveal-close" class="primary" data-i18n="common.continue"></button></div></section></div>
+  <!-- [2026-09-18 연출 세션 B] 승급으로 성급 패시브가 열리면 이 카드가 아래에서
+       올라온다. 해금 시점(3성) 판단은 PassiveUnlockTable을 읽는 쪽이 한다. -->
+  <div id="passive-reveal" hidden role="dialog" aria-modal="true" data-i18n-aria="growth.passiveUnlocked">
+    <div class="passive-reveal-card">
+      <span class="passive-reveal-kicker" data-i18n="growth.passiveUnlocked"></span>
+      <strong id="passive-reveal-name"></strong>
+      <ul id="passive-reveal-lines" class="passive-lines"></ul>
+      <button id="passive-reveal-close" data-i18n="common.confirm"></button>
+    </div>
+  </div>
   <div id="manual-panel"></div>
   <!-- [2026-09-18 연출 세션 A] 화면 경계를 넘나드는 연출용 계층. #combat-wrap은
        overflow:hidden이라 보드에서 전장으로 날아가는 연출을 담을 수 없다. -->

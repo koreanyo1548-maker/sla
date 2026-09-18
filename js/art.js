@@ -139,6 +139,8 @@ const GameAudio={
     hit_chain:null, hit_explosion:null, hit_scatter:null, hit_laser:null,
     kill:null, kill_boss:null, merge:null, generate:null,
     order_complete:null, skill_use:null,
+    // 로드맵 6단계에서 채운다 — 로비·성장 (연출 세션 B)
+    level_up:null, star_up:null, passive_unlock:null, new_best:null, stage_unlock:null,
     core_hit:null, core_low:null,
     wave_clear:null, boss_alert:null, clear:null, defeat:null,
   },
@@ -154,9 +156,118 @@ const GameAudio={
   },
 };
 
+/* 별 아이콘을 낱개 요소로 낸다 — 승급 연출(GameFeedback.starUp)이 하나씩
+   채우려면 텍스트 한 덩어리가 아니라 개별 요소여야 한다. [연출 세션 B] */
+function starMarkup(star,max=0){
+  const filled=Math.max(0,Math.floor(Number(star)||0));
+  return Array.from({length:Math.max(filled,Math.floor(Number(max)||0))},
+    (_,i)=>i<filled?'<i>★</i>':'<i class="empty">☆</i>').join('');
+}
+
+/* =====================================================================
+   [GameFeedback] 로비·성장 피드백
+   ---------------------------------------------------------------------
+   [2026-09-18 연출 세션 B] 수치가 바뀌는 자리는 countUp 하나로 모으고(B-1),
+   성장은 레벨업·승급·패시브 해금이 서로 다르게 보이게 한다(B-2). 토스트는
+   덮어쓰지 않고 최대 세 개까지 쌓인다(B-6).
+
+   prefers-reduced-motion이 켜져 있으면 tween과 별 채우기를 건너뛰고 결과
+   값만 박는다 — 연출이 없을 뿐 정보는 그대로 보인다.
+   ===================================================================== */
 const GameFeedback={
-  timer:null,
-  toast(message){const el=document.getElementById('lobby-notice');if(!el)return;el.textContent=message;el.classList.add('visible');clearTimeout(this.timer);this.timer=setTimeout(()=>el.classList.remove('visible'),2800);},
-  burst(el){if(!el)return;el.classList.remove('growth-burst');void el.offsetWidth;el.classList.add('growth-burst');GameAudio.play('up');},
+  TOAST_MS:2200, TOAST_MAX:3, STAR_STEP_MS:150,
+  counters:new WeakMap(),
+  reduced(){ try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(_){ return false; } },
+
+  /* --- B-1 수치 변화 ---------------------------------------------------
+     직전 값은 요소가 스스로 들고 있다(dataset.countValue). 호출부가 이전
+     값을 따로 보관하지 않아도 되고, 1초마다 도는 지갑 렌더는 값이 그대로면
+     조용히 지나간다. 모달처럼 통째로 다시 그려지는 자리는 from을 넘긴다. */
+  countUp(el,to,{from,duration=650,format=value=>I18N.num(Math.round(value))}={}){
+    if(!el) return;
+    const target=Number(to);
+    const previous=Number.isFinite(Number(from))?Number(from):Number(el.dataset.countValue);
+    el.dataset.countValue=String(target);
+    const running=this.counters.get(el);
+    if(running){ cancelAnimationFrame(running); this.counters.delete(el); }
+    if(!Number.isFinite(target)){ el.textContent=String(to); return; }
+    if(!Number.isFinite(previous)||previous===target||this.reduced()){ el.textContent=format(target); return; }
+    el.classList.remove('fx-count-gain','fx-count-loss');
+    void el.offsetWidth;
+    // 줄어드는 값(레벨업 비용 지출)은 붉은 톤, 느는 값은 금색이다.
+    el.classList.add(target>previous?'fx-count-gain':'fx-count-loss');
+    const startedAt=performance.now();
+    const step=now=>{
+      const ratio=Math.max(0,Math.min(1,(now-startedAt)/duration));
+      const eased=1-Math.pow(1-ratio,3);
+      el.textContent=format(previous+(target-previous)*eased);
+      if(ratio<1){ this.counters.set(el,requestAnimationFrame(step)); return; }
+      this.counters.delete(el);
+      el.textContent=format(target);
+    };
+    this.counters.set(el,requestAnimationFrame(step));
+  },
+
+  /* --- B-2 레벨업 ------------------------------------------------------ */
+  burst(el){
+    if(!el) return;
+    el.classList.remove('growth-burst'); void el.offsetWidth; el.classList.add('growth-burst');
+    GameAudio.play('level_up');
+  },
+
+  /* --- B-2 승급 --------------------------------------------------------
+     별을 STAR_STEP_MS 간격으로 하나씩 채우고 초상에 흰 플래시와 등급색 링을
+     얹는다. 레벨업의 growth-burst보다 크게 보이도록 링이 밖으로 퍼진다. */
+  starUp({stars,hero,color}={}){
+    GameAudio.play('star_up');
+    if(this.reduced()) return;
+    if(stars) [...stars.querySelectorAll('i')].forEach((star,index)=>{
+      star.classList.remove('fx-star-fill'); void star.offsetWidth;
+      star.style.animationDelay=`${index*this.STAR_STEP_MS}ms`;
+      star.classList.add('fx-star-fill');
+    });
+    if(!hero) return;
+    restartCssAnimation(hero,'fx-star-flash');
+    const ring=document.createElement('span');
+    ring.className='star-ring';
+    if(color) ring.style.setProperty('--ring-color',color);
+    hero.appendChild(ring);
+    setTimeout(()=>ring.remove(),800);
+  },
+
+  /* --- B-2 패시브 해금 --------------------------------------------------
+     승급 연출 뒤에 카드가 아래에서 올라온다. 해금 시점 판단(3성)은 호출부가
+     PassiveUnlockTable에서 읽는다 — 여기는 보여 주기만 한다. */
+  passiveReveal({name,lines=[]}={}){
+    const panel=document.getElementById('passive-reveal');
+    if(!panel) return;
+    GameAudio.play('passive_unlock');
+    document.getElementById('passive-reveal-name').textContent=name||'';
+    document.getElementById('passive-reveal-lines').innerHTML=lines.map(line=>`<li>${line}</li>`).join('');
+    panel.hidden=false;
+    document.getElementById('passive-reveal-close').focus();
+  },
+  closePassiveReveal(){
+    const panel=document.getElementById('passive-reveal');
+    if(panel) panel.hidden=true;
+  },
+
+  /* --- B-6 토스트 큐 ----------------------------------------------------
+     예전에는 한 줄을 덮어써서 연달아 오는 알림이 서로를 지웠다. 이제 아래로
+     쌓이고 위(오래된 것)부터 사라진다. */
+  toast(message){
+    const host=document.getElementById('lobby-notice');
+    if(!host||!message) return;
+    const item=document.createElement('div');
+    item.className='toast';
+    item.textContent=message;
+    host.appendChild(item);
+    while(host.children.length>this.TOAST_MAX) host.firstElementChild.remove();
+    requestAnimationFrame(()=>item.classList.add('visible'));
+    setTimeout(()=>{
+      item.classList.remove('visible');
+      setTimeout(()=>item.remove(),220);
+    },this.TOAST_MS);
+  },
 };
 

@@ -476,13 +476,13 @@ const GachaSystem={
     if(type==='skill'){
       const skillKey=choice(SKILL_KEYS),def=CONFIG.skills[skillKey],x=next.skillInventory.skills[skillKey],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(CONFIG.meta.skill.duplicateShards)||0):0;
       if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
-      return {type,skillKey,nameKey:def.nameKey,duplicate,gained,shards:x.shards,surplus:ShardLedger.skill(x).surplus};
+      return {type,skillKey,nameKey:def.nameKey,duplicate,gained,shards:x.shards,need:SkillGrowthSystem.shardCost(x),surplus:ShardLedger.skill(x).surplus};
     }
     const rarityId=this.rollRarity();if(!rarityId)return {error:'gacha.error.noRarity'};
     const pool=CharacterRepository.list().filter(c=>c.rarityId===rarityId);if(!pool.length)return {error:'gacha.error.emptyPool'};
     const c=choice(pool),x=next.characterInventory.characters[c.characterId],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(rarityConf(rarityId).duplicateShards)||0):0;
     if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
-    return {type,characterId:c.characterId,nameKey:c.nameKey,rarityId,duplicate,gained,shards:x.shards,surplus:ShardLedger.character(c.characterId,x).surplus};
+    return {type,characterId:c.characterId,nameKey:c.nameKey,rarityId,duplicate,gained,shards:x.shards,need:CharacterGrowthSystem.shardCost(c.characterId,x),surplus:ShardLedger.character(c.characterId,x).surplus};
   },
   // [2026-09-16] 확정(인철): 별불 200개에 결과 10개. 결과 전체를 한 번에 저장한 뒤 공개 연출을 시작한다.
   pull(campaign){

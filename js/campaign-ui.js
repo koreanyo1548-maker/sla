@@ -17,9 +17,11 @@ const CampaignView={
   scrollLobbyTop(){$('#lobby-scroll').scrollTop=0;},
   wallet({recovered,gold,starfire,chargeClicks,locked,selectedStage}){
     const max=CAMPAIGN_CONFIG.staminaMax,entry=CAMPAIGN_CONFIG.entryCost,sec=CampaignEconomy.secondsToNextTick(recovered);
-    $('#stamina-value').textContent=`${I18N.num(recovered.stamina)} / ${I18N.num(max)}`;
-    $('#gold-value').textContent=I18N.num(gold);
-    $('#starfire-value').textContent=I18N.num(starfire);
+    // [연출 세션 B] 재화가 바뀌는 지점은 전부 countUp을 지난다. 값이 그대로면
+    // 아무 일도 하지 않으므로 1초마다 도는 이 렌더가 조용하다.
+    GameFeedback.countUp($('#stamina-value'),recovered.stamina,{format:v=>`${I18N.num(Math.round(v))} / ${I18N.num(max)}`});
+    GameFeedback.countUp($('#gold-value'),gold);
+    GameFeedback.countUp($('#starfire-value'),starfire);
     $('#stamina-timer').textContent=recovered.stamina>=max?t('lobby.stamina.full'):t('lobby.stamina.timer',{time:`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`});
     $('#stamina-charge-count').textContent=t('lobby.stamina.chargeCount',{n:chargeClicks||0});
     $('#stamina-charge-btn').setAttribute('aria-label',t('lobby.stamina.chargeAria',{n:CampaignEconomy.chargeAmount}));
@@ -55,7 +57,20 @@ const CampaignView={
   reward(r){
     this.rewardState={kind:'reward',r};
     $('#retry-btn').disabled=false;
-    $('#result-reward').innerHTML=`<span>${t('result.reward.gold')}</span><strong>+${I18N.num(r.total)}</strong><div class="reward-breakdown"><span>${t('result.reward.waves')} <b>+${I18N.num(r.waveGold)}</b></span><span>${t('result.reward.bonus')} <b>+${I18N.num(r.bonus)}</b></span></div><p>${r.clear?t('result.reward.unlocked',{stage:r.stageId+1}):t('result.reward.retryHint')}</p><small>${t('result.reward.done')}</small>`;
+    // [연출 세션 B] 최고 기록을 갱신했으면 골드 옆에 스탬프를 찍는다.
+    const stamp=r.newBestWave||r.newBestScore?`<span class="new-best">${t('growth.newBest')}</span>`:'';
+    $('#result-reward').innerHTML=`<span>${t('result.reward.gold')}</span><strong><em data-count>+${I18N.num(r.total)}</em>${stamp}</strong><div class="reward-breakdown"><span>${t('result.reward.waves')} <b>+${I18N.num(r.waveGold)}</b></span><span>${t('result.reward.bonus')} <b>+${I18N.num(r.bonus)}</b></span></div><p>${r.clear?t('result.reward.unlocked',{stage:r.stageId+1}):t('result.reward.retryHint')}</p><small>${t('result.reward.done')}</small>`;
+    GameFeedback.countUp($('#result-reward [data-count]'),r.total,{from:0,format:v=>`+${I18N.num(Math.round(v))}`});
+    if(stamp) GameAudio.play('new_best');
+  },
+  /* [연출 세션 B · B-3] 결과 화면 맨 아래 안내 줄. 스테이지 돌파 별불은 여기서
+     알리기만 하고 수령은 로비 마일스톤에서 한다(연출개선안 미결 항목). */
+  resultHint(state,result){
+    const el=$('#result-milestone-hint'); if(!el) return;
+    const ready=MilestoneSystem.claimableCount(state);
+    el.textContent=result?.clear&&result.firstClear
+      ? t('result.starfireHint')
+      : ready ? t('result.milestoneHint',{n:ready}) : '';
   },
   rewardFailure(onRetry){this.rewardState={kind:'failure',onRetry};$('#result-reward').innerHTML=`<p>${t('result.reward.failed')}</p><button class="secondary" id="retry-reward">${t('result.reward.retrySave')}</button>`;$('#retry-reward').onclick=onRetry;$('#retry-btn').disabled=true;},
 };
@@ -88,13 +103,21 @@ const GachaLobbyUI={
   frontColor(r){return r.type==='skill'?(SKILL_DEFS[r.skillKey]?.color||PALETTE.skill):RarityTable[r.rarityId].color;},
   art(r){return r.type==='skill'?`<span class="pull-icon" style="--icon-color:${this.frontColor(r)}">${SKILL_DEFS[r.skillKey]?.icon||'◆'}</span>`:GameArt.portrait(r.characterId);},
   badge(r){return r.duplicate?`<span class="pull-badge dup">${t('gacha.badge.dup',{n:r.gained})}</span>`:`<span class="pull-badge">${t('gacha.badge.new')}</span>`;},
+  /* [연출 세션 B · B-5] 중복은 "몇 개 더 모으면 승급인지"까지 보여 준다.
+     need가 0이면(최대 성급) 진행바를 내지 않는다. */
+  shardBar(r){
+    if(!r.duplicate||!(r.need>0)) return '';
+    const held=Number(r.shards)||0,pct=Math.min(100,held/r.need*100);
+    return `<span class="pull-shard">${t('gacha.badge.dup',{n:r.gained})} · ${I18N.num(held)} / ${I18N.num(r.need)}`
+      +`<span class="pull-shard-track"><i data-shard-fill style="--fill:${pct.toFixed(1)}%"></i></span></span>`;
+  },
   label(r){return r.type==='skill'?t('gacha.label.skill'):t('gacha.label.character',{rarity:t(RarityTable[r.rarityId].nameKey)});},
   reducedMotion(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}},
   reveal(res,campaign){
     this.revealFocus=document.activeElement;
     const results=res.results||[];
     this.batch={results,flipped:results.map(()=>false),phase:'cards'};this.flipLockUntil=0;
-    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.reveal.title',{n:results.length})}</h2><div class="pull-grid">${results.map((r,i)=>`<div class="pull-slot tier-${this.tierOf(r)}" style="--hint:${this.hintColor(r)};--front:${this.frontColor(r)}"><button class="pull-card" data-pull-index="${i}" aria-label="${t('gacha.reveal.cardAria',{n:i+1})}"><span class="pull-back"><i></i></span><span class="pull-front">${this.art(r)}<b>${t(r.nameKey)}</b>${this.badge(r)}</span></button></div>`).join('')}</div><div class="pull-legend" aria-label="${t('gacha.reveal.legendAria')}">${
+    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.reveal.title',{n:results.length})}</h2><div class="pull-grid">${results.map((r,i)=>`<div class="pull-slot tier-${this.tierOf(r)}" style="--hint:${this.hintColor(r)};--front:${this.frontColor(r)}"><button class="pull-card" data-pull-index="${i}" aria-label="${t('gacha.reveal.cardAria',{n:i+1})}"><span class="pull-back"><i></i></span><span class="pull-front">${this.art(r)}<b>${t(r.nameKey)}</b>${this.badge(r)}${this.shardBar(r)}</span></button></div>`).join('')}</div><div class="pull-legend" aria-label="${t('gacha.reveal.legendAria')}">${
       RARITY_KEYS.map(id=>`<span><i style="background:${RarityTable[id].color}"></i>${t(RarityTable[id].nameKey)}</span>`).join('')
     }<span><i style="background:${PALETTE.skill}"></i>${t('gacha.reveal.legendSkill')}</span></div>
     <p class="pull-hint">${t('gacha.reveal.hint')}</p>`;
@@ -111,6 +134,8 @@ const GachaLobbyUI={
     const r=b.results[i],tier=this.tierOf(r),slot=$$('#reveal-content .pull-slot')[i];
     slot?.classList.add('flipped');
     if(slot)slot.querySelector('.pull-card').setAttribute('aria-label',t('gacha.reveal.revealedAria',{name:t(r.nameKey),label:this.label(r),state:r.duplicate?t('gacha.state.dup',{n:r.gained}):t('gacha.state.new')}));
+    const fill=slot?.querySelector('[data-shard-fill]');
+    if(fill) requestAnimationFrame(()=>{ fill.style.width=fill.style.getPropertyValue('--fill'); });
     if(tier==='legend'&&!this.reducedMotion()){slot?.classList.add('burst');this.flipLockUntil=performance.now()+this.LEGEND_LOCK_MS;}
     else if(tier==='epic'&&!this.reducedMotion())slot?.classList.add('glint');
     GameAudio.play(tier==='legend'||tier==='epic'?'reveal':'tap');
@@ -132,7 +157,10 @@ const GachaLobbyUI={
     b.flipped=b.flipped.map(()=>true);b.phase='summary';this.flipLockUntil=0;
     const rows=b.results.map((r,i)=>({r,i})).sort((a,c)=>this.rank(c.r)-this.rank(a.r)||(a.r.type===c.r.type?0:a.r.type==='skill'?1:-1)||a.i-c.i);
     const fresh=b.results.filter(r=>!r.duplicate).length,shards=b.results.reduce((s,r)=>s+(r.duplicate?r.gained:0),0);
-    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.summary.title')}</h2><div class="pull-stats">${t('gacha.summary.stats',{fresh,shards})}</div><div class="pull-summary">${rows.map(({r})=>`<div class="pull-row tier-${this.tierOf(r)}" style="--front:${this.frontColor(r)}">${this.art(r)}<div><b>${t(r.nameKey)}</b><small>${this.label(r)}</small></div>${this.badge(r)}</div>`).join('')}</div>`;
+    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.summary.title')}</h2><div class="pull-stats" data-summary></div><div class="pull-summary">${rows.map(({r})=>`<div class="pull-row tier-${this.tierOf(r)}" style="--front:${this.frontColor(r)}">${this.art(r)}<div><b>${t(r.nameKey)}</b><small>${this.label(r)}</small></div>${this.badge(r)}</div>`).join('')}</div>`;
+    // 신규 수·조각 합계는 0에서 올라온다. [연출 세션 B · B-5]
+    GameFeedback.countUp($('#reveal-content [data-summary]'),shards,{from:0,
+      format:v=>t('gacha.summary.stats',{fresh,shards:Math.round(v)})});
     $('#reveal-skip').hidden=true;this.updateButtons();$('#reveal-close').focus();
   },
   closeReveal(campaign){$('#recruit-modal').hidden=true;$('#recruit-modal .reveal-dialog').classList.remove('pull-mode');this.batch=null;this.flipLockUntil=0;this.busy=false;this.render(campaign);if(this.revealFocus?.isConnected)this.revealFocus.focus();this.revealFocus=null;},

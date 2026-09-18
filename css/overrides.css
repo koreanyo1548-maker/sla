@@ -426,3 +426,70 @@ h2.reveal-kicker{margin-top:0}
 .options-note[hidden]{display:none!important}
 #options-close{width:100%;min-height:44px;margin-top:18px;border:1px solid var(--border);
   border-radius:9px;background:var(--surface-2);color:var(--text-primary);font:600 13px system-ui;cursor:pointer}
+
+/* =========================================================================
+   [연출 세션 B 2026-09-18] 로비·성장 도파민
+   수치 변화(countUp) · 승급 · 패시브 해금 · 결과 화면 순차 등장 · 소환 조각바.
+   ========================================================================= */
+
+/* --- B-1 수치 변화 — 늘면 금색, 줄면 붉은 톤 --- */
+.fx-count-gain{animation:countGain .65s ease-out}
+.fx-count-loss{animation:countLoss .65s ease-out}
+@keyframes countGain{0%{color:var(--primary);text-shadow:0 0 12px color-mix(in srgb, var(--primary) 70%, transparent)}100%{color:inherit;text-shadow:none}}
+@keyframes countLoss{0%{color:var(--danger);text-shadow:0 0 12px color-mix(in srgb, var(--danger) 60%, transparent)}100%{color:inherit;text-shadow:none}}
+
+/* --- B-2 승급 — 별이 하나씩 채워지고 초상에 흰 플래시 + 등급색 링 --- */
+.character-stars i,.skill-stars i{display:inline-block;font-style:normal}
+.skill-stars i.empty{opacity:.35}
+.fx-star-fill{animation:starFill .45s ease-out both}
+@keyframes starFill{0%{transform:scale(.2) rotate(-35deg);opacity:0}55%{transform:scale(1.45) rotate(6deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+.fx-star-flash{animation:starFlash .5s ease-out}
+@keyframes starFlash{0%{filter:brightness(2.6) saturate(.2)}100%{filter:none}}
+.star-ring{position:absolute;left:50%;top:50%;width:80px;height:80px;margin:-40px 0 0 -40px;
+  border:2px solid var(--ring-color,var(--primary));border-radius:50%;pointer-events:none;
+  animation:starRing .8s ease-out forwards}
+@keyframes starRing{0%{transform:scale(.3);opacity:.95}100%{transform:scale(3.2);opacity:0}}
+
+/* --- B-2 패시브 해금 카드 — 아래에서 올라온다 --- */
+#passive-reveal{position:fixed;inset:0;z-index:220;display:flex;align-items:flex-end;justify-content:center;
+  padding:16px;background:color-mix(in srgb, var(--bg) 66%, transparent)}
+#passive-reveal[hidden]{display:none!important}
+.passive-reveal-card{width:min(360px,100%);border:1px solid var(--primary);border-radius:16px;
+  background:var(--surface);color:var(--text-primary);padding:18px;
+  box-shadow:0 10px 30px color-mix(in srgb, var(--bg) 73%, transparent);
+  animation:passiveRise .35s cubic-bezier(.2,.9,.3,1) both}
+@keyframes passiveRise{0%{transform:translateY(40px);opacity:0}100%{transform:translateY(0);opacity:1}}
+.passive-reveal-kicker{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--primary)}
+.passive-reveal-card strong{display:block;margin:6px 0 10px;font-size:19px}
+.passive-reveal-card .passive-lines{margin:0;padding-left:18px;font-size:12px;line-height:1.7}
+#passive-reveal-close{width:100%;min-height:46px;margin-top:16px;border:1px solid var(--border);
+  border-radius:9px;background:var(--surface-2);color:var(--text-primary);font:700 14px system-ui;cursor:pointer}
+
+/* --- B-3 결과 화면 순차 등장 --- */
+#screen-result[data-reveal] .result-step{opacity:0;transform:translateY(10px)}
+#screen-result[data-reveal] .result-step.shown{opacity:1;transform:translateY(0);transition:.28s ease-out}
+.new-best{display:inline-block;margin-left:8px;padding:3px 8px;border:2px solid var(--primary);
+  border-radius:6px;color:var(--primary);font:900 11px system-ui;letter-spacing:.06em;
+  transform:rotate(-7deg);animation:stampPop .4s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stampPop{0%{transform:rotate(-20deg) scale(2.2);opacity:0}100%{transform:rotate(-7deg) scale(1);opacity:1}}
+#result-milestone-hint{order:2;width:100%;margin:10px 0 0;font-size:11px;color:var(--text-secondary);text-align:center}
+#result-milestone-hint:empty{display:none}
+
+/* --- B-4 마일스톤 수령 뱃지와 접힘 --- */
+#milestone-home-dot{min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--danger);
+  color:var(--primary-text);font:800 10px/16px system-ui;text-align:center}
+.milestone-card.fx-claimed{animation:milestoneCollapse .45s ease-in forwards}
+@keyframes milestoneCollapse{0%{opacity:1}100%{opacity:.25;transform:scale(.97)}}
+
+/* --- B-5 소환 조각 진행바 --- */
+.pull-shard{display:block;margin-top:5px;font-size:9px;color:var(--text-secondary)}
+.pull-shard-track{display:block;height:3px;margin-top:3px;border-radius:2px;background:var(--border);overflow:hidden}
+.pull-shard-track i{display:block;height:100%;width:0;background:var(--primary);transition:width .3s ease-out}
+
+/* --- B-6 스테이지 해금 --- */
+.journey-scene.fx-unlock{animation:stageUnlock .8s ease-out}
+@keyframes stageUnlock{0%{transform:scale(.96);box-shadow:0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent)}
+  100%{transform:scale(1);box-shadow:0 0 42px 0 color-mix(in srgb, var(--primary) 0%, transparent)}}
+/* 패배는 순차 없이 한 번에. 도달 WAVE 칸만 키운다. */
+#screen-result.defeat-result .result-stat:first-child strong{font-size:22px;color:var(--danger)}
+#result-reward>strong em{font-style:normal}
