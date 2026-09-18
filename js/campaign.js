@@ -359,7 +359,8 @@ const Campaign = {
 window.addEventListener('DOMContentLoaded', ()=>{
   Platform.init();
   // 저장이 있는지는 Campaign.init()이 새 진행을 만들기 전에 봐야 한다.
-  // orientation은 세션 4·5의 레이아웃 판정 함수가 생기면 그 값으로 바꾼다.
+  // orientation은 이 판정이 최종이다 — 레이아웃이 세로 하나뿐이라(개발계획서 세션 4) 별도
+  // 판정 함수를 두지 않는다. 지표용 값이라 뷰포트 비율만 보면 충분하다.
   let isNew=1; try{ isNew=SaveStorage.load(CAMPAIGN_CONFIG.saveKey)?0:1; }catch(_){}
   Analytics.track('session_start',{
     lang:document.documentElement.lang||'ko',
