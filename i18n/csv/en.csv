@@ -164,15 +164,15 @@ milestone.merges.desc,머지 성공,Merges made
 milestone.best_wave.name,최전선 갱신,New High Water Mark
 milestone.best_wave.desc,최고 WAVE 기록,Best wave reached
 milestone.module_levels.name,화력 정비,Ordnance Upkeep
-milestone.module_levels.desc,미사일 4종 레벨 합계,Combined missile track level
+milestone.module_levels.desc,미사일 레벨 올린 횟수,Missile track level-ups
 milestone.skill_levels.name,전술 연마,Drill Practice
-milestone.skill_levels.desc,스킬 슬롯 레벨 합계,Combined skill slot level
+milestone.skill_levels.desc,스킬 슬롯 레벨 올린 횟수,Skill slot level-ups
 milestone.stars.name,별의 결정,Crystalized Stars
-milestone.stars.desc,보유 수호자 성급 합계,Combined stars of owned guardians
+milestone.stars.desc,수호자 성급 돌파,Guardian star breakthroughs
 milestone.guardians.name,불씨의 동료,Comrades of the Ember
-milestone.guardians.desc,수호자 해금,Guardians unlocked
+milestone.guardians.desc,새 수호자 해금,New guardians unlocked
 milestone.owned_skills.name,전술 수집,Tactics Collected
-milestone.owned_skills.desc,전투 스킬 해금,Combat skills unlocked
+milestone.owned_skills.desc,새 전투 스킬 해금,New combat skills unlocked
 upgrade.eyebrow,UPGRADE FORGE,UPGRADE FORGE
 upgrade.title,공용 강화,Shared Upgrade
 upgrade.count,누적 레벨 {total},{total} total levels

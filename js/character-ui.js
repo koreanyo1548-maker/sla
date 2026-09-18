@@ -178,17 +178,22 @@ const MILESTONE_TABLE=[
 const MILESTONE_RESERVED_METRICS=['highestSkillStar'];
 const MilestoneSystem={
   conf(row){return CONFIG.meta.milestones[row.id];},
+  // [2026-09-18] 모든 지표는 시작값이 0이어야 한다 — 초기 지급분(노말 4인·기본 스킬 2종·
+  // 전 트랙 Lv.1)을 그대로 세면 첫 화면에서 이미 몇 단계가 달성돼, 마일스톤이 목표가 아니라
+  // 정산 창으로 열린다. 그래서 보유·레벨 계열은 지급분을 뺀 "플레이로 늘린 만큼"을 센다.
   progress(state,row){
-    if(row.metric==='ownedSkills')return SKILL_KEYS.filter(key=>state.skillInventory.skills[key].owned).length;
+    if(row.metric==='ownedSkills')return SKILL_KEYS.filter(key=>state.skillInventory.skills[key].owned).length-DEFAULT_EQUIPPED_SKILLS.length;
     if(row.metric==='highestSkillStar')return Math.max(...SKILL_KEYS.map(key=>state.skillInventory.skills[key].star));
     // 서로 다른 클리어 스테이지 수. 로비는 최고 스테이지만 입장하므로 새 스테이지를 깰 때만 오른다.
     if(row.metric==='stagesCleared')return Array.isArray(state.cleared)?new Set(state.cleared).size:0;
     if(row.metric==='bestWave')return Number(state.best?.wave)||0;
-    if(row.metric==='moduleLevels')return LevelTrackSystem.moduleLevelTotal(state);
-    if(row.metric==='skillLevels')return LevelTrackSystem.skillLevelTotal(state);
-    if(row.metric==='ownedCharacters')return CharacterRepository.list().filter(c=>state.characterInventory.characters[c.characterId]?.owned).length;
-    // 보유한 수호자들의 성급 합계. 해금과 승급 양쪽으로 오르는 전력 지표다.
-    if(row.metric==='starTotal')return CharacterRepository.list().reduce((sum,c)=>{const x=state.characterInventory.characters[c.characterId];return sum+(x?.owned?Math.max(1,Number(x.star)||1):0);},0);
+    // 트랙은 Lv.1에서 시작하므로 트랙 수만큼 빼면 그대로 "올린 횟수"가 된다.
+    if(row.metric==='moduleLevels')return LevelTrackSystem.moduleLevelTotal(state)-MISSILE_KEYS.length;
+    if(row.metric==='skillLevels')return LevelTrackSystem.skillLevelTotal(state)-LEVEL_TRACKS.filter(track=>track.kind==='skill').length;
+    // 처음부터 주는 노말 4인은 빼고, 트랙 레벨로 새로 연 수호자만 센다.
+    if(row.metric==='ownedCharacters')return CharacterRepository.list().filter(c=>state.characterInventory.characters[c.characterId]?.owned&&c.rarityId!==CharacterGrowthRules.freeRarityId).length;
+    // 승급 횟수 합계. 1성은 해금 시 기본값이라 0으로 세어, 해금이 이 줄을 밀어 올리지 않게 한다.
+    if(row.metric==='starTotal')return CharacterRepository.list().reduce((sum,c)=>{const x=state.characterInventory.characters[c.characterId];return sum+(x?.owned?Math.max(0,(Number(x.star)||1)-1):0);},0);
     return Number(state.lifetime?.[row.metric])||0;
   },
   claims(state,row){const n=Number(state.milestoneClaims?.[row.id]);return Number.isSafeInteger(n)&&n>0?n:0;},

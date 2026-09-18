@@ -347,24 +347,24 @@ I18N.register("en", "English", {
   "milestone.best_wave.desc": "Best wave reached",
   // 화력 정비
   "milestone.module_levels.name": "Ordnance Upkeep",
-  // 미사일 4종 레벨 합계
-  "milestone.module_levels.desc": "Combined missile track level",
+  // 미사일 레벨 올린 횟수
+  "milestone.module_levels.desc": "Missile track level-ups",
   // 전술 연마
   "milestone.skill_levels.name": "Drill Practice",
-  // 스킬 슬롯 레벨 합계
-  "milestone.skill_levels.desc": "Combined skill slot level",
+  // 스킬 슬롯 레벨 올린 횟수
+  "milestone.skill_levels.desc": "Skill slot level-ups",
   // 별의 결정
   "milestone.stars.name": "Crystalized Stars",
-  // 보유 수호자 성급 합계
-  "milestone.stars.desc": "Combined stars of owned guardians",
+  // 수호자 성급 돌파
+  "milestone.stars.desc": "Guardian star breakthroughs",
   // 불씨의 동료
   "milestone.guardians.name": "Comrades of the Ember",
-  // 수호자 해금
-  "milestone.guardians.desc": "Guardians unlocked",
+  // 새 수호자 해금
+  "milestone.guardians.desc": "New guardians unlocked",
   // 전술 수집
   "milestone.owned_skills.name": "Tactics Collected",
-  // 전투 스킬 해금
-  "milestone.owned_skills.desc": "Combat skills unlocked",
+  // 새 전투 스킬 해금
+  "milestone.owned_skills.desc": "New combat skills unlocked",
 
   /* ── upgrade (공용 레벨업 6종) ── */
   // UPGRADE FORGE
