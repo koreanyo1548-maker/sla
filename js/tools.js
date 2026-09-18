@@ -36,7 +36,7 @@ function buildGameManual(){
   intro: '용광로 핵을 지키는 실시간 머지 디펜스다. 전투는 자동이고, 당신이 하는 일은 아래 보드에서 피스를 합쳐 공격을 강화하는 것뿐이다.',
   sections: [
     { title: '① 한 판의 흐름', body: [
-      `적을 잡으면 <b>점수</b>가 쌓이고, ${sc.pointsPerGrant}점마다 <b>에너지</b> ${sc.energyPerGrant}을 받는다(일반 적 약 ${killsPerGrant}기). 시작 에너지는 ${sc.startEnergy}이다.`,
+      `적을 잡으면 <b>점수</b>가 쌓이고, ${sc.pointsPerGrant}점마다 <b>에너지</b> ${sc.energyPerGrant}을 받는다(일반 적 약 ${killsPerGrant}기). WAVE ${sc.waveStartBonusFromWave}부터는 새 WAVE가 시작될 때마다 ${sc.waveStartBonus}점을 더 받는다. 시작 에너지는 ${sc.startEnergy}이다.`,
       `에너지 ${gen.costPerPiece}로 <b>피스</b>를 만들고, 같은 색·같은 티어끼리 합쳐 티어를 올린다(최대 T${CONFIG.colors.maxTier}).`,
       '<b>주문서</b>가 요구하는 색을 보드에 갖추면 주문서를 눌러 미사일을 강화한다. 소모한 피스의 티어 합계가 강화 레벨이 된다.',
       '즉 <b>적 처치 → 에너지 → 피스 → 주문서 → 더 센 공격</b>의 순환이다. 이 순환을 빨리 돌릴수록 강해진다.',
