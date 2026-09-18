@@ -28,9 +28,7 @@ const GameArt = {
   init(){
     for(const [key,url] of Object.entries(ASSET_URLS)){
       const img=new Image();
-      if(key.startsWith('fighters_')){
-        img.onload=()=>{this.images[key]=this.prepareFighterAtlas(img);};
-      }else this.images[key]=img;
+      this.images[key]=img;
       img.src=url;
       // [2026-09-18 세션 1] 자산이 파일로 빠지며 상대 경로가 생겼다. 커스텀 속성 안의
       // url()은 그 속성을 쓰는 스타일시트(css/*.css) 기준으로 풀리므로, 문서 기준
@@ -45,41 +43,9 @@ const GameArt = {
     const w=img.naturalWidth/4,h=img.naturalHeight/4;
     ctx.drawImage(img,(index%4)*w,Math.floor(index/4)*h,w,h,x-size/2,y-size/2,size,size);return true;
   },
-  // Color-key compositing is done once at load, never once per frame.
-  // Atlas files keep their solid-key source pixels for reuse in other engines.
-  keyFighterPixels(data){
-    for(let i=0;i<data.length;i+=4){
-      const r=data[i],g=data[i+1],b=data[i+2];
-      if(g<180||r>105||b>105)continue;
-      const distance=Math.hypot(r,255-g,b);
-      if(distance<100)data[i+3]=0;
-      else if(distance<145){
-        data[i+3]=Math.round(data[i+3]*(distance-100)/45);
-        data[i+1]=Math.min(g,Math.max(r,b)+55);
-      }
-    }
-    return data;
-  },
-  // [2026-09-18 세션 2] 픽셀 읽기가 막히면 원본 이미지를 그대로 돌려준다.
-  // file:// 로 열 때 파일에서 온 이미지는 캔버스를 오염시켜 getImageData가
-  // SecurityError를 던진다(cross-origin). 그때 게임이 멈추는 것보다 초록 배경이
-  // 보이는 게 낫다. 개발 진입점은 js/assets-dev.js가 이 3장을 인라인으로
-  // 덮어써서 이 경로로 떨어지지 않는다.
-  prepareFighterAtlas(img){
-    const canvas=document.createElement('canvas');
-    canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
-    const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    ctx.drawImage(img,0,0);
-    try{
-      const pixels=ctx.getImageData(0,0,canvas.width,canvas.height);
-      this.keyFighterPixels(pixels.data);ctx.putImageData(pixels,0,0);
-    }catch(e){
-      if(SLAGMA_DEV) console.warn('[art] 색키를 지울 수 없어 원본을 쓴다 — file:// 로 열면 캔버스가 오염된다:',e.name);
-      return img;
-    }
-    canvas.complete=true;canvas.naturalWidth=canvas.width;canvas.naturalHeight=canvas.height;
-    return canvas;
-  },
+  // [2026-09-18] 런타임 색키를 걷어냈다. 아틀라스가 알파를 갖게 되면서
+  // keyFighterPixels·prepareFighterAtlas가 할 일이 없어졌다. 초록 배경 시절의
+  // 원본은 git 이력에 남아 있다(88ac93a 이전).
   drawFighter(ctx,id,x,y,size){
     const index=Number(id.split('_')[1])-1;
     const img=this.images['fighters_0'+(Math.floor(index/8)+1)];

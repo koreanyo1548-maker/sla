@@ -1,21 +1,21 @@
-/* 개발 진입점 생성 — dev.html 과 js/assets-dev.js 를 만든다.
-   [2026-09-18 세션 2]
+/* 개발 진입점 생성 — dev.html 을 만든다.
+   [2026-09-18 세션 2 · 2026-09-18 갱신]
 
    왜 생성하는가: 진입점이 두 개면 <body> 마크업이 두 벌이 되고 한쪽만 고치는
    사고가 난다. 마크업의 원본은 index.html 하나로 두고, dev.html은 거기서
    기계적으로 만든다. 빌드 도구가 아니라 개발 편의 스크립트다 — 생성물은
    저장소에 커밋되므로 게임을 열 때 node가 필요하지 않다.
 
-   index.html 에서 달라지는 것은 네 군데다:
+   index.html 에서 달라지는 것은 세 군데다:
      1. <title>에 표시를 붙인다
      2. window.SLAGMA_DEV = true  (platform.js 보다 먼저 실행돼야 한다)
-     3. js/assets-dev.js  — fighters 3장을 인라인 data URL로 덮어쓴다
-     4. js/dev.js         — 개발 전용 UI
+     3. js/dev.js  — 개발 전용 UI
 
-   js/assets-dev.js 가 필요한 이유: fighters_01~03 은 prepareFighterAtlas가
-   getImageData로 색키를 지우는 대상이고, file:// 로 열면 파일에서 온 이미지가
-   캔버스를 오염시켜 픽셀을 읽을 수 없다. 원본은 assets/*.webp 하나이고 이
-   파일은 거기서 생성된다 — 같은 이미지의 사본을 손으로 관리하지 않는다.
+   [2026-09-18] js/assets-dev.js 를 없앴다. fighters 아틀라스가 알파를 갖게 되면서
+   런타임 색키(prepareFighterAtlas)가 사라졌고, 그러면 getImageData가 필요 없으니
+   file:// 에서도 파일을 그대로 쓸 수 있다. 인라인 오버라이드의 존재 이유가
+   없어졌고 1.35MB도 함께 사라졌다. (그 파일이 assets/*.webp 교체 뒤 재생성되지
+   않아 dev.html만 옛 초록 배경을 쓰던 사고가 있었다 — 이제 구조적으로 불가능하다.)
 
    실행:  node tools/build-dev.mjs
    검사:  node tools/build-dev.mjs --check   (생성물이 최신인지만 확인, 쓰지 않음)
@@ -26,29 +26,8 @@ import path from 'node:path';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const CHECK = process.argv.includes('--check');
-const INLINE_ASSETS = ['fighters_01', 'fighters_02', 'fighters_03'];
 
 const read = p => fs.readFileSync(path.join(ROOT, p), 'utf8');
-
-/* ---------- js/assets-dev.js ---------- */
-function buildAssetsDev() {
-  const entries = INLINE_ASSETS.map(key => {
-    const buf = fs.readFileSync(path.join(ROOT, 'assets', `${key}.webp`));
-    return `  "${key}":"data:image/webp;base64,${buf.toString('base64')}",`;
-  });
-  return `/* ===== assets-dev.js ===== */
-/* 생성 파일 — 직접 고치지 말 것. 원본은 assets/*.webp 이고
-   \`node tools/build-dev.mjs\` 가 이 파일을 만든다.
-
-   개발 진입점(dev.html)만 로드한다. fighters 아틀라스를 인라인 data URL로
-   덮어써서 file:// 더블클릭으로 열어도 GameArt.prepareFighterAtlas가
-   getImageData로 색키를 지울 수 있게 한다(파일에서 온 이미지는 캔버스를
-   오염시켜 픽셀을 읽을 수 없다). 출시 진입점은 assets/*.webp 를 그대로 쓴다. */
-Object.assign(ASSET_URLS,{
-${entries.join('\n')}
-});
-`;
-}
 
 /* ---------- dev.html ---------- */
 function buildDevHtml() {
@@ -68,9 +47,6 @@ function buildDevHtml() {
       + '<script>window.SLAGMA_DEV = true;</script>\n'
       + '<link rel="stylesheet" href="css/base.css">');
 
-  sub('<script src="js/assets.js"></script>',
-      '<script src="js/assets.js"></script>\n<script src="js/assets-dev.js"></script>');
-
   sub('<script src="js/campaign.js"></script>',
       '<script src="js/campaign.js"></script>\n<script src="js/dev.js"></script>');
 
@@ -79,7 +55,6 @@ function buildDevHtml() {
 
 /* ---------- write / check ---------- */
 const outputs = [
-  ['js/assets-dev.js', buildAssetsDev()],
   ['dev.html', buildDevHtml()],
 ];
 

@@ -4,12 +4,10 @@
 
    [2026-09-18 세션 1] index.html 안의 base64 9장을 이 파일로 옮겼다.
    [2026-09-18 세션 2] 마지막까지 base64로 남아 있던 fighters_01~03도 파일로 뺐다.
-     이 3장은 GameArt.prepareFighterAtlas가 getImageData로 초록 배경 색키를
-     지우는 대상이라, file:// 로 열면 파일에서 온 이미지가 캔버스를 오염시켜
-     픽셀을 읽을 수 없다. 그래서 개발 진입점(dev.html)이 js/assets-dev.js로
-     이 3장만 인라인 data URL로 덮어써 file:// 더블클릭에서도 색키가 돈다.
-     출시 진입점(index.html)은 파일을 그대로 쓴다 — https로 서비스되므로
-     오염이 없고, base64 1.35MB가 파서를 막지 않는다. */
+   [2026-09-18] fighters 3장이 알파를 갖게 돼(인철이 누끼) 런타임 색키를 걷어냈다.
+     색키가 없으면 getImageData가 필요 없고, 그러면 file:// 에서 캔버스가 오염되는
+     문제 자체가 사라진다. 개발 진입점의 인라인 오버라이드(js/assets-dev.js)도 함께
+     없앴다 — 이제 두 진입점이 같은 파일을 쓴다. 9장 모두 특례 없이 같은 경로다. */
 const ASSET_URLS={
   "forge_lobby":"assets/forge_lobby.webp",
   "heroes_01":"assets/heroes_01.webp",
