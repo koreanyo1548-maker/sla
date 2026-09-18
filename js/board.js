@@ -72,7 +72,7 @@ class MergeBoard {
     this.cellEls.forEach((cellEl, i)=>{
       cellEl.innerHTML = '';
       const piece = this.cells[i];
-      cellEl.setAttribute('aria-label',piece?`${this.pieceLabel(piece)} ${piece.tier+1}티어`:'빈 보드 칸');
+      cellEl.setAttribute('aria-label',piece?t('board.cellAria',{piece:this.pieceLabel(piece),tier:piece.tier+1}):t('board.cellEmptyAria'));
       cellEl.classList.toggle('selected-piece',this.selectedIndex===i);
       cellEl.classList.toggle('merge-candidate',this.selectedIndex!==null&&i!==this.selectedIndex&&!!piece&&!!this.cells[this.selectedIndex]&&this.canMerge(piece,this.cells[this.selectedIndex]));
       if(!piece) return;
@@ -169,7 +169,7 @@ class MergeBoard {
       this.game.orderGaugeSystem.addMerge();
       if(crit){
         logAction(`크리티컬 머지! ${this.pieceLabel(b)} T${b.tier+1}`);
-        spawnFloatNumber(this.game.floatLayer, this.game.playerPos.x, this.game.playerPos.y-40, '크리티컬 머지!', 'enhance');
+        spawnFloatNumber(this.game.floatLayer, this.game.playerPos.x, this.game.playerPos.y-40, t('battle.merge.critical'), 'enhance');
       } else {
         logAction(`머지! ${this.pieceLabel(b)} T${b.tier+1}`);
       }
@@ -389,8 +389,8 @@ class OrderSheetSystem {
   }
   enhancementLabel(slot){
     const meta=MISSILE_DEFS[slot.module];
-    const statLabel=slot.stat==='damage'?'공격력':slot.stat==='speed'?'공격속도':meta?.special.stat===slot.stat?meta.special.label:slot.stat;
-    return `${meta?.label||CONFIG.attackModules[slot.module]?.label||slot.module}: ${statLabel}`;
+    const statLabel=slot.stat==='damage'?t('order.stat.damage'):slot.stat==='speed'?t('order.stat.speed'):meta?.special.stat===slot.stat?meta.special.label:slot.stat;
+    return t('order.kindLabel',{module:meta?.label||CONFIG.attackModules[slot.module]?.label||slot.module,stat:statLabel});
   }
   resolveSlot(slotIdx){
     const slot = this.slots[slotIdx];
@@ -412,7 +412,7 @@ class OrderSheetSystem {
     // [2026-09-18 연출 세션 A] 카드→영웅 인과를 보이게 한다. 지금까지는 슬롯이 즉시
     // 비어서 "무엇이 강해졌는지"가 보이지 않았다. 완료 연출을 카드에 먼저 재생하고
     // 그 뒤에 비운다. 판정·강화 적용은 위에서 이미 끝났으므로 늦추는 것은 표시뿐이다.
-    this.playCompletionFx(slotIdx,slot,`${kindLabel} Lv.${preview.level}`);
+    this.playCompletionFx(slotIdx,slot,t('order.completion',{kind:kindLabel,level:preview.level}));
     g.mergeBoard.render();g.updateEnergyUi();
     g.tutorial?.onOrderCompleted();
     return true;
@@ -494,7 +494,11 @@ class OrderSheetSystem {
     const slot=this.slots[index];if(!slot||this.game.ending)return;
     this.detailSlot=slot;this.detailReturn=trigger;
     const p=this.preview(slot),progress=this.rewardProgress(slot,p);
-    $('#order-detail-content').innerHTML=`<h3>${this.enhancementLabel(slot)}</h3><p>${slot.requirements.map(r=>CONFIG.colors.labels[r.color]).join(' + ')} 피스를 각각 1개 소모합니다.</p><p>가장 높은 티어부터 자동 선택 · 강화 Lv.${progress.minLevel}~${progress.maxLevel}</p><p>${this.game.attackModuleSystem.modules[slot.module].active?'소환된 영웅을 강화합니다.':'편성한 영웅을 소환하고 미사일을 활성화합니다.'}</p><small>전투는 계속 진행됩니다.</small>`;
+    $('#order-detail-content').innerHTML=`<h3>${this.enhancementLabel(slot)}</h3>`
+      +`<p>${t('order.detail.requirements',{colors:slot.requirements.map(r=>CONFIG.colors.labels[r.color]).join(' + ')})}</p>`
+      +`<p>${t('order.detail.levelRange',{min:progress.minLevel,max:progress.maxLevel})}</p>`
+      +`<p>${t(this.game.attackModuleSystem.modules[slot.module].active?'order.detail.enhance':'order.detail.summon')}</p>`
+      +`<small>${t('order.detail.note')}</small>`;
     const modal=$('#order-detail');modal.hidden=false;
     $('#order-detail-close').onclick=()=>this.closeDetail();
     $('#order-detail-discard').onclick=()=>{if(this.slots[index]===slot)this.discard(index);this.closeDetail();};
@@ -509,22 +513,22 @@ class OrderSheetSystem {
     const el=$('#order-sheet-panel');if(!el)return;
     if(this.detailSlot&&!this.slots.includes(this.detailSlot))this.closeDetail();
     el.innerHTML=this.slots.map((slot,i)=>{
-      if(!slot)return `<div class="order-card empty" data-slot="${i}"><span>주문서 대기</span><small>게이지를 채우세요</small></div>`;
+      if(!slot)return `<div class="order-card empty" data-slot="${i}"><span>${t('order.empty.title')}</span><small>${t('order.empty.hint')}</small></div>`;
       const preview=this.preview(slot);
       const active=this.game.attackModuleSystem.modules[slot.module]?.active;
       const kindLabel=this.enhancementLabel(slot);
       const chips=slot.requirements.map(r=>{
         const tier=this.game.mergeBoard.cells.reduce((n,p)=>p?.color===r.color?Math.max(n,p.tier+1):n,0);
-        return `<span class="oc-chip${tier?' available':''}">${GameArt.sprite(CONFIG.colors.names.indexOf(r.color))}<b>${tier}</b><span class="sr-only">${CONFIG.colors.labels[r.color]} 보유 티어</span></span>`;
+        return `<span class="oc-chip${tier?' available':''}">${GameArt.sprite(CONFIG.colors.names.indexOf(r.color))}<b>${tier}</b><span class="sr-only">${t('order.chipAria',{color:CONFIG.colors.labels[r.color]})}</span></span>`;
       }).join('');
-      const label=active?'강화':'소환';
+      const label=t(active?'order.action.enhance':'order.action.summon');
       const fx=slot.fx?` fx-${slot.fx}`:'';delete slot.fx;
       return `<div class="order-card grade-${slot.grade}${preview.ready?' ready':''}${fx}" data-slot="${i}">
-        <button class="oc-apply" data-slot="${i}" aria-label="${kindLabel} ${preview.ready?`레벨 ${preview.level} ${label}`:'재료 부족'}" ${preview.ready?'':'disabled'}>
-          <span class="oc-title">${kindLabel}${preview.ready?`<b class="oc-level">Lv.${preview.level}</b>`:''}</span>
+        <button class="oc-apply" data-slot="${i}" aria-label="${t('order.applyAria',{kind:kindLabel,state:preview.ready?t('order.applyReady',{level:preview.level,action:label}):t('order.applyShort')})}" ${preview.ready?'':'disabled'}>
+          <span class="oc-title">${kindLabel}${preview.ready?`<b class="oc-level">${t('common.level',{n:preview.level})}</b>`:''}</span>
           <span class="oc-reqs">${chips}</span>
         </button>
-        <button class="oc-info" data-slot="${i}" aria-label="${kindLabel} 상세 · 폐기">×</button>
+        <button class="oc-info" data-slot="${i}" aria-label="${t('order.infoAria',{kind:kindLabel})}">×</button>
       </div>`;
     }).join('');
     $$('.oc-apply',el).forEach(btn=>btn.onclick=()=>this.resolveSlot(Number(btn.dataset.slot)));

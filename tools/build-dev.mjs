@@ -38,7 +38,9 @@ function buildDevHtml() {
     if (html === before) throw new Error(`index.html 에서 찾지 못했다: ${pattern}`);
   };
 
-  sub('<title>슬래그마 · 용광로의 수호자</title>',
+  // data-i18n 을 떼고 개발 표시를 박는다 — 남겨 두면 I18N.applyDom()이 언어 파일의
+  // 제목으로 덮어써서 (개발) 표시가 사라진다. 개발 진입점은 번역 대상이 아니다.
+  sub('<title data-i18n="app.title">슬래그마 · 용광로의 수호자</title>',
       '<title>슬래그마 · 용광로의 수호자 (개발)</title>');
 
   // platform.js 가 파싱될 때 이미 세워져 있어야 한다.

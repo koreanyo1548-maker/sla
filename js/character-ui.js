@@ -16,19 +16,19 @@ const CharacterLobbyUI={
     const labels=Object.fromEntries(COMBAT_FACTOR_KEYS.map(key=>[key,COMBAT_FACTOR_LABELS[key].short]));
     return PassiveEffectTable.filter(e=>e.passiveId===id).map(e=>{
       const pct=v=>Math.round((Number(v)||0)*100);
-      if(e.kind==='factor')return `${e.scope==='global'?'전체':MISSILE_DEFS[e.targetId].label} ${labels[e.factorKey]||e.factorKey} +${pct(e.value)}%`;
-      if(e.kind==='status_on_hit')return `적중 시 ${pct(e.chance)}% 확률로 ${StatusEffectTable[e.statusId].name} ${StatusEffectTable[e.statusId].duration}초`;
-      if(e.kind==='damage_vs_status')return `${StatusEffectTable[e.statusId].name} 상태의 적에게 피해 +${pct(e.value)}%`;
+      if(e.kind==='factor')return t('passive.factor',{scope:e.scope==='global'?t('passive.scopeAll'):MISSILE_DEFS[e.targetId].label,stat:labels[e.factorKey]||e.factorKey,pct:pct(e.value)});
+      if(e.kind==='status_on_hit')return t('passive.statusOnHit',{chance:pct(e.chance),status:StatusEffectTable[e.statusId].name,duration:StatusEffectTable[e.statusId].duration});
+      if(e.kind==='damage_vs_status')return t('passive.damageVsStatus',{status:StatusEffectTable[e.statusId].name,pct:pct(e.value)});
       if(e.kind==='module_rule'){
         const q=e.params||{};
-        if(e.ruleId==='unusedTargetBonus')return `남은 연결 횟수당 첫 대상 피해 +${pct(q.value)}%`;
-        if(e.ruleId==='centerDamageBonus')return `중앙 탄환 피해 +${pct(q.value)}%`;
-        if(e.ruleId==='secondary')return `처치 시 2차 폭발 · 피해 ${pct(q.damagePct)}% / 반경 ${pct(q.radiusPct)}%`;
-        if(e.ruleId==='empowered')return `${pct(q.chance)}% 확률로 강화 레이저 · 피해 +${pct(q.damagePct)}% / 폭 +${pct(q.widthPct)}%`;
-        if(e.ruleId==='focused')return `광선에 적이 1기만 걸리면 그 대상 피해 +${pct(q.damagePct)}%`;
+        if(e.ruleId==='unusedTargetBonus')return t('passive.rule.unusedTargetBonus',{pct:pct(q.value)});
+        if(e.ruleId==='centerDamageBonus')return t('passive.rule.centerDamageBonus',{pct:pct(q.value)});
+        if(e.ruleId==='secondary')return t('passive.rule.secondary',{damage:pct(q.damagePct),radius:pct(q.radiusPct)});
+        if(e.ruleId==='empowered')return t('passive.rule.empowered',{chance:pct(q.chance),damage:pct(q.damagePct),width:pct(q.widthPct)});
+        if(e.ruleId==='focused')return t('passive.rule.focused',{damage:pct(q.damagePct)});
       }
       const c=e.condition,label=c.tagType==='race'?RaceTable[c.tagId]:c.tagType==='identity'?IdentityTable[c.tagId]:MISSILE_DEFS[c.tagId]?.label;
-      return `${label} ${c.count}명 편성 시 ${e.scope==='module'?MISSILE_DEFS[e.targetId].label:'전체'} ${labels[e.factorKey]} +${pct(e.value)}%`;
+      return t('passive.formation',{tag:label,count:c.count,scope:e.scope==='module'?MISSILE_DEFS[e.targetId].label:t('passive.scopeAll'),stat:labels[e.factorKey],pct:pct(e.value)});
     }).join(' / ');
   },
   init(campaign){
@@ -40,12 +40,12 @@ const CharacterLobbyUI={
       const action=event.target.closest('[data-character-action]');
       if(action&&this.modalCharacterId){
         const id=this.modalCharacterId;
-        if(CharacterGrowthSystem.transact(campaign,id,action.dataset.characterAction)){GameFeedback.burst($('#character-modal-content'));GameFeedback.toast(`${CharacterTable[id].name} 성장 완료`);}
+        if(CharacterGrowthSystem.transact(campaign,id,action.dataset.characterAction)){GameFeedback.burst($('#character-modal-content'));GameFeedback.toast(t('character.toast.grown',{name:CharacterTable[id].name}));}
         else campaign.render();return;
       }
       if(event.target.closest('[data-character-deploy]')&&this.modalCharacterId){
         const c=CharacterTable[this.modalCharacterId];
-        if(CharacterGrowthSystem.assign(campaign,this.modalCharacterId)){GameAudio.play('up');this.close();GameFeedback.toast(`${c.name} · ${MISSILE_DEFS[c.specialtyMissileId].label} 편성 완료`);}
+        if(CharacterGrowthSystem.assign(campaign,this.modalCharacterId)){GameAudio.play('up');this.close();GameFeedback.toast(t('character.toast.deployed',{name:c.name,module:MISSILE_DEFS[c.specialtyMissileId].label}));}
       }
     });
     document.addEventListener('keydown',event=>{
@@ -61,23 +61,23 @@ const CharacterLobbyUI={
   },
   canGrow(campaign,id){const x=campaign.state.characterInventory.characters[id];return ['levelUp','rankUp'].some(action=>CharacterGrowthSystem.allowed(x,action)&&CharacterGrowthSystem.payable(campaign,id,x,action));},
   renderFormation(party){
-    return `<div class="formation-panel"><strong>출전 부대 <small>슬롯을 눌러 수호자 교체</small></strong><div class="formation-grid">${party.members.map(m=>`<button class="formation-slot ${this.filter===m.specialtyMissileId?'active':''}" data-formation-module="${m.specialtyMissileId}" aria-label="${MISSILE_DEFS[m.specialtyMissileId].label} 편성 ${m.name} 레벨 ${m.level}">${GameArt.portrait(m.characterId)}${GameArt.module(m.specialtyMissileId,'formation-module')}<b>${m.name}</b><em>Lv.${m.level}</em></button>`).join('')}</div><div class="formation-total"><span>체력 <b>${party.stats.hp.toLocaleString('ko-KR')}</b></span><span>방어 <b>${party.stats.def}</b></span><span>평균 공격 <b>${Math.round(party.stats.atk).toLocaleString('ko-KR')}</b></span></div></div>`;
+    return `<div class="formation-panel"><strong>${t('character.formation.title')} <small>${t('character.formation.hint')}</small></strong><div class="formation-grid">${party.members.map(m=>`<button class="formation-slot ${this.filter===m.specialtyMissileId?'active':''}" data-formation-module="${m.specialtyMissileId}" aria-label="${t('character.formation.slotAria',{module:MISSILE_DEFS[m.specialtyMissileId].label,name:m.name,level:m.level})}">${GameArt.portrait(m.characterId)}${GameArt.module(m.specialtyMissileId,'formation-module')}<b>${m.name}</b><em>${t('common.level',{n:m.level})}</em></button>`).join('')}</div><div class="formation-total"><span>${t('character.formation.hp')} <b>${I18N.num(party.stats.hp)}</b></span><span>${t('character.formation.def')} <b>${party.stats.def}</b></span><span>${t('character.formation.atk')} <b>${I18N.num(Math.round(party.stats.atk))}</b></span></div></div>`;
   },
   renderFilters(){
-    return `<div class="character-filters" aria-label="특화 미사일 필터">${['all',...CONFIG.moduleKeys].map(id=>`<button class="character-filter ${this.filter===id?'active':''}" data-character-filter="${id}" aria-pressed="${this.filter===id}">${id==='all'?'전체':GameArt.module(id)+MISSILE_DEFS[id].label}</button>`).join('')}</div>`;
+    return `<div class="character-filters" aria-label="${t('character.filter.aria')}">${['all',...CONFIG.moduleKeys].map(id=>`<button class="character-filter ${this.filter===id?'active':''}" data-character-filter="${id}" aria-pressed="${this.filter===id}">${id==='all'?t('character.filter.all'):GameArt.module(id)+MISSILE_DEFS[id].label}</button>`).join('')}</div>`;
   },
   renderRoster(campaign){
     const inv=campaign.state.characterInventory;
     const list=CharacterRepository.list().filter(c=>(this.filter==='all'||c.specialtyMissileId===this.filter)&&(!this.ownedOnly||inv.characters[c.characterId].owned))
       .sort((a,b)=>Number(inv.characters[b.characterId].owned)-Number(inv.characters[a.characterId].owned)||(RarityTable[b.rarityId].order-RarityTable[a.rarityId].order)||a.sortOrder-b.sortOrder);
-    return `<div class="roster-toolbar"><span>보유 우선 · 높은 등급순</span><button data-owned-toggle aria-pressed="${this.ownedOnly}">${this.ownedOnly?'☑':'☐'} 보유만 보기</button></div><div class="character-roster">${list.map(c=>{
+    return `<div class="roster-toolbar"><span>${t('character.roster.sort')}</span><button data-owned-toggle aria-pressed="${this.ownedOnly}">${this.ownedOnly?'☑':'☐'} ${t('character.roster.ownedOnly')}</button></div><div class="character-roster">${list.map(c=>{
       const x=inv.characters[c.characterId],deployed=inv.formation[c.specialtyMissileId]===c.characterId,r=RarityTable[c.rarityId];
-      return `<button data-character-id="${c.characterId}" class="${deployed?'chosen':''}${x.owned?'':' locked'}" style="--character-color:${r.color}" aria-label="${c.name} ${r.name} ${x.owned?'레벨 '+x.level:'미보유'} 상세"><span class="roster-art-wrap">${GameArt.portrait(c.characterId)}<span class="roster-rarity">${r.short}</span>${deployed?'<span class="deployed-badge">출전</span>':''}${x.owned&&this.canGrow(campaign,c.characterId)?'<span class="growth-ready" aria-label="성장 가능">↑</span>':''}</span><div class="roster-copy"><b>${c.name}</b><small>${x.owned?`${'★'.repeat(x.star)} <span>Lv.${x.level}</span>`:'미보유'} </small>${GameArt.module(c.specialtyMissileId,'module-mini')}</div></button>`;
+      return `<button data-character-id="${c.characterId}" class="${deployed?'chosen':''}${x.owned?'':' locked'}" style="--character-color:${r.color}" aria-label="${t('character.roster.aria',{name:c.name,rarity:r.name,state:x.owned?t('character.roster.levelState',{level:x.level}):t('common.notOwned')})}"><span class="roster-art-wrap">${GameArt.portrait(c.characterId)}<span class="roster-rarity">${r.short}</span>${deployed?`<span class="deployed-badge">${t('character.roster.deployed')}</span>`:''}${x.owned&&this.canGrow(campaign,c.characterId)?`<span class="growth-ready" aria-label="${t('character.roster.growable')}">↑</span>`:''}</span><div class="roster-copy"><b>${c.name}</b><small>${x.owned?`${'★'.repeat(x.star)} <span>${t('common.level',{n:x.level})}</span>`:t('common.notOwned')} </small>${GameArt.module(c.specialtyMissileId,'module-mini')}</div></button>`;
     }).join('')}</div>`;
   },
   render(campaign){
     const chars=campaign.state.characterInventory.characters,list=CharacterRepository.list();
-    $('#character-count').textContent=`${list.filter(c=>chars[c.characterId].owned).length} / ${list.length} 보유`;
+    $('#character-count').textContent=t('character.count',{owned:list.filter(c=>chars[c.characterId].owned).length,total:list.length});
     $('#growth-list').innerHTML=this.renderFormation(PartyCombatAdapter.snapshot(campaign.state))+this.renderFilters()+this.renderRoster(campaign);
     $$('[data-formation-module]').forEach(b=>b.onclick=()=>{this.filter=b.dataset.formationModule;this.render(campaign);});
     $$('[data-character-filter]').forEach(b=>b.onclick=()=>{this.filter=b.dataset.characterFilter;this.render(campaign);});
@@ -105,10 +105,12 @@ const CharacterLobbyUI={
     const r=RarityTable[c.rarityId],def=MISSILE_DEFS[c.specialtyMissileId],assigned=inv.formation[c.specialtyMissileId]===id,locked=campaign.broken||!!campaign.state.active;
     const button=(action,label)=>{
       const ok=CharacterGrowthSystem.allowed(x,action),payable=CharacterGrowthSystem.payable(campaign,id,x,action);
-      const detail=action==='levelUp'?(ok?CharacterGrowthSystem.costs(id,x,action).map(k=>`${k.amount.toLocaleString('ko-KR')} 골드`).join(' + '):'레벨 상한'):(x.star>=CharacterGrowthRules.maxStars?'최대 성급':`조각 ${CharacterGrowthSystem.shardCost(id,x)}개`);
+      const detail=action==='levelUp'
+        ?(ok?CharacterGrowthSystem.costs(id,x,action).map(k=>t('character.detail.levelCost',{amount:k.amount})).join(' + '):t('character.detail.levelMax'))
+        :(x.star>=CharacterGrowthRules.maxStars?t('character.detail.rankMax'):t('character.detail.rankCost',{n:CharacterGrowthSystem.shardCost(id,x)}));
       return `<button class="primary" data-character-action="${action}" ${locked||!ok||!payable?'disabled':''}>${label}<small>${detail}</small></button>`;
     };
-    $('#character-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${r.name}</span><h2 id="character-modal-title">${c.name}</h2><span class="character-stars">${'★'.repeat(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${IdentityTable[c.identityId]}</span><span>${RaceTable[c.raceId]}</span><span style="color:${def.color}">${def.label} 특화</span></div><div class="character-level-bar"><b>${x.owned?'Lv.'+x.level:'미보유'}</b><div class="level-track"><span style="width:${x.level/CharacterGrowthRules.maxLevel*100}%"></span></div><span>${CharacterGrowthRules.maxLevel}</span></div><div class="character-stats">${[['atk','공격력'],['def','방어력'],['hp','체력']].map(([k,label])=>`<div><small>${label}</small><b>${stats[k].toLocaleString('ko-KR')}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?`다음 ${next[k].toLocaleString('ko-KR')}`:canRank?`승급 시 ${rankNext[k].toLocaleString('ko-KR')}`:'기본 능력치'}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?`성급 패시브 · ${pv.need}성 해금`:'고정 패시브'}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(t=>`<li>${t}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${c.name} 조각</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div>`:`<p class="meta-note">영입에서 획득할 수 있습니다. ${r.name} 등급 전체 확률 ${GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)}%</p>`}</div></div><div class="character-modal-footer">${x.owned?`<div class="character-actions">${button('levelUp','레벨 올리기')}${button('rankUp','성급 올리기')}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?`${def.label} 슬롯 출전 중`:'출전 부대에 편성'}</button>`:`<button class="primary character-deploy-button" data-go-recruit>영입하러 가기</button>`}</div>`;
+    $('#character-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${r.name}</span><h2 id="character-modal-title">${c.name}</h2><span class="character-stars">${'★'.repeat(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${IdentityTable[c.identityId]}</span><span>${RaceTable[c.raceId]}</span><span style="color:${def.color}">${t('character.detail.specialty',{module:def.label})}</span></div><div class="character-level-bar"><b>${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</b><div class="level-track"><span style="width:${x.level/CharacterGrowthRules.maxLevel*100}%"></span></div><span>${CharacterGrowthRules.maxLevel}</span></div><div class="character-stats">${[['atk','character.detail.statAtk'],['def','character.detail.statDef'],['hp','character.detail.statHp']].map(([k,labelKey])=>`<div><small>${t(labelKey)}</small><b>${I18N.num(stats[k])}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?t('character.detail.nextStat',{value:next[k]}):canRank?t('character.detail.rankUpStat',{value:rankNext[k]}):t('character.detail.baseStat')}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?t('character.detail.starPassive',{n:pv.need}):t('character.detail.innatePassive')}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(t=>`<li>${t}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${t('character.detail.shards',{name:c.name})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div>`:`<p class="meta-note">${t('character.detail.recruitHint',{rarity:r.name,pct:GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)})}</p>`}</div></div><div class="character-modal-footer">${x.owned?`<div class="character-actions">${button('levelUp',t('character.detail.levelUp'))}${button('rankUp',t('character.detail.rankUp'))}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?t('character.detail.deployed',{module:def.label}):t('character.detail.deploy')}</button>`:`<button class="primary character-deploy-button" data-go-recruit>${t('character.detail.goRecruit')}</button>`}</div>`;
   },
 };
 
@@ -155,7 +157,7 @@ const MilestoneSystem={
     if(!WalletSystem.earn(next,row.currencyId,st.total))return false;
     if(!campaign.commit(next))return false;
     Analytics.track('milestone_claim',{id,tier:st.tier+st.count});
-    campaign.render();MilestoneUI.render(campaign);GameFeedback.toast(`${CurrencyTable[row.currencyId].name} +${st.total.toLocaleString('ko-KR')} 획득`);return true;
+    campaign.render();MilestoneUI.render(campaign);GameFeedback.toast(t('milestone.toast.claimed',{currency:CurrencyTable[row.currencyId].name,amount:st.total}));return true;
   },
   claimableCount(state){return MILESTONE_TABLE.filter(row=>this.claimable(state,row)).length;},
 };
@@ -170,29 +172,29 @@ const SkillLobbyUI={
   },
   // [2026-09-16 v0916_7] 스킬 키별 switch 대신 처리 방식(effect)과 제어(control)로 문구를 만든다.
   effectText(key,x){
-    const cfg=CONFIG.skills[key],def=SKILL_DEFS[key],v=SkillGrowthSystem.effect(key,x),dur=SkillGrowthSystem.duration(key,x),pct=n=>Math.round(n*1000)/10,dmg=`공격력의 ${Math.round(v*100)}%`;
+    const cfg=CONFIG.skills[key],def=SKILL_DEFS[key],v=SkillGrowthSystem.effect(key,x),dur=SkillGrowthSystem.duration(key,x),pct=n=>Math.round(n*1000)/10,dmg=t('skill.effect.damage',{pct:Math.round(v*100)});
     const control={
-      stun:()=>`스턴 ${cfg.stunSec}초`,
-      slow:()=>`이동·공격속도 -${pct(cfg.slowPct)}% ${cfg.slowSec}초`,
-      knockback:()=>`밀어내기 ${cfg.knockbackPx}`,
+      stun:()=>t('skill.effect.stun',{sec:cfg.stunSec}),
+      slow:()=>t('skill.effect.slow',{pct:pct(cfg.slowPct),sec:cfg.slowSec}),
+      knockback:()=>t('skill.effect.knockback',{px:cfg.knockbackPx}),
     }[def.control];
     switch(def.effect){
-      case 'projectile': case 'damageAll': return control?`${dmg} · ${control()}`:dmg;
-      case 'damageReduction': return `피해 ${pct(v)}% 감소 · ${dur}초`;
-      case 'heal': return `최대 HP ${pct(v)}% 회복`;
-      case 'energy': return `에너지 ${Math.round(v)} 즉시 획득`;
-      case 'attackBuff': return `일반 공격력 +${pct(v)}% · ${dur}초`;
-      case 'defenseBuff': return `방어력 +${pct(v)}% · ${dur}초`;
-      case 'regen': return `초당 최대 HP ${pct(v)}% · ${dur}초 (총 ${pct(v*dur)}%)`;
+      case 'projectile': case 'damageAll': return control?t('skill.effect.withControl',{damage:dmg,control:control()}):dmg;
+      case 'damageReduction': return t('skill.effect.damageReduction',{pct:pct(v),sec:dur});
+      case 'heal': return t('skill.effect.heal',{pct:pct(v)});
+      case 'energy': return t('skill.effect.energy',{n:Math.round(v)});
+      case 'attackBuff': return t('skill.effect.attackBuff',{pct:pct(v),sec:dur});
+      case 'defenseBuff': return t('skill.effect.defenseBuff',{pct:pct(v),sec:dur});
+      case 'regen': return t('skill.effect.regen',{pct:pct(v),sec:dur,total:pct(v*dur)});
     }
     return def.description;
   },
-  statsText(key,x){const s=SkillGrowthSystem.stats(key,x);return `공격 +${s.atk} · 방어 +${s.def} · 체력 +${s.hp}`;},
+  statsText(key,x){const s=SkillGrowthSystem.stats(key,x);return t('skill.statsLine',{atk:s.atk,def:s.def,hp:s.hp});},
   render(campaign){
     const inv=campaign.state.skillInventory,equipped=inv.equipped;
-    $('#skill-count').textContent=`${SKILL_KEYS.filter(key=>inv.skills[key].owned).length} / ${SKILL_KEYS.length} 보유`;
-    const slotHtml=equipped.map((key,index)=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-slot" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-icon">${m.icon}</span><b>${index+1}. ${d.name}</b><small>Lv.${x.level} · ${this.effectText(key,x)}</small></button>`;}).join('');
-    $('#skill-lobby-content').innerHTML=`<div class="skill-equipped-panel"><strong>장착 스킬 · 전투 능력치에 합산</strong><div class="skill-equipped-grid">${slotHtml}</div></div><div class="skill-card-grid">${SKILL_KEYS.map(key=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-card${x.owned?'':' locked'}${equipped.includes(key)?' equipped':''}" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-level">${x.owned?'Lv.'+x.level:'미보유'}</span><span class="skill-icon">${m.icon}</span><b>${d.name}</b><small>${x.owned?this.effectText(key,x):'소환에서 획득'}</small><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div></button>`;}).join('')}</div>`;
+    $('#skill-count').textContent=t('skill.count',{owned:SKILL_KEYS.filter(key=>inv.skills[key].owned).length,total:SKILL_KEYS.length});
+    const slotHtml=equipped.map((key,index)=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-slot" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-icon">${m.icon}</span><b>${t('skill.slotName',{index:index+1,name:d.name})}</b><small>${t('skill.slotLine',{level:x.level,effect:this.effectText(key,x)})}</small></button>`;}).join('');
+    $('#skill-lobby-content').innerHTML=`<div class="skill-equipped-panel"><strong>${t('skill.equipped.title')}</strong><div class="skill-equipped-grid">${slotHtml}</div></div><div class="skill-card-grid">${SKILL_KEYS.map(key=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-card${x.owned?'':' locked'}${equipped.includes(key)?' equipped':''}" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-level">${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</span><span class="skill-icon">${m.icon}</span><b>${d.name}</b><small>${x.owned?this.effectText(key,x):t('skill.card.locked')}</small><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div></button>`;}).join('')}</div>`;
     $$('[data-skill-open]').forEach(button=>button.onclick=()=>this.open(campaign,button.dataset.skillOpen,button));
     const ready=SKILL_KEYS.some(key=>{const x=inv.skills[key];return SkillGrowthSystem.allowed(x,'levelUp')&&SkillGrowthSystem.costs(x).length>0&&WalletSystem.canPay(campaign.state,SkillGrowthSystem.costs(x))||SkillGrowthSystem.allowed(x,'rankUp')&&x.shards>=SkillGrowthSystem.shardCost(x);});
     $('#skill-nav-dot').hidden=!ready;
@@ -204,7 +206,7 @@ const SkillLobbyUI={
   renderModal(campaign,key){
     const x=campaign.state.skillInventory.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key],stats=SkillGrowthSystem.stats(key,x),nextStats=SkillGrowthSystem.stats(key,{...x,level:x.level+1}),equipped=campaign.state.skillInventory.equipped;
     const levelAllowed=SkillGrowthSystem.allowed(x,'levelUp'),rankAllowed=SkillGrowthSystem.allowed(x,'rankUp'),levelCost=SkillGrowthSystem.levelCost(x),rankCost=SkillGrowthSystem.shardCost(x);
-    $('#skill-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${d.name}</h2><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div><small>${x.owned?`Lv.${x.level} / ${CharacterGrowthRules.maxLevel}`:'미보유'}</small></div></div><div class="character-modal-section"><strong>액티브 효과</strong><p>${m.description}</p><b>${this.effectText(key,x)}</b><small>쿨타임 ${SkillGrowthSystem.cooldown(key)}초 · ${d.growth==='duration'?`성급 상승 시 지속 +${d.durationPerStar}초`:'성급 상승 시 효과 성장'}</small></div><div class="character-modal-section"><strong>장착 능력치</strong><div class="character-stats">${[['atk','공격'],['def','방어'],['hp','체력']].map(([s,label])=>`<div><small>${label}</small><b>+${stats[s]}</b><small>${levelAllowed?'다음 +'+nextStats[s]:'현재 최대'}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${d.name} 조각</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div>`:'<p class="meta-note">불씨 소환에서 획득할 수 있습니다.</p>'}</div><div class="character-modal-footer">${x.owned?`<div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>레벨 올리기<small>${levelAllowed?`골드 ${levelCost.toLocaleString('ko-KR')}`:'레벨 상한'}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>성급 올리기<small>조각 ${rankCost}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?`${slot+1}번 장착 중`:`${slot+1}번 슬롯 장착`}</button>`).join('')}</div>`:''}</div>`;
+    $('#skill-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${d.name}</h2><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div><small>${x.owned?t('skill.detail.levelOfMax',{level:x.level,max:CharacterGrowthRules.maxLevel}):t('common.notOwned')}</small></div></div><div class="character-modal-section"><strong>${t('skill.detail.active')}</strong><p>${m.description}</p><b>${this.effectText(key,x)}</b><small>${t('skill.detail.cooldown',{sec:SkillGrowthSystem.cooldown(key),growth:d.growth==='duration'?t('skill.detail.growthDuration',{sec:d.durationPerStar}):t('skill.detail.growthEffect')})}</small></div><div class="character-modal-section"><strong>${t('skill.detail.stats')}</strong><div class="character-stats">${[['atk','skill.detail.statAtk'],['def','skill.detail.statDef'],['hp','skill.detail.statHp']].map(([s,labelKey])=>`<div><small>${t(labelKey)}</small><b>+${stats[s]}</b><small>${levelAllowed?t('skill.detail.nextStat',{value:nextStats[s]}):t('skill.detail.maxStat')}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${t('skill.detail.shards',{name:d.name})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div>`:`<p class="meta-note">${t('skill.detail.gachaHint')}</p>`}</div><div class="character-modal-footer">${x.owned?`<div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>${t('skill.detail.levelUp')}<small>${levelAllowed?t('skill.detail.levelCost',{amount:levelCost}):t('skill.detail.levelMax')}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>${t('skill.detail.rankUp')}<small>${t('skill.detail.rankCost',{n:rankCost})}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?t('skill.detail.slotEquipped',{n:slot+1}):t('skill.detail.slotEquip',{n:slot+1})}</button>`).join('')}</div>`:''}</div>`;
     $$('[data-skill-action]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.transact(campaign,key,button.dataset.skillAction)){this.renderModal(campaign,key);MilestoneUI.render(campaign);}});
     $$('[data-skill-slot]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.equip(campaign,key,Number(button.dataset.skillSlot)))this.renderModal(campaign,key);});
   },
@@ -219,17 +221,17 @@ const MilestoneUI={
     if(ready.length){
       const totals={};
       ready.forEach(row=>{const st=MilestoneSystem.status(state,row);totals[row.currencyId]=(totals[row.currencyId]||0)+st.total;});
-      const reward=Object.entries(totals).map(([id,n])=>`${CurrencyTable[id].name} +${n.toLocaleString('ko-KR')}`).join(' · ');
-      return {ready:true,text:'보상 받기',sub:`${ready.length}개`,pct:100,reward};
+      const reward=Object.entries(totals).map(([id,n])=>t('milestone.card.reward',{currency:CurrencyTable[id].name,amount:n})).join(' · ');
+      return {ready:true,text:t('milestone.strip.claim'),sub:t('milestone.strip.count',{n:ready.length}),pct:100,reward};
     }
     let best=null;
     MILESTONE_TABLE.forEach(row=>{
       const st=MilestoneSystem.status(state,row),pct=st.need>0?st.current/st.need:0;
       if(!best||pct>best.pct)best={row,st,pct};
     });
-    if(!best)return {ready:false,text:'진행 중인 목표 없음',sub:'',pct:0};
+    if(!best)return {ready:false,text:t('milestone.strip.none'),sub:'',pct:0};
     return {ready:false,text:best.row.name,
-      sub:`${best.st.current.toLocaleString('ko-KR')} / ${best.st.need.toLocaleString('ko-KR')}`,
+      sub:t('milestone.strip.progress',{current:best.st.current,need:best.st.need}),
       pct:Math.min(100,best.pct*100)};
   },
   renderStrip(campaign){
@@ -238,14 +240,14 @@ const MilestoneUI={
     const s=this.strip(state);
     $('#open-milestones').classList.toggle('ready',s.ready);
     // pill은 좁다. 게이지는 버리고 목표 이름과 진행만 남긴다(자세한 건 패널에서 본다).
-    $('#open-milestones').setAttribute('aria-label',`마일스톤 미션 · ${s.text} ${s.sub}`.trim());
+    $('#open-milestones').setAttribute('aria-label',t('milestone.strip.aria',{text:s.text,sub:s.sub}).trim());
     el.innerHTML=`<b>${s.text}</b><small>${s.sub}</small>`;
   },
   render(campaign){
     const state=campaign.state;if(!state)return;const count=MilestoneSystem.claimableCount(state);
     $('#milestone-home-dot').hidden=!count;
     this.renderStrip(campaign);
-    $('#milestone-list').innerHTML=MILESTONE_TABLE.map(row=>{const st=MilestoneSystem.status(state,row),cur=CurrencyTable[row.currencyId].name,pct=Math.min(100,st.current/st.need*100),fmt=n=>n.toLocaleString('ko-KR');return `<article class="milestone-card${st.ready?' claimable':''}"><span class="milestone-icon">${row.icon}</span><div class="milestone-copy"><b>${row.name}<em class="milestone-tier">${fmt(st.tier+1)}단계</em></b><small>${row.description} · ${fmt(st.current)} / ${fmt(st.need)}</small><div class="milestone-progress"><i style="width:${pct}%"></i></div><div class="milestone-reward">${cur} +${fmt(st.ready?st.total:st.reward)}${st.count>1?` · ${st.count}단계 한꺼번에`:''}</div></div><button data-claim-milestone="${row.id}" ${st.ready?'':'disabled'}>${st.ready?'받기':'진행 중'}</button></article>`;}).join('');
+    $('#milestone-list').innerHTML=MILESTONE_TABLE.map(row=>{const st=MilestoneSystem.status(state,row),cur=CurrencyTable[row.currencyId].name,pct=Math.min(100,st.current/st.need*100);return `<article class="milestone-card${st.ready?' claimable':''}"><span class="milestone-icon">${row.icon}</span><div class="milestone-copy"><b>${row.name}<em class="milestone-tier">${t('milestone.tier',{n:st.tier+1})}</em></b><small>${t('milestone.card.progress',{description:row.description,current:st.current,need:st.need})}</small><div class="milestone-progress"><i style="width:${pct}%"></i></div><div class="milestone-reward">${t('milestone.card.reward',{currency:cur,amount:st.ready?st.total:st.reward})}${st.count>1?t('milestone.card.bulk',{n:st.count}):''}</div></div><button data-claim-milestone="${row.id}" ${st.ready?'':'disabled'}>${t(st.ready?'milestone.card.claim':'milestone.card.inProgress')}</button></article>`;}).join('');
     $$('[data-claim-milestone]').forEach(button=>button.onclick=()=>MilestoneSystem.claim(campaign,button.dataset.claimMilestone));
   },
 };

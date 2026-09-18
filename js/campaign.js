@@ -70,8 +70,9 @@ function syncToolButtons(){
    Store는 DOM을 모른다 — 실패를 {ok,error}로 돌려주고 표시는 View가 맡는다.
    ===================================================================== */
 const CampaignStore = {
-  READ_ERROR:'진행 데이터를 읽지 못했습니다. 브라우저 저장 설정을 확인한 뒤 새로고침해 주세요.',
-  WRITE_ERROR:'저장하지 못했습니다. 브라우저 저장 공간을 확인한 뒤 다시 시도해 주세요.',
+  // 문구가 아니라 키를 돌려준다 — 표시 시점(Campaign.warn)에 현재 언어로 바꾼다.
+  READ_ERROR:'notice.read.error',
+  WRITE_ERROR:'notice.write.error',
   fresh(){return {version:4,gold:0,balances:{starfire:CONFIG.meta.gacha.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),gachaCount:0,stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0,shardsGained:0},active:null,lastResult:null};},
   validate(s){
     const integer=(n,min,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
@@ -164,7 +165,8 @@ const CampaignEconomy = {
 const Campaign = {
   state:null,selectedStage:1,broken:false,currentLobbyPage:'home',
   fresh(){ return CampaignStore.fresh(); },
-  warn(message){ CampaignView.warn(message); },
+  // 빈 문자열은 경고 줄을 지우라는 뜻이라 그대로 넘긴다. 그 밖에는 문자열 키다.
+  warn(key){ CampaignView.warn(key?t(key):''); },
   read(){
     const r=CampaignStore.read();
     if(!r.ok){ this.broken=true; this.warn(r.error); return false; }
@@ -191,8 +193,8 @@ const Campaign = {
     this.selectedStage=this.state.unlocked;
     if(this.state.active&&!this.broken){
       const id=this.state.active.id;
-      if(this.settle(id,false))CampaignView.notice(`이전 전투가 종료되어 통과 보상 ${this.state.lastResult.total} 골드를 받았습니다.`);
-      else this.warn('이전 전투 보상을 저장하지 못했습니다. 저장 공간을 확인한 뒤 새로고침해 주세요.');
+      if(this.settle(id,false))CampaignView.notice(t('notice.settle.previous',{gold:this.state.lastResult.total}));
+      else this.warn('notice.settle.previousFailed');
     }
     $$('[data-lobby-nav]').forEach(button=>button.onclick=()=>this.navigate(button.dataset.lobbyNav));
     CharacterLobbyUI.init(this);
@@ -207,7 +209,7 @@ const Campaign = {
       $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙';
       if(!RunHost.running)return;
       RunHost.holdStop();
-      if(confirm('전투를 종료할까요? 통과한 WAVE의 골드는 지급되며 행동력은 환급되지 않습니다.'))RunHost.defeat();
+      if(confirm(t('notice.quit.confirm')))RunHost.defeat();
     };
     this.showLobby();
     setInterval(()=>{if(GameState.current==='lobby')this.renderWallet();},1000);
@@ -216,7 +218,7 @@ const Campaign = {
       if(!this.read())return;
       if(RunHost.running&&this.state.active?.id!==RunHost.runId){
         RunHost.abort();
-        this.showLobby();CampaignView.notice('다른 창에서 진행이 변경되어 이 전투를 종료했습니다.');
+        this.showLobby();CampaignView.notice(t('notice.storage.changed'));
       }else if(GameState.current==='lobby')this.render();
     });
   },
@@ -231,14 +233,14 @@ const Campaign = {
   },
   resetData(){
     if(GameState.current!=='lobby'||this.state?.active) return false;
-    if(!confirm('현재 진행을 초기화할까요? 골드·별불·캐릭터·스킬·마일스톤·전투 기록이 초기화됩니다.')) return false;
+    if(!confirm(t('notice.reset.confirm'))) return false;
     replaceObjectContents(DEFAULT_CONFIG,FACTORY_DEFAULT_CONFIG);
     CONFIG=cloneConfig(DEFAULT_CONFIG);
     RunConfig.clear();CharacterLobbyUI.filter='all';CharacterLobbyUI.close();SkillLobbyUI.close();
     if(!this.commit(this.fresh())) return false;
     this.selectedStage=1;GachaLobbyUI.lastResult=null;
     this.render();
-    CampaignView.notice('데이터를 초기화했습니다. 스테이지 1 입장 시 튜토리얼이 다시 표시됩니다.');
+    CampaignView.notice(t('notice.reset.done'));
     return true;
   },
   showLobby(){
@@ -252,7 +254,7 @@ const Campaign = {
     if(gained<=0){this.renderWallet();return false;}
     if(!this.commit(s))return false;
     this.renderWallet();
-    CampaignView.notice(`행동력 +${gained} 충전 · 누적 ${s.staminaChargeClicks}회`);
+    CampaignView.notice(t('notice.stamina.charged',{gained,total:s.staminaChargeClicks}));
     return true;
   },
   renderWallet(){
@@ -324,7 +326,7 @@ const Campaign = {
     return {
       progress:(id,count)=>this.progress(id,count),
       settle:(id,clear,metrics)=>this.settle(id,clear,metrics),
-      warn:message=>this.warn(message),
+      warn:key=>this.warn(key),
       tutorialDone:()=>!!this.state?.tutorialCompleted,
       completeTutorial:()=>this.completeTutorial(),
     };
@@ -354,16 +356,92 @@ const Campaign = {
 
 
 /* =====================================================================
+   [LanguageUI] 언어 선택 팝업 — 도구 메뉴의 🌐
+   ---------------------------------------------------------------------
+   [2026-09-18 세션 3] 목록은 I18N.languages()에서 만든다. i18n/ 에 언어 파일이
+   하나 늘면 버튼도 하나 늘고, 이 코드는 손대지 않는다. 각 언어는 자기 이름을
+   자기 언어로 표시한다(한국어 · English).
+
+   전투 중에는 막는다 — 전투 화면은 매 프레임 갱신되는 요소가 많아 중간에
+   다시 그리면 연출 타이밍이 어긋난다. 로비·출전 준비·결과에서만 연다.
+   ===================================================================== */
+const LanguageUI = {
+  lastFocus:null,
+  available(){ return GameState.current!=='playing' || !RunHost.running; },
+  init(){
+    const toggle=$('#lang-toggle'); if(!toggle) return;
+    toggle.onclick=()=>{ $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙'; this.open(); };
+    $('#lang-close').onclick=()=>this.close();
+    $('#lang-panel').onclick=event=>{ if(event.target===$('#lang-panel')) this.close(); };
+    document.addEventListener('keydown',event=>{
+      if($('#lang-panel').hidden) return;
+      if(event.key==='Escape'){ event.preventDefault(); this.close(); }
+    });
+    // 언어가 바뀌면 지금 보고 있는 화면을 다시 그린다.
+    I18N.onChange(()=>{ this.render(); Screens.rerender(); });
+  },
+  render(){
+    const list=$('#lang-list'); if(!list) return;
+    list.innerHTML=I18N.languages().map(({code,label})=>
+      `<button data-lang="${code}" aria-current="${code===I18N.current}">${label}</button>`).join('');
+    $$('[data-lang]',list).forEach(button=>button.onclick=()=>{
+      if(!this.available()) return;
+      I18N.setLanguage(button.dataset.lang);
+      this.close();
+    });
+    $('#lang-panel .lang-note').hidden=this.available();
+  },
+  open(){
+    this.lastFocus=document.activeElement;
+    this.render();
+    $('#lang-panel').hidden=false;
+    $('#lang-close').focus();
+  },
+  close(){
+    $('#lang-panel').hidden=true;
+    if(this.lastFocus?.isConnected) this.lastFocus.focus();
+    this.lastFocus=null;
+  },
+};
+
+/* =====================================================================
+   [Screens] 언어가 바뀐 뒤 현재 화면을 다시 그린다
+   ---------------------------------------------------------------------
+   I18N.applyDom()은 마크업에 키로 적힌 고정 문구만 되돌린다. 수치가 섞인
+   문구는 렌더 함수가 만들므로 화면마다 그 함수를 다시 부른다.
+   ===================================================================== */
+const Screens = {
+  rerender(){
+    switch(GameState.current){
+      case 'lobby':
+        Campaign.render();
+        break;
+      case 'start':
+        buildStartScreen(Campaign.state);
+        CampaignView.brief(Campaign.stage(),PartyCombatAdapter.snapshot(Campaign.state));
+        break;
+      case 'clear': case 'defeat':
+        RunHost.current?.renderResultScreen();
+        if(Campaign.state?.lastResult) CampaignView.reward(Campaign.state.lastResult);
+        break;
+    }
+  },
+};
+
+/* =====================================================================
    Global event wiring
    ===================================================================== */
 window.addEventListener('DOMContentLoaded', ()=>{
   Platform.init();
+  // 언어를 먼저 정한다 — 아래 analytics의 lang 값과 첫 렌더가 같은 언어를 봐야 한다.
+  // Platform.languageHint()를 읽으므로 Platform.init() 뒤여야 한다.
+  I18N.boot();
   // 저장이 있는지는 Campaign.init()이 새 진행을 만들기 전에 봐야 한다.
   // orientation은 이 판정이 최종이다 — 레이아웃이 세로 하나뿐이라(개발계획서 세션 4) 별도
   // 판정 함수를 두지 않는다. 지표용 값이라 뷰포트 비율만 보면 충분하다.
   let isNew=1; try{ isNew=SaveStorage.load(CAMPAIGN_CONFIG.saveKey)?0:1; }catch(_){}
   Analytics.track('session_start',{
-    lang:document.documentElement.lang||'ko',
+    lang:I18N.current,
     orientation:window.innerWidth>window.innerHeight?'landscape':'portrait',
     isNew,
   });
@@ -376,7 +454,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     const app=$('#app');
     const open=app.classList.toggle('tools-open');
     $('#tools-toggle').textContent=open?'×':'⚙';
-    $('#tools-toggle').setAttribute('aria-label',open?'도구 메뉴 닫기':'도구 메뉴 열기');
+    $('#tools-toggle').setAttribute('aria-label',t(open?'tools.closeAria':'tools.openAria'));
     // 전투 중에는 종료만, 로비에서는 데이터 초기화만 낸다 — 전투 중 초기화는 사고다.
     syncToolButtons();
   });
@@ -415,6 +493,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
   window.addEventListener('blur',()=>RunHost.holdStop());
   $('#retry-btn').addEventListener('click', ()=>Campaign.showLobby());
+
+  LanguageUI.init();
 
   $('#manual-toggle').addEventListener('click', ()=>{
     $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙';

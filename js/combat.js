@@ -570,12 +570,14 @@ class SkillSystem {
       while(b.regenTickLeft<=0&&b.regenTicks>0){this.healCore(RunConfig.playerStat('hp')*b.regenPerTick);b.regenTicks--;b.regenTickLeft+=1;}
     }
   }
+  // 발동할 수 없는 사유를 코드로 돌려준다(null이면 쓸 수 있다). 화면에 그대로 나가는
+  // 값이 아니다 — 버튼 상태 판정(game.js renderSkillBar)과 디버그 로그가 이 코드를 본다.
   blockReason(skillKey){
     const def=SKILL_DEFS[skillKey],entry=this.entry(skillKey);
-    if(!def||!CONFIG.skills[skillKey]||!entry) return '장착되지 않음';
-    if(this.game.ending) return '전투 종료';
-    if(this.cooldownLeft(skillKey) > 0) return '쿨타임';
-    if(this.game.energy < this.energyCost(skillKey)) return '에너지 부족';
+    if(!def||!CONFIG.skills[skillKey]||!entry) return 'notEquipped';
+    if(this.game.ending) return 'ended';
+    if(this.cooldownLeft(skillKey) > 0) return 'cooldown';
+    if(this.game.energy < this.energyCost(skillKey)) return 'noEnergy';
     return def.requires ? SkillSystem.REQUIRES[def.requires](this) : null;
   }
   canUse(skillKey){ return this.blockReason(skillKey)===null; }
@@ -609,8 +611,8 @@ class SkillSystem {
     return true;
   }
   static REQUIRES = {
-    enemy:system=>system.game.combatSystem.liveEnemies().length===0?'대상 없음':null,
-    missingHp:system=>system.game.playerHpCurrent>=RunConfig.playerStat('hp')?'HP 가득 참':null,
+    enemy:system=>system.game.combatSystem.liveEnemies().length===0?'noTarget':null,
+    missingHp:system=>system.game.playerHpCurrent>=RunConfig.playerStat('hp')?'fullHp':null,
   };
   // 각 처리는 성공 시 행동 로그 문구를, 발동할 수 없으면 false를 돌려준다.
   static EFFECTS = {
@@ -648,7 +650,7 @@ class SkillSystem {
       const g=system.game,amount=Math.max(0,Math.round(entry.effect));
       g.energy+=amount;g.updateEnergyUi();
       g.effects.skill(key);
-      spawnFloatNumber(g.floatLayer,g.playerPos.x,g.playerPos.y-40,`에너지 +${amount}`,'enhance');
+      spawnFloatNumber(g.floatLayer,g.playerPos.x,g.playerPos.y-40,t('battle.skill.energyGain',{n:amount}),'enhance');
       return `에너지 +${amount}`;
     },
     attackBuff(system,key,entry){
@@ -1354,7 +1356,7 @@ class WaveSystem {
     this.waveTimer = 0;
     const cfg = this.currentWaveCfg;
     this.game.currentWaveCfg = cfg;
-    $('#wave-label').textContent = `WAVE ${cfg.wave} / ${RunConfig.waves().length}`;
+    $('#wave-label').textContent = t('battle.waveLabel',{n:cfg.wave,total:RunConfig.waves().length});
     // [2026-09-18 확정(인철)] WAVE 시작 보너스 — waveStartBonusFromWave번째 WAVE부터
     // WAVE가 시작될 때마다 점수를 지급한다(WAVE 1은 제외).
     if(cfg.wave >= CONFIG.scoring.waveStartBonusFromWave){
@@ -1399,9 +1401,9 @@ class WaveSystem {
     GameAudio.play('wave_clear');
     if(!badge||!caption) return;
     restartCssAnimation(badge,'fx-clear');
-    caption.textContent='CLEAR';
+    caption.textContent=t('battle.waveCaptionClear');
     clearTimeout(this.captionTimer);
-    this.captionTimer=setTimeout(()=>{ caption.textContent='WAVE'; },520);
+    this.captionTimer=setTimeout(()=>{ caption.textContent=t('battle.waveCaption'); },520);
   }
   renderWaveTypeBadge(cfg,slide=false){
     const badge=$('#wave-type-badge'), name=$('#wave-type-name');
@@ -1450,7 +1452,7 @@ class WaveSystem {
       this.game.completedWaves=this.waveIndex+1;
       if(!this.game.host.progress(this.game.runId,this.game.completedWaves)){
         this.game.running=false; this.game.generator.stopHold();
-        this.game.host.warn('진행 저장에 실패해 전투를 중단했습니다. 저장 공간을 확인한 뒤 새로고침하면 마지막 저장 WAVE까지 정산합니다.'); return;
+        this.game.host.warn('notice.progressSaveFailed'); return;
       }
       if(this.waveIndex >= RunConfig.waves().length-1){
         this.finished = true;
