@@ -13,7 +13,7 @@
    Playwright가 없으면 `npx playwright install chromium` 한 번.
    CLAUDE 환경에서는 /opt/pw-browsers 에 이미 있다.
 
-   진입점 생성물(dev.html · js/assets-dev.js)이 index.html보다 낡았는지도
+   진입점 생성물(dev.html)이 index.html보다 낡았는지도
    먼저 확인한다 — index.html 만 고치고 build-dev.mjs 를 안 돌린 상태로
    플레이테스트하는 사고를 막는다.
 */
