@@ -91,7 +91,8 @@ function restartCssAnimation(el, className){
   el.classList.add(className);
   el.addEventListener('animationend', ()=>el.classList.remove(className), {once:true});
 }
-function formatDamage(n){ return n < 1 ? n.toFixed(1) : String(Math.round(n)); }
+// 피해 숫자도 현재 언어의 자릿수 구분을 쓴다(1000 이상이 자주 나온다).
+function formatDamage(n){ return n < 1 ? I18N.num(n,{min:1,max:1}) : I18N.num(Math.round(n)); }
 // Canvas 판정 좌표를 CSS로 표시되는 전투 컨테이너 좌표로 변환한다.
 // 모바일에서는 canvas.width(440)와 표시 폭이 달라 이 변환 없이는 피해 숫자가 피격 지점에서 벗어난다.
 function combatLayerPoint(container,x,y){
@@ -122,8 +123,8 @@ function spawnDamageStack(container,x,y,entries){
   d.style.left=p.x+'px';
   d.style.top=p.y+'px';
   d.innerHTML=entries.map(entry=>{
-    const crit=entry.critical?'CRIT ':'';
-    const pierce=entry.pierceDamage>0?`<em>관통 ${formatDamage(entry.pierceDamage)}</em>`:'';
+    const crit=entry.critical?t('battle.critPrefix'):'';
+    const pierce=entry.pierceDamage>0?`<em>${t('battle.pierce',{damage:formatDamage(entry.pierceDamage)})}</em>`:'';
     return `<span class="damage-value${entry.critical?' critical':''}" style="color:${DAMAGE_COLORS[entry.kind]||'#ffffff'}">${crit}-${formatDamage(entry.damage)}${pierce}</span>`;
   }).join('');
   container.appendChild(d);

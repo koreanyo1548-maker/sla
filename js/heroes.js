@@ -27,7 +27,7 @@ class HeroFieldSystem {
     this.game.effects.ring(p.x,p.y,color,existing?27:44,.45,2);
     this.game.effects.emit(p.x,p.y-25,color,existing?5:16,20,90,.5,2);
     const label=CharacterTable[this.units[key].id]?.name||CONFIG.attackModules[key].label;
-    spawnFloatNumber(this.game.floatLayer,p.x,p.y-85,existing?`강화 +${level}`:`${label} 소환`, 'enhance');
+    spawnFloatNumber(this.game.floatLayer,p.x,p.y-85,existing?t('battle.hero.upgrade',{n:level}):t('battle.hero.summon',{name:label}), 'enhance');
   }
   shot(key){
     const unit=this.units[key];if(!unit)return;

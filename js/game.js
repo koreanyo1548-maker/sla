@@ -26,6 +26,8 @@ class Game {
     this.endSequenceTimer = null;
     this.cinematicToken = 0;
     this.outcomeSettled = false;
+    // 결과 화면을 다시 그릴 때 필요한 승패. null이면 아직 결과 화면이 아니다.
+    this.resultOutcome = null;
     this.elapsedTime = 0;
     this.stats = {generated:0,merges:0,ordersCompleted:0,skillsUsed:0,energySpent:0,enemiesKilled:0,bossesKilled:0,damageDealt:0,criticalHits:0,pierceDamage:0};
     this.skillReadyState = {};
@@ -114,6 +116,7 @@ class Game {
     this.ending=null;
     this.timeScale=1;
     this.outcomeSettled=false;
+    this.resultOutcome=null;
     $('#screen-game')?.classList.remove('cinematic-ending');
     this.hideCinematic(true);
     const layer=$('#cinematic-layer');layer.onclick=null;layer.onkeydown=null;layer.removeAttribute('tabindex');layer.setAttribute('role','status');
@@ -138,9 +141,9 @@ class Game {
     const duration=this.prefersReducedMotion()?0.05:configured;
     this.showCinematic({
       classes:`boss-alert${final?' final-boss':''}`,
-      kicker:final?'FINAL WAVE':'WARNING',
-      title:final?'최종보스 출현':'중간보스 출현',
-      sub:final?'마지막 전투를 준비하세요':'강적이 전장에 진입합니다',
+      kicker:t(final?'battle.boss.finalKicker':'battle.boss.warningKicker'),
+      title:t(final?'battle.boss.finalTitle':'battle.boss.midTitle'),
+      sub:t(final?'battle.boss.finalSub':'battle.boss.midSub'),
       durationSec:duration,
     });
     const token=++this.cinematicToken;
@@ -164,9 +167,9 @@ class Game {
     this.updateEnergyUi();
     this.showCinematic({
       classes:`end-sequence ${clear?'end-clear':'end-defeat'}`,
-      kicker:clear?'FINAL STRIKE':'SYSTEM DOWN',
-      title:clear?'승리':'패배',
-      sub:clear?'최종보스를 처치했습니다':'방어선이 붕괴되었습니다',
+      kicker:t(clear?'battle.end.clearKicker':'battle.end.defeatKicker'),
+      title:t(clear?'battle.end.clearTitle':'battle.end.defeatTitle'),
+      sub:t(clear?'battle.end.clearSub':'battle.end.defeatSub'),
       durationSec:duration,
     });
     const token=++this.cinematicToken;
@@ -177,8 +180,8 @@ class Game {
   awaitResult(outcome){
     this.running=false;this.generator.stopHold();this.timeScale=1;
     syncToolButtons();          // 연출 중 종료를 막는다 — 클리어가 패배로 정산될 수 있다.
-    const layer=$('#cinematic-layer');layer.classList.add('awaiting-result');layer.tabIndex=0;layer.setAttribute('role','button');layer.setAttribute('aria-label','터치해서 결과 보기');
-    $('#cinematic-sub').textContent='터치해서 결과 보기';
+    const layer=$('#cinematic-layer');layer.classList.add('awaiting-result');layer.tabIndex=0;layer.setAttribute('role','button');layer.setAttribute('aria-label',t('battle.end.touch'));
+    $('#cinematic-sub').textContent=t('battle.end.touch');
     layer.onclick=()=>this.finishRun(outcome);
     layer.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();this.finishRun(outcome);}};
     layer.focus();GameAudio.play(outcome==='clear'?'clear':'defeat');
@@ -196,19 +199,26 @@ class Game {
     this.orderSheetSystem.closeDetail();
     const clear=outcome==='clear';
     GameState.set(clear?'clear':'defeat');
-    $('#result-title').textContent=clear?'클리어!':'패배';
-    $('#result-title').className=clear?'clear':'defeat';
-    $('#result-sub').textContent=clear
-      ? `스테이지 ${this.stageId} · ${RunConfig.waves().length} WAVE 클리어`
-      : `스테이지 ${this.stageId} · WAVE ${this.currentWaveCfg?.wave||'?'}에서 종료`;
+    this.resultOutcome=outcome;
+    this.renderResultScreen();
     if(!this.outcomeSettled) this.outcomeSettled=this.host.settle(this.runId,clear,this.milestoneMetrics());
-    this.renderResultStats();
     // 결과 화면 진입 = 게임플레이 구간 종료. 실제 전송·SDK 연결은 세션 7.
     const durationSec=Math.max(0,Math.round(this.elapsedTime));
     const wave=this.currentWaveCfg?.wave||0;
     if(clear) Analytics.progression('complete',this.stageId,{wave,durationSec});
     else Analytics.progression('fail',this.stageId,{wave,durationSec,reason:this.endReason==='quit'?'quit':'defeat'});
     Platform.gameplayStop();
+  }
+  // 결과 화면의 문구 전부. finishRun이 한 번 부르고, 언어가 바뀌면 Screens가 다시 부른다.
+  renderResultScreen(){
+    if(!this.resultOutcome) return;
+    const clear=this.resultOutcome==='clear';
+    $('#result-title').textContent=t(clear?'result.clear':'result.defeat');
+    $('#result-title').className=clear?'clear':'defeat';
+    $('#result-sub').textContent=clear
+      ? t('result.subClear',{stage:this.stageId,waves:RunConfig.waves().length})
+      : t('result.subDefeat',{stage:this.stageId,wave:this.currentWaveCfg?.wave||'?'});
+    this.renderResultStats();
   }
   milestoneMetrics(){return {bosses:this.stats.bossesKilled,orders:this.stats.ordersCompleted,merges:this.stats.merges,skillsUsed:this.stats.skillsUsed};}
   addEnergy(n){ this.energy += n; this.updateEnergyUi(); }
@@ -229,8 +239,8 @@ class Game {
     // 에너지가 없으면 생성기를 비활성화한다(다음 지급 점수를 채우면 다시 켜진다).
     const btn = $('#generator-btn');
     // [2026-09-17] 툴팁도 CONFIG에서 만든다 — 마크업에 수치를 박아 두면 밸런스 변경 때 낡는다.
-    if(btn)btn.title=`처치 점수가 ${CONFIG.scoring.pointsPerGrant}점 쌓일 때마다 에너지 ${CONFIG.scoring.energyPerGrant}을 지급합니다`;
-    if(btn){btn.disabled=!!this.ending||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?'공간 부족':`생성 <small>−${CONFIG.generator.costPerPiece}</small>`;}
+    if(btn)btn.title=t('battle.generator.tooltip',{points:CONFIG.scoring.pointsPerGrant,energy:CONFIG.scoring.energyPerGrant});
+    if(btn){btn.disabled=!!this.ending||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?t('battle.generator.full'):t('battle.generator.label',{cost:CONFIG.generator.costPerPiece});}
     this.renderSkillBar();
   }
   // 로비에서 장착한 스킬 2개를 그린다. 에너지 비용은 없고 개별 쿨타임만 표시한다.
@@ -241,11 +251,11 @@ class Game {
       const def = CONFIG.skills[key];
       const meta=SKILL_DEFS[key]||{icon:'◆',color:PALETTE.arcane};
       const entry=this.skillSystem.entry(key);
-      return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${def.name} Lv.${entry?.level||1}">
+      return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${def.name} ${t('common.level',{n:entry?.level||1})}">
         <span class="sk-cd"></span>
         <span class="sk-icon">${meta.icon}</span>
         <span class="sk-name">${def.name}</span>
-        <span class="sk-level">Lv.${entry?.level||1}</span>
+        <span class="sk-level">${t('common.level',{n:entry?.level||1})}</span>
         <span class="sk-cost"></span>
       </button>`;
     }).join('');
@@ -263,7 +273,7 @@ class Game {
       const left = this.skillSystem.cooldownLeft(key);
       const reason=this.skillSystem.blockReason(key);
       const ready=reason===null;
-      const state=ready?'ready':reason==='쿨타임'?'cooldown':'target';
+      const state=ready?'ready':reason==='cooldown'?'cooldown':'target';
       btn.disabled = !ready;
       btn.dataset.state=state;
       if(ready && !this.skillReadyState[key]) restartCssAnimation(btn,'fx-ready');
@@ -280,7 +290,8 @@ class Game {
         costEl.classList.toggle('short', this.energy<need);
       }
       const titleCost=this.skillSystem.energyCost(key);
-      btn.title=`${def.name} Lv.${this.skillSystem.entry(key)?.level||1} · ${titleCost>0?`에너지 ${titleCost}`:'에너지 소모 없음'}`;
+      btn.title=t('battle.skill.tooltip',{name:def.name,level:this.skillSystem.entry(key)?.level||1,
+        cost:titleCost>0?t('battle.skill.costEnergy',{n:titleCost}):t('battle.skill.costFree')});
     });
   }
 
@@ -297,7 +308,7 @@ class Game {
     const maxHp = RunConfig.playerStat('hp');
     const ratio = clamp(this.playerHpCurrent/maxHp,0,1);
     $('#player-hp-bar').style.width = ratio*100+'%';
-    $('#player-hp-label').textContent = `용광로 핵 · ${Math.max(0,Math.round(this.playerHpCurrent))} / ${maxHp}`;
+    $('#player-hp-label').textContent = t('battle.coreHp',{current:Math.max(0,Math.round(this.playerHpCurrent)),max:maxHp});
     // [2026-09-18 연출 세션 A] 저HP 경고. 회복으로 기준을 넘으면 해제된다.
     // 표시용 비율만 보고 판정에는 관여하지 않는다.
     const low = this.running && ratio>0 && ratio<=CONFIG.presentation.coreLowPct;
@@ -429,18 +440,18 @@ class Game {
     const totalSeconds=Math.max(0,Math.floor(this.elapsedTime));
     const elapsed=`${String(Math.floor(totalSeconds/60)).padStart(2,'0')}:${String(totalSeconds%60).padStart(2,'0')}`;
     const rows=[
-      [this.currentWaveCfg?.wave||1,'도달 웨이브'],
-      [elapsed,'경과 시간'],
-      [this.scoreSystem?.score||0,'누적 점수'],
-      [this.stats.ordersCompleted,'완료 주문서'],
-      [this.stats.merges,'머지'],
-      [this.stats.skillsUsed,'스킬 사용'],
-      [Math.round(this.stats.damageDealt).toLocaleString('ko-KR'),'누적 피해'],
-      [this.stats.criticalHits,'치명타 적중'],
-      [Math.round(this.stats.pierceDamage).toLocaleString('ko-KR'),'관통 피해'],
+      [I18N.num(this.currentWaveCfg?.wave||1),'result.stat.wave'],
+      [elapsed,'result.stat.time'],
+      [I18N.num(this.scoreSystem?.score||0),'result.stat.score'],
+      [I18N.num(this.stats.ordersCompleted),'result.stat.orders'],
+      [I18N.num(this.stats.merges),'result.stat.merges'],
+      [I18N.num(this.stats.skillsUsed),'result.stat.skills'],
+      [I18N.num(Math.round(this.stats.damageDealt)),'result.stat.damage'],
+      [I18N.num(this.stats.criticalHits),'result.stat.crit'],
+      [I18N.num(Math.round(this.stats.pierceDamage)),'result.stat.pierce'],
     ];
-    const renderRow=([value,label])=>`<div class="result-stat"><strong>${value}</strong><span>${label}</span></div>`;
-    el.innerHTML=rows.slice(0,6).map(renderRow).join('')+`<details class="result-details"><summary>세부 전투 기록</summary><div>${rows.slice(6).map(renderRow).join('')}</div></details>`;
+    const renderRow=([value,labelKey])=>`<div class="result-stat"><strong>${value}</strong><span>${t(labelKey)}</span></div>`;
+    el.innerHTML=rows.slice(0,6).map(renderRow).join('')+`<details class="result-details"><summary>${t('result.details')}</summary><div>${rows.slice(6).map(renderRow).join('')}</div></details>`;
   }
 }
 
@@ -449,9 +460,9 @@ class Game {
    ===================================================================== */
 function buildStartScreen(state=Campaign.state){
   const list=$('#skill-pick-list'),inv=state.skillInventory;
-  list.innerHTML=inv.equipped.map(key=>{const x=inv.skills[key],def=CONFIG.skills[key],meta=SKILL_DEFS[key];return `<div class="skill-slot" style="--skill-accent:${meta.color}"><span class="skill-icon">${meta.icon}</span><b>${def.name}</b><small>Lv.${x.level} · ${SkillLobbyUI.effectText(key,x)}<br>쿨타임 ${SkillGrowthSystem.cooldown(key)}초</small></div>`;}).join('');
+  list.innerHTML=inv.equipped.map(key=>{const x=inv.skills[key],def=CONFIG.skills[key],meta=SKILL_DEFS[key];return `<div class="skill-slot" style="--skill-accent:${meta.color}"><span class="skill-icon">${meta.icon}</span><b>${def.name}</b><small>${t('prepare.skillSlot',{level:x.level,effect:SkillLobbyUI.effectText(key,x),sec:SkillGrowthSystem.cooldown(key)})}</small></div>`;}).join('');
   $('#start-btn').disabled=false;
-  $('#start-btn').textContent=`전투 시작 · 행동력 ${CAMPAIGN_CONFIG.entryCost}`;
+  $('#start-btn').textContent=t('prepare.start',{cost:CAMPAIGN_CONFIG.entryCost});
   $('#start-btn').onclick=()=>Campaign.enter();
 }
 

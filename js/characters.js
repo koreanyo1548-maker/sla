@@ -469,14 +469,15 @@ const GachaSystem={
   },
   // 결과 1개를 next에 반영한다. 같은 묶음에서 두 번째로 나온 대상은 이미 보유 상태이므로 조각이 된다.
   rollOne(next){
-    const type=this.rollCategory();if(!type)return {error:'소환 카테고리 확률이 모두 0입니다.'};
+    // error는 문구가 아니라 문자열 키다 — 표시하는 쪽(campaign-ui.js)이 t()로 바꾼다.
+    const type=this.rollCategory();if(!type)return {error:'gacha.error.noCategory'};
     if(type==='skill'){
       const skillKey=choice(SKILL_KEYS),def=CONFIG.skills[skillKey],x=next.skillInventory.skills[skillKey],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(CONFIG.meta.skill.duplicateShards)||0):0;
       if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
       return {type,skillKey,name:def.name,duplicate,gained,shards:x.shards,surplus:ShardLedger.skill(x).surplus};
     }
-    const rarityId=this.rollRarity();if(!rarityId)return {error:'캐릭터 등급 확률이 모두 0입니다.'};
-    const pool=CharacterRepository.list().filter(c=>c.rarityId===rarityId);if(!pool.length)return {error:'해당 등급의 캐릭터가 없습니다.'};
+    const rarityId=this.rollRarity();if(!rarityId)return {error:'gacha.error.noRarity'};
+    const pool=CharacterRepository.list().filter(c=>c.rarityId===rarityId);if(!pool.length)return {error:'gacha.error.emptyPool'};
     const c=choice(pool),x=next.characterInventory.characters[c.characterId],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(rarityConf(rarityId).duplicateShards)||0):0;
     if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
     return {type,characterId:c.characterId,name:c.name,rarityId,duplicate,gained,shards:x.shards,surplus:ShardLedger.character(c.characterId,x).surplus};
@@ -486,11 +487,11 @@ const GachaSystem={
     if(GameState.current!=='lobby'||!campaign.read()||campaign.state.active) return null;
     const next=cloneConfig(campaign.state);
     const price=this.cost(),count=Math.max(1,Math.round(Number(CONFIG.meta.gacha.resultsPerPull)||1));
-    if(!WalletSystem.spend(next,[{currencyId:CONFIG.meta.gacha.currencyId,amount:price}])) return {error:'별불이 부족합니다.'};
+    if(!WalletSystem.spend(next,[{currencyId:CONFIG.meta.gacha.currencyId,amount:price}])) return {error:'gacha.error.poor'};
     const results=[];
     for(let i=0;i<count;i++){const r=this.rollOne(next);if(r.error)return r;results.push(r);}
     next.gachaCount=(Number(next.gachaCount)||0)+results.length;
-    if(!campaign.commit(next)) return {error:'소환 결과를 저장하지 못했습니다.'};
+    if(!campaign.commit(next)) return {error:'gacha.error.saveFailed'};
     Analytics.track('gacha',{count:next.gachaCount});
     return {results,price};
   },

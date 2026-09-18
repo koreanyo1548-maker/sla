@@ -124,7 +124,7 @@ const SOUND_PREF_KEY='slagma.sound';
 const GameAudio={
   enabled:false,context:null,
   init(){try{this.enabled=SaveStorage.load(SOUND_PREF_KEY)==='on';}catch(_){}this.render();},
-  render(){const b=document.getElementById('sound-toggle');if(b){b.setAttribute('aria-pressed',String(this.enabled));b.title=this.enabled?'효과음 끄기':'효과음 켜기';b.innerHTML=GameArt.icon('sound');b.classList.toggle('muted',!this.enabled);}},
+  render(){const b=document.getElementById('sound-toggle');if(b){b.setAttribute('aria-pressed',String(this.enabled));b.title=t(this.enabled?'tools.soundOff':'tools.soundOn');b.innerHTML=GameArt.icon('sound');b.classList.toggle('muted',!this.enabled);}},
   toggle(){this.enabled=!this.enabled;try{SaveStorage.save(SOUND_PREF_KEY,this.enabled?'on':'off');}catch(_){}this.render();this.play('up');},
   /* [2026-09-18 연출 세션 A] 호출 지점을 먼저 심는다.
      아래 MELODIES에 있는 kind만 소리가 나고, 없는 kind는 조용히 통과한다. 연출

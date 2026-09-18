@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-<title>슬래그마 · 용광로의 수호자</title>
+<title data-i18n="app.title">슬래그마 · 용광로의 수호자</title>
 <meta name="theme-color" content="#12282b">
 <meta name="slagma-build" content="v0916_12">
 
@@ -19,47 +19,47 @@
 <div id="app">
   <div id="save-status" role="alert"></div>
   <div id="screen-lobby" class="screen">
-    <div class="wallet"><div class="wallet-energy"><span data-ui-icon="energy"></span><strong id="stamina-value"></strong><button id="stamina-charge-btn" class="wallet-add" aria-label="행동력 5 충전">+</button><small id="stamina-timer"></small><small id="stamina-charge-count" hidden></small></div><div class="wallet-gold"><span data-ui-icon="gold"></span><strong id="gold-value"></strong></div><div class="wallet-starfire"><span data-ui-icon="starfire"></span><strong id="starfire-value">0</strong></div></div>
+    <div class="wallet"><div class="wallet-energy"><span data-ui-icon="energy"></span><strong id="stamina-value"></strong><button id="stamina-charge-btn" class="wallet-add">+</button><small id="stamina-timer"></small><small id="stamina-charge-count" hidden></small></div><div class="wallet-gold"><span data-ui-icon="gold"></span><strong id="gold-value"></strong></div><div class="wallet-starfire"><span data-ui-icon="starfire"></span><strong id="starfire-value">0</strong></div></div>
     <div id="lobby-notice" role="status" aria-live="polite"></div>
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
-        <div class="journey-scene"><div class="journey-caption"><span id="stage-eyebrow">모험</span><h2 id="stage-name">꺼지지 않는 불씨</h2><p id="stage-meta" class="journey-meta"></p></div><div class="forge-beacon" aria-hidden="true"></div><button id="open-milestones" class="milestone-pill" aria-label="마일스톤 미션"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button></div>
-        <div class="home-controls"><div class="section-label"><h3>출전 부대</h3><button class="text-button" data-open-characters>편성 변경 ›</button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label">장착 스킬</span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span>평균 공격력 <b id="home-party-atk">0</b></span><span>총 체력 <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span>클리어하면 다음 지역이 열립니다</span><span>v0916_12</span></div></div>
+        <div class="journey-scene"><div class="journey-caption"><span id="stage-eyebrow"></span><h2 id="stage-name"></h2><p id="stage-meta" class="journey-meta"></p></div><div class="forge-beacon" aria-hidden="true"></div><button id="open-milestones" class="milestone-pill" data-i18n-aria="milestone.title"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button></div>
+        <div class="home-controls"><div class="section-label"><h3 data-i18n="lobby.party.title"></h3><button class="text-button" data-open-characters data-i18n="lobby.party.change"></button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label" data-i18n="lobby.skills.equipped"></span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span><span data-i18n="lobby.party.avgAtk"></span> <b id="home-party-atk">0</b></span><span><span data-i18n="lobby.party.totalHp"></span> <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span data-i18n="lobby.footnote"></span><span>v0916_12</span></div></div>
       </section>
-      <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow">GUARDIANS</span><h2>수호자</h2></div><span class="character-count" id="character-count">0 / 24 보유</span></div><div id="growth-list"></div></section>
-      <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow">TACTICAL SKILLS</span><h2>전투 스킬</h2></div><span class="character-count" id="skill-count">0 / 4 보유</span></div><div id="skill-lobby-content"></div></section>
-      <section id="lobby-gacha" class="lobby-page" hidden aria-labelledby="nav-gacha"><div class="character-page-head"><div><span class="eyebrow">SUMMONING FORGE</span><h2>불씨 소환</h2></div><span class="character-count" id="gacha-count">0회</span></div>
-        <div class="gacha-stage"><div class="summon-circle" aria-hidden="true"></div><div class="gacha-chest" data-sprite="11"></div><div class="gacha-stage-caption"><span>상자에 수호자와 스킬이 함께 잠들어 있습니다</span><strong>새로운 전력을 깨우세요</strong></div></div>
-        <div class="gacha-hero"><div class="gacha-price"><span>소환 비용</span><b><span data-ui-icon="starfire"></span><span id="gacha-cost">200</span></b></div><button id="gacha-pull-btn" class="primary">불씨 소환</button><p class="meta-note" id="gacha-hint"></p></div>
+      <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow" data-i18n="character.eyebrow"></span><h2 data-i18n="character.title"></h2></div><span class="character-count" id="character-count"></span></div><div id="growth-list"></div></section>
+      <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow" data-i18n="skill.eyebrow"></span><h2 data-i18n="skill.title"></h2></div><span class="character-count" id="skill-count"></span></div><div id="skill-lobby-content"></div></section>
+      <section id="lobby-gacha" class="lobby-page" hidden aria-labelledby="nav-gacha"><div class="character-page-head"><div><span class="eyebrow" data-i18n="gacha.eyebrow"></span><h2 data-i18n="gacha.title"></h2></div><span class="character-count" id="gacha-count"></span></div>
+        <div class="gacha-stage"><div class="summon-circle" aria-hidden="true"></div><div class="gacha-chest" data-sprite="11"></div><div class="gacha-stage-caption"><span data-i18n="gacha.stage.caption"></span><strong data-i18n="gacha.stage.strong"></strong></div></div>
+        <div class="gacha-hero"><div class="gacha-price"><span data-i18n="gacha.costLabel"></span><b><span data-ui-icon="starfire"></span><span id="gacha-cost">200</span></b></div><button id="gacha-pull-btn" class="primary" data-i18n="gacha.pull"></button><p class="meta-note" id="gacha-hint"></p></div>
         <div id="gacha-result" class="gacha-result" hidden></div>
-        <details class="recruit-details"><summary>소환 확률과 수집 현황 <span>⌄</span></summary><div class="character-modal-section"><strong>카테고리·등급 확률</strong><div id="gacha-odds" class="gacha-odds"></div></div><div class="character-modal-section"><strong>보유 현황</strong><div id="gacha-progress" class="gacha-odds"></div></div></details>
+        <details class="recruit-details"><summary><span data-i18n="gacha.details"></span> <span>⌄</span></summary><div class="character-modal-section"><strong data-i18n="gacha.odds.title"></strong><div id="gacha-odds" class="gacha-odds"></div></div><div class="character-modal-section"><strong data-i18n="gacha.progress.title"></strong><div id="gacha-progress" class="gacha-odds"></div></div></details>
       </section>
     </div>
-    <nav id="lobby-nav" aria-label="로비 메뉴"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b>모험</b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b>수호자</b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b>스킬</b><i id="skill-nav-dot" hidden></i></button><button id="nav-gacha" data-lobby-nav="gacha"><span data-ui-icon="recruit"></span><b>소환</b><i id="gacha-nav-dot" hidden></i></button></nav>
+    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-gacha" data-lobby-nav="gacha"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.gacha"></b><i id="gacha-nav-dot" hidden></i></button></nav>
   </div>
 
-  <div id="character-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-character-close></div><section class="character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-modal-title"><button class="character-modal-close" data-character-close aria-label="캐릭터 상세 닫기">×</button><div id="character-modal-content"></div></section></div>
-  <div id="skill-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-skill-close></div><section class="skill-dialog" role="dialog" aria-modal="true" aria-labelledby="skill-modal-title"><button class="character-modal-close" data-skill-close aria-label="스킬 상세 닫기">×</button><div id="skill-modal-content"></div></section></div>
-  <section id="milestone-panel" class="milestone-panel" hidden aria-labelledby="milestone-title"><div class="milestone-head"><h2 id="milestone-title">마일스톤 미션</h2><button id="close-milestones" class="icon-button" aria-label="마일스톤 닫기">×</button></div><div id="milestone-list" class="milestone-list"></div></section>
+  <div id="character-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-character-close></div><section class="character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-modal-title"><button class="character-modal-close" data-character-close data-i18n-aria="character.modal.closeAria">×</button><div id="character-modal-content"></div></section></div>
+  <div id="skill-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-skill-close></div><section class="skill-dialog" role="dialog" aria-modal="true" aria-labelledby="skill-modal-title"><button class="character-modal-close" data-skill-close data-i18n-aria="skill.modal.closeAria">×</button><div id="skill-modal-content"></div></section></div>
+  <section id="milestone-panel" class="milestone-panel" hidden aria-labelledby="milestone-title"><div class="milestone-head"><h2 id="milestone-title" data-i18n="milestone.title"></h2><button id="close-milestones" class="icon-button" data-i18n-aria="milestone.closeAria">×</button></div><div id="milestone-list" class="milestone-list"></div></section>
 
   <!-- ===================== START SCREEN (§18) ===================== -->
   <div id="screen-start" class="screen">
-    <div class="prepare-heading"><button id="back-lobby" class="icon-button" aria-label="로비로 돌아가기"><span data-ui-icon="back"></span></button><h1>출전 준비</h1></div><div id="stage-brief"></div>
-    <div class="prepare-skill-summary"><h2>장착 스킬</h2><div id="skill-pick-list" class="prepare-skills"></div><button id="prepare-change-skills" class="secondary prepare-change">로비에서 장착 변경</button></div>
-    <button id="start-btn">전투 시작</button>
+    <div class="prepare-heading"><button id="back-lobby" class="icon-button" data-i18n-aria="prepare.backAria"><span data-ui-icon="back"></span></button><h1 data-i18n="prepare.title"></h1></div><div id="stage-brief"></div>
+    <div class="prepare-skill-summary"><h2 data-i18n="prepare.skills"></h2><div id="skill-pick-list" class="prepare-skills"></div><button id="prepare-change-skills" class="secondary prepare-change" data-i18n="prepare.changeSkills"></button></div>
+    <button id="start-btn"></button>
   </div>
 
   <!-- ===================== GAME SCREEN ===================== -->
   <div id="screen-game" class="screen">
     <div id="hud">
-      <span class="wave-label" id="wave-label">WAVE 1 / 10</span>
+      <span class="wave-label" id="wave-label"></span>
       <div class="player-status">
-        <div class="run-metrics" aria-label="런 시간과 누적 점수">
-          <span class="run-metric">시간 <strong id="run-timer">00:00</strong></span>
-          <span class="run-metric">점수 <strong id="run-score">0</strong></span>
+        <div class="run-metrics" data-i18n-aria="battle.metricsAria">
+          <span class="run-metric"><span data-i18n="battle.time"></span> <strong id="run-timer">00:00</strong></span>
+          <span class="run-metric"><span data-i18n="battle.score"></span> <strong id="run-score">0</strong></span>
         </div>
         <div class="hp-wrap"><div class="hp-bar" id="player-hp-bar"></div>
-          <div class="hp-label" id="player-hp-label">용광로 핵 · 1200 / 1200</div></div>
+          <div class="hp-label" id="player-hp-label"></div></div>
       </div>
     </div>
     <div id="combat-wrap">
@@ -68,34 +68,34 @@
            이미 배경 그라디언트와 피격 비네트가 쓰고 있어 별도 요소로 둔다. -->
       <div id="core-alert" aria-hidden="true"></div>
       <div id="boss-hp" aria-hidden="true"><div id="boss-hp-fill"></div></div>
-      <div id="wave-type-badge" aria-label="현재 WAVE 종류"><span class="wave-type-caption">WAVE</span><strong id="wave-type-name">혼성</strong></div>
-      <div id="energy-status-row" aria-label="보유 에너지"><span class="energy-status-label">에너지</span><strong id="energy-display">0</strong></div>
-      <div id="skill-row" aria-label="전투 스킬"></div>
+      <div id="wave-type-badge" data-i18n-aria="battle.waveTypeAria"><span class="wave-type-caption" data-i18n="battle.waveCaption"></span><strong id="wave-type-name"></strong></div>
+      <div id="energy-status-row" data-i18n-aria="battle.energyAria"><span class="energy-status-label" data-i18n="battle.energyLabel"></span><strong id="energy-display">0</strong></div>
+      <div id="skill-row" data-i18n-aria="battle.skillRowAria"></div>
     </div>
     <div id="board-wrap">
-      <div id="order-status-row" aria-label="주문서 상태">
-        <div id="order-gauge-wrap" class="order-gauge-wrap" title="주문서 생성 게이지">
+      <div id="order-status-row" data-i18n-aria="order.statusAria">
+        <div id="order-gauge-wrap" class="order-gauge-wrap" data-i18n-title="order.gaugeTitle">
           <div class="order-gauge-track"><div class="order-gauge-fill" id="order-gauge-bar"></div></div>
           <div class="order-gauge-label" id="order-gauge-label"></div>
         </div>
-        <div id="order-stock" class="order-stock" title="보유 주문서">대기 <span id="order-stock-count">0</span></div>
+        <div id="order-stock" class="order-stock" data-i18n-title="order.stockTitle"><span data-i18n="order.stockLabel"></span> <span id="order-stock-count">0</span></div>
       </div>
       <div id="order-sheet-panel"></div>
       <div id="board"></div>
       <div id="generator-row">
         <button id="generator-btn">
           <span class="gen-fill" id="gen-fill"></span>
-          <span class="gen-label"><b>피스 생성 <small>에너지 1</small></b><span class="gen-score" id="gen-score"></span></span>
+          <span class="gen-label"><b data-i18n="battle.generator.initial"></b><span class="gen-score" id="gen-score"></span></span>
         </button>
       </div>
     </div>
-    <div id="order-detail" hidden role="dialog" aria-modal="true" aria-label="주문서 상세"><div class="order-detail-card"><div id="order-detail-content"></div><div class="order-detail-actions"><button id="order-detail-discard">🗑 이 주문서 폐기</button><button id="order-detail-close">닫기</button></div></div></div>
+    <div id="order-detail" hidden role="dialog" aria-modal="true" data-i18n-aria="order.detailAria"><div class="order-detail-card"><div id="order-detail-content"></div><div class="order-detail-actions"><button id="order-detail-discard" data-i18n="order.discard"></button><button id="order-detail-close" data-i18n="common.close"></button></div></div></div>
     <div id="tutorial-layer" hidden aria-live="polite">
       <div id="tutorial-card" role="dialog" aria-modal="false" aria-labelledby="tutorial-title">
         <div class="tutorial-step" id="tutorial-step"></div>
         <strong id="tutorial-title"></strong>
         <p id="tutorial-body"></p>
-        <button id="tutorial-skip" type="button">건너뛰기</button>
+        <button id="tutorial-skip" type="button" data-i18n="tutorial.skip"></button>
       </div>
     </div>
     <div id="cinematic-layer" hidden role="status" aria-live="assertive" aria-atomic="true">
@@ -112,16 +112,28 @@
     <div id="result-title"></div>
     <div id="result-sub" style="color:var(--dim);font-size:13px;"></div>
     <div id="result-stats"></div><div id="result-reward" aria-live="polite"></div>
-    <button id="retry-btn">로비로 돌아가기</button>
+    <button id="retry-btn" data-i18n="result.retry"></button>
   </div>
 
-  <button id="tools-toggle" title="설정 및 도구" aria-label="도구 메뉴 열기">⚙</button>
-  <button id="sound-toggle" class="tool-button" aria-label="효과음" aria-pressed="false"></button>
-  <button id="quit-run" class="tool-button" title="전투 종료" hidden>⏻</button>
-  <button id="manual-toggle" class="tool-button" title="게임 설명서">❓</button>
-  <button id="reset-data-btn" class="tool-button" title="데이터 초기화">↻</button>
+  <button id="tools-toggle" data-i18n-title="tools.toggleTitle" data-i18n-aria="tools.openAria">⚙</button>
+  <button id="sound-toggle" class="tool-button" data-i18n-aria="tools.soundAria" aria-pressed="false"></button>
+  <button id="quit-run" class="tool-button" data-i18n-title="tools.quitTitle" hidden>⏻</button>
+  <button id="manual-toggle" class="tool-button" data-i18n-title="tools.manualTitle">❓</button>
+  <button id="reset-data-btn" class="tool-button" data-i18n-title="tools.resetTitle">↻</button>
+<button id="lang-toggle" class="tool-button" data-i18n-title="tools.languageTitle" data-i18n-aria="tools.languageTitle">🌐</button>
 
-  <div id="recruit-modal" class="reveal-overlay" hidden><section class="reveal-dialog" role="dialog" aria-modal="true" aria-labelledby="reveal-title"><div id="reveal-content"></div><div class="reveal-actions"><button id="reveal-skip" class="secondary" hidden>전체 공개</button><button id="reveal-close" class="primary">계속하기</button></div></section></div>
+  <!-- [2026-09-18 세션 3] 언어 선택. 목록은 등록된 언어 파일에서 만들어지므로
+       i18n/ 에 파일이 하나 늘면 버튼도 하나 는다 — 이 마크업은 손대지 않는다. -->
+  <div id="lang-panel" hidden role="dialog" aria-modal="true" data-i18n-aria="options.language.title">
+    <div class="lang-card">
+      <h2 data-i18n="options.language.title"></h2>
+      <div id="lang-list" class="lang-list"></div>
+      <p class="lang-note" data-i18n="options.language.note"></p>
+      <button id="lang-close" data-i18n="common.close"></button>
+    </div>
+  </div>
+
+  <div id="recruit-modal" class="reveal-overlay" hidden><section class="reveal-dialog" role="dialog" aria-modal="true" aria-labelledby="reveal-title"><div id="reveal-content"></div><div class="reveal-actions"><button id="reveal-skip" class="secondary" hidden data-i18n="gacha.reveal.skipAll"></button><button id="reveal-close" class="primary" data-i18n="common.continue"></button></div></section></div>
   <div id="manual-panel"></div>
   <!-- [2026-09-18 연출 세션 A] 화면 경계를 넘나드는 연출용 계층. #combat-wrap은
        overflow:hidden이라 보드에서 전장으로 날아가는 연출을 담을 수 없다. -->
@@ -129,6 +141,11 @@
 </div>
 
 <script src="js/platform.js"></script>
+<script src="js/i18n.js"></script>
+<!-- 언어 파일 — node tools/i18n.mjs 가 관리한다. 직접 고치지 말 것. -->
+<!-- i18n:languages -->
+<script src="i18n/ko.js"></script>
+<!-- /i18n:languages -->
 <script src="js/assets.js"></script>
 <script src="js/config.js"></script>
 <script src="js/art.js"></script>
@@ -148,13 +165,13 @@
      (#manual-panel이 그 경우다). 여기서는 뷰포트 전체를 덮어야 한다.
      표시 판정은 css/overrides.css의 미디어쿼리 하나뿐이고 JS는 관여하지 않는다. 게임 루프도
      멈추지 않으므로 세로로 되돌리면 진행 중이던 전투가 그대로 이어진다.
-     문구는 아직 한글 리터럴이다 — 세션 3의 "index.html에 한글 리터럴이 없다" 완료 조건이
-     이것도 함께 걷어간다. dev.html은 생성물이므로 index.html만 고치고 build-dev를 돌리면 된다. -->
+     문구는 i18n 키로 들어갔다(세션 3). dev.html은 생성물이므로 index.html만 고치고
+     build-dev를 돌리면 된다. -->
 <div id="rotate-notice">
   <div class="rotate-card">
     <span class="rotate-icon" aria-hidden="true">📱</span>
-    <strong>화면을 세로로 돌려주세요</strong>
-    <p>이 게임은 세로 화면에 맞춰져 있습니다.</p>
+    <strong data-i18n="rotate.title"></strong>
+    <p data-i18n="rotate.body"></p>
   </div>
 </div>
 
