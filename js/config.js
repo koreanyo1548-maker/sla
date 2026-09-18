@@ -400,6 +400,9 @@ const DEFAULT_CONFIG = {
   },
   // 공격 모듈은 서로 독립된 주기로 동시에 발사된다. 아래 값은 기획 미확정 초기값이며
   // 에디터에서 조정한다. 각 주문서 완료 시 소모 피스의 티어 합계를 레벨로 사용한다.
+  // [2026-09-18] 확정(인철): 미사일별 baseDamageMul을 전부 1.00으로 맞추고, 피해 격차는
+  // 캐릭터 능력치 쪽 meta.character.moduleAtkMul로 옮겼다(값도 거기서 새로 정한다).
+  // 이제 미사일 계수는 피해에 관여하지 않는다.
   attackModules: {
     damageBonusByLevel: [0.10,0.18,0.25,0.35,0.45,0.58,0.72,0.88,1.06,1.26,1.48,1.72],
     speedBonusByLevel:  [0.08,0.13,0.18,0.24,0.30,0.37,0.44,0.52,0.60,0.69,0.78,0.88],
@@ -413,13 +416,13 @@ const DEFAULT_CONFIG = {
       unusedTargetBonus:0,
     },
     explosion: {
-      labelKey:MISSILE_DEFS.explosion.labelKey, color:MISSILE_DEFS.explosion.color, baseDamageMul:1.20, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.explosion.labelKey, color:MISSILE_DEFS.explosion.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
       baseRadius:42, radiusBonusByLevel:[4,8,12,16,20,24,28,32,36,40,44,48],
       // [2026-09-14] 2차 폭발. 전역 기본값 0 — 캐릭터 패시브로만 켜진다.
       secondary:{ damagePct:0, radiusPct:0 },
     },
     scatter: {
-      labelKey:MISSILE_DEFS.scatter.labelKey, color:MISSILE_DEFS.scatter.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.scatter.labelKey, color:MISSILE_DEFS.scatter.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
       // [2026-09-07] 확정(인철): 산탄은 활성화 즉시 중앙·좌·우 3발로 시작한다. 중앙 1발만 나가면
       // 산탄이라는 이름의 의미가 없다. 발사 수 옵션 최초 적용에 1발을 보정하던 처리는 제거하고,
       // 강화는 아래 증가량을 그대로 누적한다 — Lv.1 반복 기준 3→4→5…
@@ -434,7 +437,7 @@ const DEFAULT_CONFIG = {
     // 레이저는 이동시간 없이 직선상의 적을 즉시 타격하며 단일 대상에도 온전히 유효해서,
     // 연쇄·폭발·산탄의 전용 옵션이 보스전에서 무효인 문제를 미사일 구성 단계에서 보완한다.
     laser: {
-      labelKey:MISSILE_DEFS.laser.labelKey, color:MISSILE_DEFS.laser.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.laser.labelKey, color:MISSILE_DEFS.laser.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
       baseWidth:10, widthBonusByLevel:[2,4,6,8,10,12,14,16,18,20,22,24],
       // [2026-09-14] 강화 발동. 전역 기본값 0 — 캐릭터 패시브로만 켜진다.
       empowered:{ chance:0, damagePct:0, widthPct:0 },
@@ -671,6 +674,13 @@ const DEFAULT_CONFIG = {
       // blend 만큼만 섞어(나머지는 기존 선형) 초반 체감은 유지하고 후반만 무겁게 한다.
       // blend를 1에 가깝게 올리면 몰빵이 유리해져 4인 균등 육성 유인이 사라진다.
       growthCurve:{ blend:0.35, expBase:1.030 },
+      // [2026-09-18] 확정(인철): 미사일별 피해 격차를 캐릭터 공격력 계수로 옮겼다.
+      // CONFIG.attackModules[key].baseDamageMul은 전부 1.00이 되어 피해에 관여하지 않는다.
+      // 캐릭터는 specialtyMissileId가 고정이라 편성 슬롯과 1:1로 맞물린다.
+      // 공격력에만 곱한다 — baseDamageMul이 피해만 건드렸고 방어력·체력은 건드리지 않았다.
+      // [2026-09-18] 확정(인철): 값을 옮기기 전 격차(연쇄 1.00·폭발 1.20·산탄 0.85·레이저 0.85)를
+      // 그대로 쓰지 않고 연쇄·레이저를 올린 구성으로 바꿨다.
+      moduleAtkMul:{ chain:1.20, explosion:1.00, scatter:1.00, laser:1.20 },
     },
     rarity: {
       normal:{ statMul:1.0000,   levelCostMul:1.00, gachaWeight:51.6129, duplicateShards:1, shardSteps:[2,3,4,6,8] },

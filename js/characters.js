@@ -363,14 +363,18 @@ const SkillCombatAdapter={
 };
 const CharacterGrowthSystem={
   // 기본 능력치와 레벨당 성장 모두에 희귀도 배율을 곱한다. 노말이 1.00이라
-  // 기존 전투 밸런스(기본 공격력 1,000)는 그대로 남는다.
+  // 1레벨 기준 전투 밸런스(기본 공격력 1,000)는 그대로 남는다.
   // [2026-09-15] 성급 누적 배율. 계산은 스킬과 같은 GrowthRules.starMultiplier를 쓴다.
   starMul(star){ return GrowthRules.starMultiplier(CONFIG.meta.character.starStepPct,star); },
+  // [2026-09-18] 전속 미사일 배율. CONFIG.attackModules[key].baseDamageMul에 있던 값을 옮긴 것이라
+  // 공격력에만 곱한다(방어력·체력은 종전대로 건드리지 않는다).
+  moduleMul(id){ return Number(CONFIG.meta.character.moduleAtkMul?.[CharacterTable[id]?.specialtyMissileId])||1; },
   stats(id,owned){
     const c=CharacterTable[id],g=GrowthProfileTable[c.growthProfileId],mul=rarityConf(c.rarityId).statMul;
     const star=this.starMul(owned?.star);
     const grown=LevelGrowthFactor.at(owned?.level||1);
-    return Object.fromEntries(['atk','def','hp'].map(k=>[k,Math.round((c.baseStats[k]+grown*g[k])*mul*star)]));
+    const module=this.moduleMul(id);
+    return Object.fromEntries(['atk','def','hp'].map(k=>[k,Math.round((c.baseStats[k]+grown*g[k])*mul*star*(k==='atk'?module:1))]));
   },
   // 레벨업은 골드, 승급은 조각이다.
   costs(id,x,action){
