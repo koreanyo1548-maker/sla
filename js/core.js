@@ -45,10 +45,19 @@ function missileKeyForSource(sourceKind){
   if(sourceKind==='explosion_secondary') return 'explosion';
   return CONFIG.moduleKeys.includes(sourceKind) ? sourceKind : null;
 }
-function enemyHitRadius(e){ return e.isBoss ? CONFIG.hitbox.bossRadius : CONFIG.hitbox.enemyRadius; }
+// [2026-09-18] 중간보스·최종보스 판정 반경을 나눴다(기획서.md의 "단일 값의 한계" 해소) —
+// 크기 배율(CONFIG.boss.midSizeMul/finalSizeMul)이 보스 종류마다 달라져 공용 값으로는
+// 렌더와 판정이 더 이상 맞지 않는다.
+function enemyHitRadius(e){
+  if(!e.isBoss) return CONFIG.hitbox.enemyRadius;
+  return e.bossKind==='final' ? CONFIG.hitbox.bossRadiusFinal : CONFIG.hitbox.bossRadiusMid;
+}
 // 적 몸체 크기를 핵 앞 정지 거리와 렌더링에서 함께 사용한다.
+// [2026-09-18] 확정(인철): 중간보스·최종보스 기본 크기(78·92)에 CONFIG.boss의
+// midSizeMul(1.2)·finalSizeMul(1.3)을 곱해 스프라이트를 키운다.
 function enemyVisualSize(e){
-  return e.isBoss?(e.bossKind==='final'?92:78):(e.type==='tank'?48:e.type==='ranged'?42:38);
+  if(e.isBoss) return e.bossKind==='final'?92*CONFIG.boss.finalSizeMul:78*CONFIG.boss.midSizeMul;
+  return e.type==='tank'?48:e.type==='ranged'?42:38;
 }
 const CoreField={
   position(){return {x:CONFIG.field.width/2,y:CONFIG.field.coreY};},
