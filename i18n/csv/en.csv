@@ -1,0 +1,479 @@
+﻿key,ko,en
+app.title,슬래그마 · 용광로의 수호자,Slagma · Guardians of the Forge
+common.close,닫기,Close
+common.continue,계속하기,Continue
+common.level,Lv.{n},Lv.{n}
+common.notOwned,미보유,Not owned
+lobby.stamina.chargeAria,행동력 {n} 충전,Recharge {n} stamina
+lobby.stamina.full,행동력 충전 완료,Stamina full
+lobby.stamina.timer,+1 회복 {time},+1 in {time}
+lobby.stamina.chargeCount,충전 {n}회,{n} recharges
+lobby.prepare.waiting,행동력 회복 중 <small>{current} / {need}</small>,Stamina recovering <small>{current} / {need}</small>
+lobby.prepare.ready,{sword} 전투 준비 <small>{energy} {cost}</small>,{sword} Prepare <small>{energy} {cost}</small>
+lobby.stage.eyebrow,모험 · {id},Journey · {id}
+lobby.stage.meta,{waves} 웨이브 · 클리어 <b>+{gold}</b> 골드,{waves} waves · Clear <b>+{gold}</b> gold
+lobby.party.title,출전 부대,Squad
+lobby.party.change,편성 변경 ›,Edit squad ›
+lobby.party.memberAria,{name} 레벨 {level} 상세,"{name}, level {level}, details"
+lobby.party.avgAtk,평균 공격력,Avg. attack
+lobby.party.totalHp,총 체력,Total HP
+lobby.skills.equipped,장착 스킬,Equipped skills
+lobby.footnote,클리어하면 다음 지역이 열립니다,Clear the stage to unlock the next region
+lobby.nav.aria,로비 메뉴,Lobby menu
+lobby.nav.home,모험,Journey
+lobby.nav.characters,수호자,Guardians
+lobby.nav.skills,스킬,Skills
+lobby.nav.gacha,소환,Summon
+character.eyebrow,GUARDIANS,GUARDIANS
+character.title,수호자,Guardians
+character.count,{owned} / {total} 보유,{owned} / {total} owned
+character.modal.closeAria,캐릭터 상세 닫기,Close guardian details
+character.formation.title,출전 부대,Squad
+character.formation.hint,슬롯을 눌러 수호자 교체,Tap a slot to swap
+character.formation.slotAria,{module} 편성 {name} 레벨 {level},"{module} slot, {name}, level {level}"
+character.formation.hp,체력,HP
+character.formation.def,방어,DEF
+character.formation.atk,평균 공격,Avg. ATK
+character.filter.aria,특화 미사일 필터,Filter by missile
+character.filter.all,전체,All
+character.roster.sort,보유 우선 · 높은 등급순,Owned first · Highest rarity
+character.roster.ownedOnly,보유만 보기,Owned only
+character.roster.aria,{name} {rarity} {state} 상세,"{name}, {rarity}, {state}, details"
+character.roster.levelState,레벨 {level},level {level}
+character.roster.deployed,출전,Active
+character.roster.growable,성장 가능,Can grow
+character.detail.specialty,{module} 특화,{module} specialist
+character.detail.statAtk,공격력,Attack
+character.detail.statDef,방어력,Defense
+character.detail.statHp,체력,HP
+character.detail.nextStat,다음 {value},Next {value}
+character.detail.rankUpStat,승급 시 {value},{value} at next star
+character.detail.baseStat,기본 능력치,Base stat
+character.detail.starPassive,성급 패시브 · {n}성 해금,Star passive · unlocks at {n}★
+character.detail.innatePassive,고정 패시브,Innate passive
+character.detail.shards,{name} 조각,{name} shards
+character.detail.recruitHint,영입에서 획득할 수 있습니다. {rarity} 등급 전체 확률 {pct}%,Available from summoning. {rarity} rarity chance {pct}%
+character.detail.levelUp,레벨 올리기,Level up
+character.detail.levelCost,{amount} 골드,{amount} gold
+character.detail.levelMax,레벨 상한,Max level
+character.detail.rankUp,성급 올리기,Star up
+character.detail.rankCost,조각 {n}개,{n} shards
+character.detail.rankMax,최대 성급,Max star
+character.detail.deployed,{module} 슬롯 출전 중,In {module} slot
+character.detail.deploy,출전 부대에 편성,Add to squad
+character.detail.goRecruit,영입하러 가기,Go to summon
+character.toast.grown,{name} 성장 완료,{name} grew stronger
+character.toast.deployed,{name} · {module} 편성 완료,{name} · {module} slot set
+passive.scopeAll,전체,All
+passive.factor,{scope} {stat} +{pct}%,{scope} {stat} +{pct}%
+passive.statusOnHit,적중 시 {chance}% 확률로 {status} {duration}초,{chance}% chance on hit to apply {status} for {duration}s
+passive.damageVsStatus,{status} 상태의 적에게 피해 +{pct}%,+{pct}% damage to {status} enemies
+passive.formation,{tag} {count}명 편성 시 {scope} {stat} +{pct}%,With {count} {tag} in the squad: {scope} {stat} +{pct}%
+passive.rule.unusedTargetBonus,남은 연결 횟수당 첫 대상 피해 +{pct}%,+{pct}% first-target damage per unused chain jump
+passive.rule.centerDamageBonus,중앙 탄환 피해 +{pct}%,+{pct}% center pellet damage
+passive.rule.secondary,처치 시 2차 폭발 · 피해 {damage}% / 반경 {radius}%,Secondary blast on kill · {damage}% damage / {radius}% radius
+passive.rule.empowered,{chance}% 확률로 강화 레이저 · 피해 +{damage}% / 폭 +{width}%,{chance}% chance of an empowered laser · +{damage}% damage / +{width}% width
+passive.rule.focused,광선에 적이 1기만 걸리면 그 대상 피해 +{damage}%,+{damage}% damage when the beam hits only one enemy
+skill.eyebrow,TACTICAL SKILLS,TACTICAL SKILLS
+skill.title,전투 스킬,Combat Skills
+skill.count,{owned} / {total} 보유,{owned} / {total} owned
+skill.modal.closeAria,스킬 상세 닫기,Close skill details
+skill.equipped.title,장착 스킬 · 전투 능력치에 합산,Equipped skills · added to combat stats
+skill.slotName,{index}. {name},{index}. {name}
+skill.slotLine,Lv.{level} · {effect},Lv.{level} · {effect}
+skill.card.locked,소환에서 획득,From summoning
+skill.detail.active,액티브 효과,Active effect
+skill.detail.cooldown,쿨타임 {sec}초 · {growth},Cooldown {sec}s · {growth}
+skill.detail.growthDuration,성급 상승 시 지속 +{sec}초,+{sec}s duration per star
+skill.detail.growthEffect,성급 상승 시 효과 성장,Effect grows per star
+skill.detail.levelOfMax,Lv.{level} / {max},Lv.{level} / {max}
+skill.detail.stats,장착 능력치,Equip stats
+skill.detail.statAtk,공격,ATK
+skill.detail.statDef,방어,DEF
+skill.detail.statHp,체력,HP
+skill.detail.nextStat,다음 +{value},Next +{value}
+skill.detail.maxStat,현재 최대,At max
+skill.detail.shards,{name} 조각,{name} shards
+skill.detail.gachaHint,불씨 소환에서 획득할 수 있습니다.,Available from Ember Summon.
+skill.detail.levelUp,레벨 올리기,Level up
+skill.detail.levelCost,골드 {amount},{amount} gold
+skill.detail.levelMax,레벨 상한,Max level
+skill.detail.rankUp,성급 올리기,Star up
+skill.detail.rankCost,조각 {n},{n} shards
+skill.detail.slotEquipped,{n}번 장착 중,In slot {n}
+skill.detail.slotEquip,{n}번 슬롯 장착,Equip to slot {n}
+skill.effect.damage,공격력의 {pct}%,{pct}% of attack
+skill.effect.withControl,{damage} · {control},{damage} · {control}
+skill.effect.stun,스턴 {sec}초,Stun {sec}s
+skill.effect.slow,이동·공격속도 -{pct}% {sec}초,Move/attack speed -{pct}% for {sec}s
+skill.effect.knockback,밀어내기 {px},Knockback {px}
+skill.effect.damageReduction,피해 {pct}% 감소 · {sec}초,Damage -{pct}% · {sec}s
+skill.effect.heal,최대 HP {pct}% 회복,Heal {pct}% of max HP
+skill.effect.energy,에너지 {n} 즉시 획득,Gain {n} energy instantly
+skill.effect.attackBuff,일반 공격력 +{pct}% · {sec}초,Normal attack +{pct}% · {sec}s
+skill.effect.defenseBuff,방어력 +{pct}% · {sec}초,Defense +{pct}% · {sec}s
+skill.effect.regen,초당 최대 HP {pct}% · {sec}초 (총 {total}%),{pct}% max HP per second · {sec}s ({total}% total)
+skill.statsLine,공격 +{atk} · 방어 +{def} · 체력 +{hp},ATK +{atk} · DEF +{def} · HP +{hp}
+skill.strong_single.name,분쇄창,Crushing Lance
+skill.strong_single.desc,가장 강한 적에게 고화력 투사체를 발사합니다.,Fires a high-power projectile at the strongest enemy.
+skill.aoe.name,낙뢰 폭격,Thunder Barrage
+skill.aoe.desc,현재 전장의 모든 적을 동시에 공격합니다.,Strikes every enemy on the field at once.
+skill.defense.name,용광 방벽,Forge Bulwark
+skill.defense.desc,일정 시간 용광로 핵이 받는 피해를 줄입니다.,Reduces damage taken by the forge core for a time.
+skill.heal.name,재생 불씨,Regrowth Ember
+skill.heal.desc,용광로 핵의 최대 체력 일부를 회복합니다.,Restores part of the forge core's max HP.
+skill.energy_surge.name,불씨 충전,Ember Charge
+skill.energy_surge.desc,에너지를 즉시 얻습니다.,Gain energy instantly.
+skill.attack_buff.name,달군 칼날,Honed Edge
+skill.attack_buff.desc,일정 시간 일반 공격력(기본 공격·미사일)을 높입니다. 스킬 피해에는 적용되지 않습니다.,Raises normal attack power (basic attacks and missiles) for a time. Does not apply to skill damage.
+skill.defense_buff.name,강철 외피,Steel Hide
+skill.defense_buff.desc,일정 시간 수호자들의 방어력을 높입니다.,Raises the guardians' defense for a time.
+skill.stun.name,굉음 충격,Thunderclap
+skill.stun.desc,모든 적에게 피해를 주고 잠시 기절시킵니다.,Damages every enemy and briefly stuns them.
+skill.slow.name,슬래그 늪,Slag Mire
+skill.slow.desc,모든 적에게 피해를 주고 이동속도와 공격속도를 낮춥니다.,Damages every enemy and lowers their move and attack speed.
+skill.knockback.name,열풍 분출,Heat Blast
+skill.knockback.desc,모든 적에게 피해를 주고 용광로 핵에서 멀리 밀어냅니다.,Damages every enemy and pushes them away from the forge core.
+skill.regen.name,치유 잔불,Healing Embers
+skill.regen.desc,일정 시간 매초 용광로 핵의 최대 체력 일부를 회복합니다.,Restores part of the forge core's max HP every second for a time.
+milestone.title,마일스톤 미션,Milestones
+milestone.closeAria,마일스톤 닫기,Close milestones
+milestone.strip.aria,마일스톤 미션 · {text} {sub},Milestones · {text} {sub}
+milestone.strip.claim,보상 받기,Claim rewards
+milestone.strip.count,{n}개,{n}
+milestone.strip.none,진행 중인 목표 없음,No goal in progress
+milestone.strip.progress,{current} / {need},{current} / {need}
+milestone.tier,{n}단계,Tier {n}
+milestone.card.progress,{description} · {current} / {need},{description} · {current} / {need}
+milestone.card.reward,{currency} +{amount},{currency} +{amount}
+milestone.card.bulk, · {n}단계 한꺼번에, · {n} tiers at once
+milestone.card.claim,받기,Claim
+milestone.card.inProgress,진행 중,In progress
+milestone.toast.claimed,{currency} +{amount} 획득,{currency} +{amount} received
+milestone.stage_clear.name,불씨 전선 돌파,Breaking the Front
+milestone.stage_clear.desc,새로운 최고 스테이지 클리어,Clear a new highest stage
+milestone.waves.name,전선 유지,Holding the Line
+milestone.waves.desc,WAVE 통과,Waves cleared
+milestone.bosses.name,강적 사냥,Boss Hunter
+milestone.bosses.desc,보스 처치,Bosses defeated
+milestone.skills_used.name,전술 운용,Tactician
+milestone.skills_used.desc,스킬 사용,Skills used
+milestone.orders.name,숙련된 제작자,Master Crafter
+milestone.orders.desc,주문서 완료,Orders completed
+milestone.merges.name,융합의 손길,Fusion Touch
+milestone.merges.desc,머지 성공,Merges made
+gacha.eyebrow,SUMMONING FORGE,SUMMONING FORGE
+gacha.title,불씨 소환,Ember Summon
+gacha.count,누적 {n}개 소환,{n} summoned in total
+gacha.stage.caption,상자에 수호자와 스킬이 함께 잠들어 있습니다,Guardians and skills sleep together in the chest
+gacha.stage.strong,새로운 전력을 깨우세요,Wake new power
+gacha.costLabel,소환 비용,Summon cost
+gacha.pull,불씨 소환,Ember Summon
+gacha.pulling,소환 완료,Summoned
+gacha.poor,별불이 부족합니다,Not enough starfire
+gacha.hint.poor,새로운 최고 스테이지를 클리어하고 마일스톤에서 별불을 받으세요. {n} 별불이 더 필요합니다.,Clear a new highest stage and claim starfire from milestones. {n} more starfire needed.
+gacha.hint.odds,수호자 {character}% · 스킬 {skill}%. 중복 결과는 각 조각으로 전환됩니다.,Guardian {character}% · Skill {skill}%. Duplicates turn into shards.
+gacha.details,소환 확률과 수집 현황,Summon odds and collection
+gacha.odds.title,카테고리·등급 확률,Category and rarity odds
+gacha.odds.character,수호자,Guardian
+gacha.odds.skill,스킬 · 희귀도 없음,Skill · no rarity
+gacha.odds.rarity,수호자 {rarity},Guardian {rarity}
+gacha.progress.title,보유 현황,Collection
+gacha.progress.skills,전투 스킬,Combat skills
+gacha.reveal.title,불씨 소환 · {n}개,Ember Summon · {n}
+gacha.reveal.cardAria,{n}번째 카드 공개,Reveal card {n}
+gacha.reveal.revealedAria,{name} · {label} · {state},{name} · {label} · {state}
+gacha.reveal.legendAria,빛 색상별 등급,Rarity by glow color
+gacha.reveal.legendSkill,스킬,Skill
+gacha.reveal.hint,카드를 눌러 한 장씩 공개하세요.,Tap a card to reveal it.
+gacha.reveal.skipAll,전체 공개,Reveal all
+gacha.reveal.next,다음 공개 ({n}),Reveal next ({n})
+gacha.reveal.summaryButton,결과 요약,Summary
+gacha.summary.title,소환 결과,Summon results
+gacha.summary.stats,신규 {fresh} · 조각 +{shards},New {fresh} · Shards +{shards}
+gacha.badge.dup,조각 +{n},Shards +{n}
+gacha.badge.new,NEW,NEW
+gacha.label.skill,전투 스킬,Combat skill
+gacha.label.character,{rarity} 수호자,{rarity} guardian
+gacha.state.dup,조각 +{n},shards +{n}
+gacha.state.new,신규,new
+gacha.recent.title,최근 소환 {n}개,Last {n} summons
+gacha.recent.body,신규 {fresh} · 조각 +{shards}{best},New {fresh} · Shards +{shards}{best}
+gacha.recent.best, · 최고 {rarity} {name}, · Best {rarity} {name}
+gacha.error.noCategory,소환 카테고리 확률이 모두 0입니다.,Every summon category chance is 0.
+gacha.error.noRarity,캐릭터 등급 확률이 모두 0입니다.,Every guardian rarity chance is 0.
+gacha.error.emptyPool,해당 등급의 캐릭터가 없습니다.,No guardian exists at that rarity.
+gacha.error.poor,별불이 부족합니다.,Not enough starfire.
+gacha.error.saveFailed,소환 결과를 저장하지 못했습니다.,Could not save the summon results.
+prepare.backAria,로비로 돌아가기,Back to lobby
+prepare.title,출전 준비,Prepare
+prepare.skills,장착 스킬,Equipped skills
+prepare.changeSkills,로비에서 장착 변경,Change loadout in lobby
+prepare.start,전투 시작 · 행동력 {cost},Start battle · {cost} stamina
+prepare.brief.kicker,스테이지 {id},Stage {id}
+prepare.brief.waves,{n} 웨이브,{n} waves
+prepare.brief.clearGold,클리어 +{gold} 골드,Clear +{gold} gold
+prepare.brief.coreHp,핵 체력,Core HP
+prepare.brief.teamDef,팀 방어,Team DEF
+prepare.skillSlot,Lv.{level} · {effect}<br>쿨타임 {sec}초,Lv.{level} · {effect}<br>Cooldown {sec}s
+battle.waveLabel,WAVE {n} / {total},WAVE {n} / {total}
+battle.waveCaption,WAVE,WAVE
+battle.waveCaptionClear,CLEAR,CLEAR
+battle.waveTypeAria,현재 WAVE 종류,Current wave type
+battle.metricsAria,런 시간과 누적 점수,Run time and total score
+battle.time,시간,Time
+battle.score,점수,Score
+battle.coreHp,용광로 핵 · {current} / {max},Forge core · {current} / {max}
+battle.energyAria,보유 에너지,Energy held
+battle.energyLabel,에너지,Energy
+battle.skillRowAria,전투 스킬,Combat skills
+battle.critPrefix,CRIT ,CRIT 
+battle.pierce,관통 {damage},pierce {damage}
+battle.generator.initial,피스 생성,Make piece
+battle.generator.label,생성 <small>−{cost}</small>,Make <small>−{cost}</small>
+battle.generator.full,공간 부족,No space
+battle.generator.tooltip,처치 점수가 {points}점 쌓일 때마다 에너지 {energy}을 지급합니다,Every {points} kill score grants {energy} energy
+battle.skill.tooltip,{name} Lv.{level} · {cost},{name} Lv.{level} · {cost}
+battle.skill.costEnergy,에너지 {n},{n} energy
+battle.skill.costFree,에너지 소모 없음,No energy cost
+battle.skill.energyGain,에너지 +{n},Energy +{n}
+battle.hero.summon,{name} 소환,{name} summoned
+battle.hero.upgrade,강화 +{n},Upgrade +{n}
+battle.merge.critical,크리티컬 머지!,Critical merge!
+battle.boss.warningKicker,WARNING,WARNING
+battle.boss.finalKicker,FINAL WAVE,FINAL WAVE
+battle.boss.midTitle,중간보스 출현,Midboss incoming
+battle.boss.midSub,강적이 전장에 진입합니다,A strong enemy enters the field
+battle.boss.finalTitle,최종보스 출현,Final boss incoming
+battle.boss.finalSub,마지막 전투를 준비하세요,Brace for the last fight
+battle.end.clearKicker,FINAL STRIKE,FINAL STRIKE
+battle.end.clearTitle,승리,Victory
+battle.end.clearSub,최종보스를 처치했습니다,The final boss has fallen
+battle.end.defeatKicker,SYSTEM DOWN,SYSTEM DOWN
+battle.end.defeatTitle,패배,Defeat
+battle.end.defeatSub,방어선이 붕괴되었습니다,The defense line has collapsed
+battle.end.touch,터치해서 결과 보기,Tap to see results
+board.cellAria,{piece} {tier}티어,{piece} tier {tier}
+board.cellEmptyAria,빈 보드 칸,Empty board cell
+order.statusAria,주문서 상태,Order status
+order.gaugeTitle,주문서 생성 게이지,Order charge gauge
+order.stockTitle,보유 주문서,Orders held
+order.stockLabel,대기,Queued
+order.detailAria,주문서 상세,Order details
+order.discard,🗑 이 주문서 폐기,🗑 Discard this order
+order.empty.title,주문서 대기,Awaiting order
+order.empty.hint,게이지를 채우세요,Fill the gauge
+order.kindLabel,{module}: {stat},{module}: {stat}
+order.stat.damage,공격력,Attack
+order.stat.speed,공격속도,Attack speed
+order.action.enhance,강화,Upgrade
+order.action.summon,소환,Summon
+order.applyAria,{kind} {state},{kind} {state}
+order.applyReady,레벨 {level} {action},level {level} {action}
+order.applyShort,재료 부족,Missing pieces
+order.infoAria,{kind} 상세 · 폐기,{kind} details and discard
+order.chipAria,{color} 보유 티어,{color} tier held
+order.completion,{kind} Lv.{level},{kind} Lv.{level}
+order.detail.requirements,{colors} 피스를 각각 1개 소모합니다.,Consumes one {colors} piece each.
+order.detail.levelRange,가장 높은 티어부터 자동 선택 · 강화 Lv.{min}~{max},Highest tiers chosen first · upgrade Lv.{min}–{max}
+order.detail.enhance,소환된 영웅을 강화합니다.,Upgrades the summoned hero.
+order.detail.summon,편성한 영웅을 소환하고 미사일을 활성화합니다.,Summons your hero and activates the missile.
+order.detail.note,전투는 계속 진행됩니다.,The battle continues.
+result.clear,클리어!,Cleared!
+result.defeat,패배,Defeat
+result.subClear,스테이지 {stage} · {waves} WAVE 클리어,Stage {stage} · {waves} waves cleared
+result.subDefeat,스테이지 {stage} · WAVE {wave}에서 종료,Stage {stage} · ended on wave {wave}
+result.stat.wave,도달 웨이브,Wave reached
+result.stat.time,경과 시간,Time
+result.stat.score,누적 점수,Total score
+result.stat.orders,완료 주문서,Orders done
+result.stat.merges,머지,Merges
+result.stat.skills,스킬 사용,Skills used
+result.stat.damage,누적 피해,Total damage
+result.stat.crit,치명타 적중,Critical hits
+result.stat.pierce,관통 피해,Pierce damage
+result.details,세부 전투 기록,Battle details
+result.retry,로비로 돌아가기,Back to lobby
+result.reward.gold,획득 골드,Gold earned
+result.reward.waves,웨이브 통과,Waves cleared
+result.reward.bonus,클리어 보너스,Clear bonus
+result.reward.unlocked,스테이지 {stage}이 열렸습니다,Stage {stage} unlocked
+result.reward.retryHint,수호자와 스킬을 성장시키고 다시 도전하세요,"Grow your guardians and skills, then try again"
+result.reward.done,보상 지급 완료,Rewards granted
+result.reward.failed,보상을 저장하지 못했습니다.,Could not save the rewards.
+result.reward.retrySave,보상 저장 재시도,Retry saving rewards
+tools.toggleTitle,설정 및 도구,Settings and tools
+tools.openAria,도구 메뉴 열기,Open tool menu
+tools.closeAria,도구 메뉴 닫기,Close tool menu
+tools.soundAria,효과음,Sound effects
+tools.soundOn,효과음 켜기,Turn sound on
+tools.soundOff,효과음 끄기,Turn sound off
+tools.quitTitle,전투 종료,End battle
+options.title,옵션,Options
+options.language.title,언어,Language
+options.language.note,전투 중에는 바꿀 수 없습니다.,Cannot be changed during battle.
+options.manual,게임 설명서,Game guide
+options.reset,데이터 초기화,Reset data
+options.reset.note,로비에서만 초기화할 수 있습니다.,Only available in the lobby.
+notice.read.error,진행 데이터를 읽지 못했습니다. 브라우저 저장 설정을 확인한 뒤 새로고침해 주세요.,Could not read your progress. Check your browser storage settings and reload.
+notice.write.error,저장하지 못했습니다. 브라우저 저장 공간을 확인한 뒤 다시 시도해 주세요.,Could not save. Check your browser storage space and try again.
+notice.settle.previous,이전 전투가 종료되어 통과 보상 {gold} 골드를 받았습니다.,The previous battle ended — you received {gold} gold for the waves cleared.
+notice.settle.previousFailed,이전 전투 보상을 저장하지 못했습니다. 저장 공간을 확인한 뒤 새로고침해 주세요.,Could not save the previous battle's rewards. Check your storage space and reload.
+notice.quit.confirm,전투를 종료할까요? 통과한 WAVE의 골드는 지급되며 행동력은 환급되지 않습니다.,"End this battle? Gold for the waves you cleared is paid out, but stamina is not refunded."
+notice.storage.changed,다른 창에서 진행이 변경되어 이 전투를 종료했습니다.,"Progress changed in another window, so this battle was ended."
+notice.reset.confirm,현재 진행을 초기화할까요? 골드·별불·캐릭터·스킬·마일스톤·전투 기록이 초기화됩니다.,"Reset your progress? Gold, starfire, guardians, skills, milestones and battle records will all be cleared."
+notice.reset.done,데이터를 초기화했습니다. 스테이지 1 입장 시 튜토리얼이 다시 표시됩니다.,Data reset. The tutorial will show again when you enter stage 1.
+notice.stamina.charged,행동력 +{gained} 충전 · 누적 {total}회,Stamina +{gained} · {total} recharges total
+notice.progressSaveFailed,진행 저장에 실패해 전투를 중단했습니다. 저장 공간을 확인한 뒤 새로고침하면 마지막 저장 WAVE까지 정산합니다.,The battle stopped because progress could not be saved. Check your storage space; reloading settles up to the last saved wave.
+tutorial.skip,건너뛰기,Skip
+tutorial.step,튜토리얼 {index},Tutorial {index}
+tutorial.energy.title,에너지로 피스를 만드세요,Make pieces with energy
+tutorial.energy.body,생성기를 누르면 에너지 {cost}을 사용해 피스가 생성됩니다.\n적을 처치해 {points}점을 채우면 에너지 {energy}을 받습니다.,Tap the generator to spend {cost} energy and make a piece.\nDefeat enemies to reach {points} score and receive {energy} energy.
+tutorial.order.title,주문서에 필요한 피스를 모으세요,Gather the pieces the order needs
+tutorial.order.body,주문서에 표시된 색의 피스를 보드에 준비하세요.\n같은 색과 같은 티어의 피스는 합칠 수 있습니다.,Prepare pieces on the board in the colors the order shows.\nPieces of the same color and tier can be merged.
+tutorial.ready.title,주문서를 완성하세요,Complete the order
+tutorial.ready.body,조건이 충족되었습니다.\n빛나는 주문서를 누르면 영웅이 소환됩니다.\n같은 미사일의 다음 주문서는 영웅을 강화합니다.,The requirements are met.\nTap the glowing order to summon your hero.\nThe next order for the same missile upgrades that hero.
+tutorial.skill.title,스킬은 에너지를 쓰고 쿨타임이 흐릅니다,Skills cost energy and have cooldowns
+tutorial.skill.body,"로비에서 장착한 스킬입니다. 버튼에 표시된 에너지를 소모하며, 같은 스킬을 쓸수록 비용이 {step}씩 올라갑니다.","These are the skills you equipped in the lobby. Each use spends the energy shown on the button, and the cost rises by {step} every time you use that skill."
+color.red,빨강,Red
+color.blue,파랑,Blue
+color.green,초록,Green
+color.yellow,노랑,Yellow
+color.purple,보라,Purple
+currency.gold,골드,Gold
+currency.starfire,별불,Starfire
+enemy.type.melee,근접,Melee
+enemy.type.ranged,원거리,Ranged
+enemy.type.tank,탱커,Tank
+factor.attackPct.short,공격력,Attack
+factor.attackPct.long,공격력 증가율,Attack bonus
+factor.damagePct.short,피해량,Damage
+factor.damagePct.long,피해량 증가율,Damage bonus
+factor.critChance.short,치명타율,Crit rate
+factor.critChance.long,치명타율,Critical rate
+factor.critDamagePct.short,치명타 피해,Crit damage
+factor.critDamagePct.long,치명타 피해량,Critical damage
+factor.defenseIgnore.short,방어 무시율,Def ignore
+factor.defenseIgnore.long,방어 무시율,Defense ignore
+factor.pierceRate.short,관통 피해율,Pierce rate
+factor.pierceRate.long,관통 피해율,Pierce damage rate
+factor.attackSpeedPct.short,공격속도,Atk speed
+factor.attackSpeedPct.long,공격속도 증가율,Attack speed bonus
+factor.bossDamagePct.short,보스 피해,Boss damage
+factor.bossDamagePct.long,보스 피해 증가율,Boss damage bonus
+guardian.adel.name,아델,Adel
+guardian.ricia.name,리시아,Ricia
+guardian.bron.name,브론,Bron
+guardian.tarq.name,타르크,Tark
+guardian.belka.name,벨카,Belka
+guardian.kyle.name,카일,Kyle
+guardian.seria.name,세리아,Seria
+guardian.dorman.name,도르만,Dorman
+guardian.rokan.name,로칸,Rokan
+guardian.azra.name,아즈라,Azra
+guardian.yuna.name,유나,Yuna
+guardian.elion.name,엘리온,Elion
+guardian.grim.name,그림,Grim
+guardian.teon.name,테온,Teon
+guardian.nia.name,니아,Nia
+guardian.miren.name,미렌,Miren
+guardian.astel.name,아스텔,Astel
+guardian.volkan.name,볼칸,Volkan
+guardian.kira.name,키라,Kira
+guardian.seraph.name,세라프,Seraph
+guardian.ruhen.name,루헨,Ruhen
+guardian.morga.name,모르가,Morga
+guardian.shan.name,샨,Shan
+guardian.ornel.name,오르넬,Ornel
+identity.knight,기사,Knight
+identity.noble,귀족,Noble
+identity.engineer,기술자,Engineer
+identity.mercenary,용병,Mercenary
+identity.exile,추방자,Exile
+missile.chain.label,연쇄,Chain
+missile.chain.stat,추가 타깃,Extra targets
+missile.explosion.label,폭발,Blast
+missile.explosion.stat,폭발 범위,Blast radius
+missile.scatter.label,산탄,Scatter
+missile.scatter.stat,발사 수,Pellets
+missile.laser.label,레이저,Laser
+missile.laser.stat,광선 폭,Beam width
+passive.adel.name,전류 개방,Current Release
+passive.ricia.name,과전 폭연,Overcharge Burst
+passive.bron.name,정비 숙련,Maintenance Mastery
+passive.tarq.name,야성 조준,Feral Aim
+passive.belka.name,무법 결속,Outlaw Bond
+passive.kyle.name,인간 전술,Human Tactics
+passive.seria.name,용융 탄환,Molten Rounds
+passive.dorman.name,용융 절단,Molten Cut
+passive.rokan.name,추적 전류,Tracking Current
+passive.rokanStar.name,무법자의 연대,Outlaws' Solidarity
+passive.azra.name,열충격,Thermal Shock
+passive.azraStar.name,마족 공명,Demon Resonance
+passive.yuna.name,표식 산개,Marked Spread
+passive.yunaStar.name,귀족 지휘,Noble Command
+passive.elion.name,용융 관통,Molten Pierce
+passive.elionStar.name,엘프 정밀,Elven Precision
+passive.grim.name,용해 전류,Melting Current
+passive.grimStar.name,용병 연대,Mercenary Bond
+passive.teon.name,열파 증폭,Heatwave Amp
+passive.teonStar.name,정비 라인,Assembly Line
+passive.nia.name,감전 산탄,Shock Shot
+passive.niaStar.name,기사 서약,Knight's Oath
+passive.miren.name,전도 절단,Conductive Cut
+passive.mirenStar.name,인류 연합,Human Alliance
+passive.astel.name,고전압 증폭,High Voltage Amp
+passive.astelStar.name,엘프 결계,Elven Ward
+passive.volkan.name,작열 각인,Searing Brand
+passive.volkanStar.name,드워프 제련,Dwarven Forging
+passive.kira.name,관통 산개,Piercing Spread
+passive.kiraStar.name,귀족 대열,Noble Ranks
+passive.seraph.name,초점 수렴,Focus Convergence
+passive.seraphStar.name,마족 강림,Demon Descent
+passive.ruhen.name,잔류 방전,Residual Discharge
+passive.ruhenStar.name,용융 잔류,Molten Residue
+passive.morga.name,연쇄 붕괴,Chain Collapse
+passive.morgaStar.name,용융 붕괴,Molten Collapse
+passive.shan.name,정조준,Precision Aim
+passive.shanStar.name,감전 정밀,Shock Precision
+passive.ornel.name,임계 출력,Critical Output
+passive.ornelStar.name,임계 감전,Critical Shock
+race.human,인간,Human
+race.elf,엘프,Elf
+race.dwarf,드워프,Dwarf
+race.beast,야수인,Beastkin
+race.demon,마족,Demon
+rarity.normal.name,노말,Normal
+rarity.normal.short,N,N
+rarity.magic.name,매직,Magic
+rarity.magic.short,M,M
+rarity.rare.name,레어,Rare
+rarity.rare.short,R,R
+rarity.epic.name,영웅,Epic
+rarity.epic.short,E,E
+rarity.legend.name,전설,Legend
+rarity.legend.short,L,L
+stage.1,불씨의 길,Ember Road
+stage.2,잿빛 외곽,Ashen Outskirts
+stage.3,용광로 입구,Forge Gate
+stage.4,끓는 심장,Boiling Heart
+stage.5,슬래그마 심층,Slagma Depths
+stage.endless,끝없는 심층,Endless Depths
+status.shocked,감전,Shocked
+status.melted,융해,Molten
+wave.fortress.short,탱커,Tank
+wave.fortress.label,탱커전,Tank wave
+wave.rush.short,돌격,Rush
+wave.rush.label,돌격전,Rush wave
+wave.siege.short,원거리,Ranged
+wave.siege.label,원거리 압박,Ranged pressure
+wave.horde.short,물량,Horde
+wave.horde.label,물량전,Horde wave
+wave.standard.short,혼성,Mixed
+wave.standard.label,혼성,Mixed
+wave.midboss.short,보스,Boss
+wave.midboss.label,보스전,Boss wave
+wave.finalboss.short,최종보스,Final
+wave.finalboss.label,최종보스전,Final boss wave
+rotate.title,화면을 세로로 돌려주세요,Please turn your screen upright
+rotate.body,이 게임은 세로 화면에 맞춰져 있습니다.,This game is built for a portrait screen.
