@@ -165,7 +165,7 @@ class MergeBoard {
       b.golden = false; // 크리티컬 머지 결과물은 골든 표시와 별개(중복 강조 방지)
       b.fx = crit ? 'critical' : 'merge';
       this.cells[fromIdx] = null;
-      this.game.stats.merges++;GameAudio.play(crit?'reveal':'up');
+      this.game.stats.merges++;GameAudio.play(crit?'reveal':'merge');
       this.game.orderGaugeSystem.addMerge();
       if(crit){
         logAction(`크리티컬 머지! ${this.pieceLabel(b)} T${b.tier+1}`);
@@ -258,6 +258,7 @@ class Generator {
     piece.fx = 'spawn';
     g.mergeBoard.placeRandom(piece);
     restartCssAnimation($('#generator-btn'),'fx-generate');
+    GameAudio.play('generate');
     if(piece.golden) logAction(`골든 피스! ${g.mergeBoard.pieceLabel(piece)} T${piece.tier+1}`);
     g.updateEnergyUi();
     g.tutorial?.onGenerated();
@@ -405,14 +406,70 @@ class OrderSheetSystem {
     preview.selected.forEach(x=>{ g.mergeBoard.cells[x.index]=null; });
     const kindLabel=this.enhancementLabel(slot);
     g.attackModuleSystem.applyUpgrade(slot.module,slot.stat,preview.level);
-    g.stats.ordersCompleted++;GameAudio.play('up');
+    g.stats.ordersCompleted++;
+    GameAudio.play('order_complete');
     logAction(`${'★'.repeat(this.rewardProgress(slot,preview).stars)} ${kindLabel} Lv.${preview.level} 적용!`);
-    this.slots[slotIdx]=null;
-    g.orderGaugeSystem.refillCompletedSlot(slotIdx);
+    // [2026-09-18 연출 세션 A] 카드→영웅 인과를 보이게 한다. 지금까지는 슬롯이 즉시
+    // 비어서 "무엇이 강해졌는지"가 보이지 않았다. 완료 연출을 카드에 먼저 재생하고
+    // 그 뒤에 비운다. 판정·강화 적용은 위에서 이미 끝났으므로 늦추는 것은 표시뿐이다.
+    this.playCompletionFx(slotIdx,slot,`${kindLabel} Lv.${preview.level}`);
     g.mergeBoard.render();g.updateEnergyUi();
-    this.render();
     g.tutorial?.onOrderCompleted();
     return true;
+  }
+  /* 완료 연출 — 카드에 fx-complete 를 주고 약 0.3초 뒤에 슬롯을 비운다.
+     그 사이 그 카드만 입력을 막는다(.is-resolving). reduced-motion이거나 연출을 붙일
+     카드를 못 찾으면 예전처럼 즉시 비운다 — 연출이 진행을 막아서는 안 된다. */
+  playCompletionFx(slotIdx,slot,label){
+    const g=this.game;
+    const finish=()=>{
+      if(this.slots[slotIdx]!==slot) return;      // 그 사이 폐기·재충전으로 바뀌었으면 손대지 않는다
+      this.slots[slotIdx]=null;
+      g.orderGaugeSystem.refillCompletedSlot(slotIdx);
+      this.render();
+    };
+    const card=$(`.order-card[data-slot="${slotIdx}"]`);
+    if(!card||g.prefersReducedMotion()){ finish(); return; }
+    card.classList.add('is-resolving');
+    restartCssAnimation(card,'fx-complete');
+    this.sendSparksToHero(card,slot.module);
+    // 영웅 강화 펄스를 늘리고 강화 내용을 띄운다 — 스파크가 도착하는 타이밍에 맞춘다.
+    setTimeout(()=>{
+      if(!g.running&&!g.ending) return;
+      const unit=g.heroField.units[slot.module];
+      if(unit) unit.upgradedAt=performance.now();
+      const p=g.heroField.slotPosition(slot.module);
+      spawnFloatNumber(g.floatLayer,p.x,p.y-85,label,'upgrade');
+    },350);
+    setTimeout(finish,300);
+  }
+  /* 카드 중심에서 해당 미사일 영웅 위치로 글로우가 날아간다.
+     출발점이 캔버스 좌표계 밖(보드 영역)이라 DOM 플로트 계층을 쓴다. 도착점은
+     combatLayerPoint로 캔버스 표시 배율을 반영하므로 가로 레이아웃에서도 맞는다. */
+  sendSparksToHero(card,moduleKey){
+    const g=this.game, layer=$('#fx-layer');
+    if(!layer||!g.floatLayer) return;
+    const layerRect=layer.getBoundingClientRect(), cardRect=card.getBoundingClientRect();
+    const from={x:cardRect.left-layerRect.left+cardRect.width/2,y:cardRect.top-layerRect.top+cardRect.height/2};
+    const hero=g.heroField.slotPosition(moduleKey);
+    // 도착점은 캔버스 표시 배율을 반영해야 하므로 combatLayerPoint(#combat-wrap 기준)로
+    // 구한 뒤 #fx-layer 좌표로 옮긴다. 가로 레이아웃(세션 4)에서도 그대로 맞는다.
+    const wrapRect=g.floatLayer.getBoundingClientRect();
+    const inWrap=combatLayerPoint(g.floatLayer,hero.x,hero.y-40);
+    const to={x:inWrap.x+(wrapRect.left-layerRect.left),y:inWrap.y+(wrapRect.top-layerRect.top)};
+    const color=CONFIG.attackModules[moduleKey]?.color||'#ffffff';
+    for(let i=0;i<7;i++){
+      const d=document.createElement('div');
+      d.className='order-spark';
+      d.style.left=from.x+rand(-10,10)+'px';
+      d.style.top=from.y+rand(-8,8)+'px';
+      d.style.setProperty('--spark-color',color);
+      d.style.setProperty('--spark-dx',(to.x-from.x)+rand(-12,12)+'px');
+      d.style.setProperty('--spark-dy',(to.y-from.y)+rand(-12,12)+'px');
+      d.style.setProperty('--spark-dur',(0.30+i*0.012)+'s');
+      layer.appendChild(d);
+      setTimeout(()=>d.remove(),500);
+    }
   }
   discard(slotIdx){
     if(!this.game.running||this.game.ending)return;

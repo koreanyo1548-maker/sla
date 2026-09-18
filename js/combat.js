@@ -3,6 +3,8 @@
    [VisualEffects] 판정과 분리된 Canvas/DOM 연출 계층
    ===================================================================== */
 class VisualEffects {
+  // 공격 종류 → 사운드 kind. 기본 공격·스킬은 여기 없으므로 소리가 나지 않는다.
+  static HIT_SOUNDS={chain:'hit_chain',explosion:'hit_explosion',scatter:'hit_scatter',laser:'hit_laser'};
   constructor(game){
     this.game = game;
     this.particles = [];
@@ -55,6 +57,8 @@ class VisualEffects {
       enemy.fxSquashAt=now;
     }
     this.hitBurst(enemy,sourceKind,dir);
+    // [2026-09-18 연출 세션 A] 미사일 4종은 소리도 구분한다. 정의되지 않은 kind는 무음이다.
+    if(VisualEffects.HIT_SOUNDS[sourceKind]) GameAudio.play(VisualEffects.HIT_SOUNDS[sourceKind]);
   }
   // 발사 원점에서 적을 향하는 방향. 해당 미사일의 영웅이 없으면 거점 기준이다.
   hitDirection(enemy,sourceKind){
@@ -131,9 +135,38 @@ class VisualEffects {
     }
     if(enemy.isBoss) restartCssAnimation($('#combat-wrap'),'fx-shake');
   }
-  playerShot(){
-    const p=this.game.playerPos;
-    this.emit(p.x,p.y-15,PALETTE.accent,3,15,55,.25,2);
+  // [2026-09-18 연출 세션 A] 핵이 맞는 것을 보이게 한다. 근접 타격과 원거리 탄 도달이
+  // 같은 연출을 쓴다 — 플레이어에게는 "핵이 맞았다"는 같은 사건이다.
+  // point는 핵 표면(CoreField.impactPoint), dir은 적→핵 방향의 단위 벡터다.
+  coreImpact(point,dir){
+    const g=this.game, p=CONFIG.presentation;
+    g.coreFlashUntil=performance.now()+p.coreFlashSec*1000;
+    if(!g.prefersReducedMotion()) g.coreSquashAt=performance.now();
+    this.ring(point.x,point.y,PALETTE.hp,p.coreImpactRadius,.3,2);
+    // 파편은 적이 온 쪽으로 튄다(핵에서 바깥으로).
+    const n=Math.max(0,Math.round(p.coreImpactParticles));
+    for(let i=0;i<n;i++){
+      const spread=rand(-.7,.7), speed=rand(45,130);
+      const a=Math.atan2(dir?.y??-1,dir?.x??0)+Math.PI+spread;
+      this.particles.push({x:point.x,y:point.y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,
+        life:.32,maxLife:.32,color:PALETTE.hp,size:rand(1.6,3),gravity:rand(20,60)});
+    }
+    if(this.particles.length>VISUAL_CONFIG.maxParticles){
+      this.particles.splice(0,this.particles.length-VISUAL_CONFIG.maxParticles);
+    }
+    GameAudio.play('core_hit');
+  }
+  // 적 원거리 발사 순간. 탄이 어디서 왔는지 보이게 한다.
+  muzzleFlash(x,y){
+    this.ring(x,y,PALETTE.hp,9,CONFIG.presentation.muzzleFlashSec,2);
+  }
+  // [2026-09-18 연출 세션 A] 발사 순간을 세게 만든다. moduleKey를 받으면 그 미사일 색을 쓰고,
+  // 없으면(기본 공격) 기존 accent 색이다. origin이 없으면 핵 위치를 쓴다(기존 동작).
+  playerShot(moduleKey=null,origin=null){
+    const p=origin||this.game.playerPos;
+    const color=(moduleKey&&CONFIG.attackModules[moduleKey]?.color)||PALETTE.accent;
+    this.emit(p.x,p.y-15,color,5,15,55,.25,2);
+    this.ring(p.x,p.y-15,color,10,.1,2);
   }
   playerHit(p=this.game.playerPos){
     this.emit(p.x,p.y,PALETTE.hp,10,35,125,.45,3);
@@ -194,6 +227,13 @@ class VisualEffects {
       if(push){ const core=CoreField.position(); fx.ring(core.x,core.y,color,120,.45,5); }
     },
   };
+  // 투사체 잔상 — 좌표 배열만 들고 있다가 알파 감쇠로 그린다. 판정과 무관하다.
+  pushTrail(p){
+    const len=Math.max(0,Math.round(CONFIG.presentation.projectileTrailLen||0));
+    if(len<=0||this.game.prefersReducedMotion())return;
+    (p.trail=p.trail||[]).push({x:p.x,y:p.y});
+    if(p.trail.length>len)p.trail.splice(0,p.trail.length-len);
+  }
   update(dt){
     this.particles.forEach(p=>{
       p.life-=dt; p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=p.gravity*dt;
@@ -875,6 +915,9 @@ class CombatSystem {
     // (인철 지적, 2026-09-01). 그래서 "이번 프레임 이동거리 >= 남은 거리"이면 이동시키지
     // 않고 그 자리에서 명중 처리한다 — 목표를 지나칠 프레임이면 애초에 명중으로 취급.
     this.projectiles = this.projectiles.filter(p=>{
+      // [2026-09-18 연출 세션 A] 이동 전 위치를 잔상으로 남긴다. 좌표만 복사하므로
+      // 판정에 관여하지 않는다. 레이저는 투사체가 아니라 빔이라 여기 오지 않는다.
+      g.effects?.pushTrail(p);
       if(p.owner==='player'){
         if(p.motion==='linear'){
           // [2026-09-07] 직선탄은 발사 각도로 직진해 경로에 처음 닿은 적 한 기에게만 피해를 준다.
@@ -908,7 +951,11 @@ class CombatSystem {
         const dist = Math.hypot(dx,dy);
         const step2 = p.speed*dt;
         if(dist <= 1e-7 || step2 >= dist){
+          const fromX=p.x, fromY=p.y;
           p.x=p.target.x;p.y=p.target.y;
+          // 근접 타격과 같은 연출 — 도달 방향만 탄의 진행 방향에서 가져온다.
+          const d0=Math.hypot(fromX-p.target.x,fromY-p.target.y);
+          g.effects?.coreImpact(p.target,d0>1e-7?{x:(fromX-p.target.x)/d0,y:(fromY-p.target.y)/d0}:{x:0,y:-1});
           g.applyDamageToPlayer(this.computeIncomingDamage(p.dmg),p.target);
           return false;
         }
@@ -944,6 +991,23 @@ class CombatSystem {
   static DEFAULT_RENDER = { shape:'orb', radius:4 };
   draw(ctx){
     ctx.save();
+    // 잔상을 먼저 깔고 그 위에 탄을 그린다.
+    this.projectiles.forEach(p=>{
+      if(!p.trail?.length) return;
+      const color=p.owner==='enemy' ? PALETTE.hp : (CONFIG.attackModules[p.kind]?.color || PALETTE.accent);
+      ctx.strokeStyle=color; ctx.shadowBlur=6; ctx.shadowColor=color; ctx.lineCap='round';
+      for(let i=1;i<p.trail.length;i++){
+        const t=i/p.trail.length;
+        ctx.globalAlpha=t*.45; ctx.lineWidth=1+t*2;
+        ctx.beginPath(); ctx.moveTo(p.trail[i-1].x,p.trail[i-1].y); ctx.lineTo(p.trail[i].x,p.trail[i].y); ctx.stroke();
+      }
+      if(p.trail.length){
+        const last=p.trail[p.trail.length-1];
+        ctx.globalAlpha=.5; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke();
+      }
+    });
+    ctx.globalAlpha=1;
     this.projectiles.forEach(p=>{
       const moduleDef=p.owner==='player' ? CONFIG.attackModules[p.kind] : null;
       ctx.fillStyle = p.owner==='enemy' ? PALETTE.hp : (moduleDef?.color || PALETTE.accent);
@@ -1074,6 +1138,7 @@ class EnemySystem {
     if(e.hp<=0){
       e.dead = true;
       this.game.stats.enemiesKilled++;if(e.isBoss)this.game.stats.bossesKilled++;
+      GameAudio.play(e.isBoss?'kill_boss':'kill');
       this.game.hitStop(e.isBoss?CONFIG.presentation.bossKillStopSec:CONFIG.presentation.killStopSec,!!e.isBoss);
       this.game.effects.enemyKilled(e);
       // [2026-09-04] 처치 보상은 에너지 직접 지급이 아니라 점수다. 점수가 일정량 쌓일 때마다
@@ -1122,6 +1187,7 @@ class EnemySystem {
           const step=e.moveSpeed*active;
           e.x+=dx/remaining*step;e.y+=dy/remaining*step;
           e.stopped=false;
+          e.fxWindup=0;               // 이동 중에는 예비 자세를 남기지 않는다
           return;
         }
         // 목적지에 고정해 큰 프레임에서도 핵을 통과하거나 왕복하지 않게 한다.
@@ -1130,18 +1196,61 @@ class EnemySystem {
       e.x=e.attackPos.x;e.y=e.attackPos.y;
       e.stopped=true;
       e.attackCd-=attackDt;
+      // [2026-09-18 연출 세션 A] 공격이 오기 전에 보이게 한다. 남은 쿨다운이 예비 구간에
+      // 들어오면 표시용 필드만 찍고, EnemySystem.draw가 그 값으로 기울기·확대를 그린다.
+      // attackCd·atkSpeed·피해량은 건드리지 않으므로 판정은 그대로다.
+      const windup=CONFIG.presentation.windupSec;
+      e.fxWindup=(attackDt>0&&windup>0&&e.attackCd<windup)?clamp(1-e.attackCd/windup,0,1):0;
       if(e.attackCd<=0){
         e.attackCd=1/e.atkSpeed;
+        e.fxWindup=0;                  // 타격 순간 원래 크기로 스냅
         if(e.type==='ranged'){
+          g.effects?.muzzleFlash(e.x,e.y);
           g.combatSystem.projectiles.push({
             x:e.x,y:e.y,owner:'enemy',dmg:e.atk,
             speed:typeDef.projectileSpeed,target:{...e.coreTarget},
           });
         }else{
-          g.applyDamageToPlayer(g.combatSystem.computeIncomingDamage(e.atk),e.coreTarget);
+          // 핵 표면에 임팩트를 먼저 놓고 피해를 적용한다 — 순서가 바뀌면 패배 연출이
+          // 시작된 뒤에 링이 떠서 어색하다.
+          const at=e.coreTarget, d=Math.hypot(e.x-at.x,e.y-at.y);
+          g.effects?.coreImpact(at,d>1e-7?{x:(e.x-at.x)/d,y:(e.y-at.y)/d}:{x:0,y:-1});
+          g.applyDamageToPlayer(g.combatSystem.computeIncomingDamage(e.atk),at);
         }
       }
     });
+    this.syncBossHpBar();
+  }
+  /* [2026-09-18 연출 세션 A · A-5] 전장 상단 보스 HP바.
+     스프라이트 위 58px 바는 그대로 두고 하나 더 둔다 — 물량 속에서 보스 HP가
+     어디 있는지 찾지 않게 하는 것이 목적이다. 매 프레임 DOM 쓰기는 width 하나뿐이다.
+     보스는 WAVE당 한 기라 첫 보스만 본다. */
+  syncBossHpBar(){
+    const bar=$('#boss-hp'), fill=$('#boss-hp-fill');
+    if(!bar||!fill) return;
+    const boss=this.enemies.find(e=>e.isBoss&&!e.dead);
+    if(boss){
+      const pct=clamp(boss.hp/boss.maxHp,0,1)*100;
+      if(this.bossBarId!==boss.id){
+        // 새 보스 — 0에서 시작해 현재 비율까지 0.6초에 채운다.
+        this.bossBarId=boss.id;
+        bar.classList.remove('is-defeated');
+        bar.classList.add('is-active','is-spawning');
+        fill.style.width='0%';
+        // 다음 프레임에 목표 폭을 줘야 transition이 걸린다.
+        requestAnimationFrame(()=>{ if(this.bossBarId===boss.id) fill.style.width=pct+'%'; });
+        setTimeout(()=>bar.classList.remove('is-spawning'),650);
+      } else {
+        fill.style.width=pct+'%';
+      }
+      return;
+    }
+    if(this.bossBarId!=null){
+      // 보스가 사라졌다 — 갈라지며 사라진다.
+      this.bossBarId=null;
+      bar.classList.add('is-defeated');
+      setTimeout(()=>{ bar.classList.remove('is-active','is-defeated'); fill.style.width='0%'; },460);
+    }
   }
   draw(ctx){
     this.enemies.forEach(e=>{
@@ -1158,10 +1267,19 @@ class EnemySystem {
       const ox=(e.fxOffsetX||0)*ease, oy=(e.fxOffsetY||0)*ease;
       const sq=clamp(1-(performance.now()-(e.fxSquashAt||-99999))/(CONFIG.presentation.squashSec*1000),0,1);
       const amt=CONFIG.presentation.squashAmount*sq;
-      const dx0=e.x+ox, dy0=e.y+oy+bob;
+      // [2026-09-18 연출 세션 A] 예비동작 — 핵 쪽으로 기울며 커진다. 표시 좌표만 바꾼다.
+      const wu=this.game.prefersReducedMotion()?0:clamp(e.fxWindup||0,0,1);
+      let lx=0,ly=0;
+      if(wu>0){
+        const at=e.coreTarget||this.game.playerPos, d=Math.hypot(at.x-e.x,at.y-e.y);
+        if(d>1e-7){const lean=CONFIG.presentation.windupLeanPx*wu;lx=(at.x-e.x)/d*lean;ly=(at.y-e.y)/d*lean;}
+      }
+      const dx0=e.x+ox+lx, dy0=e.y+oy+bob+ly;
       ctx.fillStyle='#171C2066';ctx.beginPath();ctx.ellipse(e.x,e.y+r*.65,r*.9,r*.35,0,0,Math.PI*2);ctx.fill();
       if(performance.now()<e.hitFlashUntil){ctx.shadowBlur=8;ctx.shadowColor='#ffffff';}
       if(amt>0){ ctx.translate(dx0,dy0); ctx.scale(1+amt,1-amt); ctx.translate(-dx0,-dy0); }
+      const wuScale=1+CONFIG.presentation.windupScale*wu;
+      if(wu>0){ ctx.translate(dx0,dy0); ctx.scale(wuScale,wuScale); ctx.translate(-dx0,-dy0); }
       if(!GameArt.drawSprite(ctx,sprite,dx0,dy0,visualSize)){ctx.fillStyle=color;ctx.beginPath();ctx.arc(dx0,dy0,r,0,Math.PI*2);ctx.fill();}
       ctx.restore();
       // hp bar — 스프라이트와 같이 밀려야 떨어져 보이지 않는다
@@ -1170,6 +1288,29 @@ class EnemySystem {
       ctx.fillStyle = '#171C20CC'; ctx.fillRect(e.x+ox-w/2, e.y+oy-visualSize*.42, w, 4);
       ctx.fillStyle = '#5CCB8A'; ctx.fillRect(e.x+ox-w/2, e.y+oy-visualSize*.42, w*hpPct, 4);
       const statuses=Object.keys(e.statuses||{}).filter(id=>StatusEffectTable[id]);
+      // [2026-09-18 연출 세션 A] 글자만으로는 물량전에서 안 보인다. 글자는 그대로 두고
+      // 스프라이트 위에 시각 신호를 더한다. 융해는 주황 틴트, 감전은 스파크 점.
+      if(statuses.includes('melted')){
+        ctx.save();
+        ctx.globalAlpha=.28; ctx.fillStyle=StatusEffectTable.melted.color;
+        ctx.beginPath(); ctx.arc(dx0,dy0,visualSize*.34,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+      }
+      if(statuses.includes('shocked')&&!this.game.prefersReducedMotion()){
+        ctx.save();
+        // 0.3초 주기로 자리를 바꾸는 점 3개. id를 섞어 적마다 위상이 다르다.
+        const phase=Math.floor(performance.now()/300)+e.id;
+        ctx.fillStyle=StatusEffectTable.shocked.color;
+        ctx.shadowBlur=6; ctx.shadowColor=StatusEffectTable.shocked.color;
+        for(let i=0;i<3;i++){
+          const a=((phase+i*2)%6)/6*Math.PI*2;
+          const rr=visualSize*.36;
+          ctx.beginPath();
+          ctx.arc(dx0+Math.cos(a)*rr,dy0+Math.sin(a)*rr*.7,1.5,0,Math.PI*2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
       statuses.forEach((id,index)=>{
         const def=StatusEffectTable[id];ctx.save();ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillStyle=def.color;ctx.shadowBlur=5;ctx.shadowColor=def.color;
         ctx.fillText(def.short,e.x+(index-(statuses.length-1)/2)*10,e.y+visualSize*.42+8);ctx.restore();
@@ -1216,7 +1357,7 @@ class WaveSystem {
     $('#wave-label').textContent = `WAVE ${cfg.wave} / ${RunConfig.waves().length}`;
     // [2026-09-17] WAVE 시작 float 텍스트는 없애고 전장 좌상단 배지에 상시 표기한다.
     const label = waveTypeName(cfg,'label');
-    this.renderWaveTypeBadge(cfg);
+    this.renderWaveTypeBadge(cfg, idx>0);
     if(this.game.effects){
       this.game.effects.ring(this.game.playerPos.x,this.game.playerPos.y-55,PALETTE.accent,95,.6,3);
     }
@@ -1238,16 +1379,31 @@ class WaveSystem {
     } else {
       this.waveEnemyTotal = 1;
       this.spawnScheduled = [{ time:0, boss: cfg.type==='midboss'?'mid':'final', done:false }];
+      GameAudio.play('boss_alert');
       this.game.showBossAlert(cfg.type==='finalboss'?'final':'mid');
       logAction(`WAVE ${cfg.wave} 시작 — ${label}`);
     }
   }
 
-  renderWaveTypeBadge(cfg){
+  /* [2026-09-18 연출 세션 A · A-4] WAVE를 넘길 때 배지에 비트를 준다.
+     조기 전환이든 시간 경과든 "한 WAVE를 넘겼다"는 신호가 없어서 리듬이 끊겼다.
+     캡션을 잠깐 CLEAR로 바꾸고 배지를 팝시킨다. 바로 뒤에 startWave가 새 WAVE
+     이름을 넣으며 fx-next 슬라이드를 얹으므로 둘이 한 동작으로 읽힌다. */
+  playWaveClearBeat(){
+    const badge=$('#wave-type-badge'), caption=badge?.querySelector('.wave-type-caption');
+    GameAudio.play('wave_clear');
+    if(!badge||!caption) return;
+    restartCssAnimation(badge,'fx-clear');
+    caption.textContent='CLEAR';
+    clearTimeout(this.captionTimer);
+    this.captionTimer=setTimeout(()=>{ caption.textContent='WAVE'; },520);
+  }
+  renderWaveTypeBadge(cfg,slide=false){
     const badge=$('#wave-type-badge'), name=$('#wave-type-name');
     if(!badge||!name) return;
     name.textContent=waveTypeName(cfg,'short');
     badge.classList.toggle('is-boss', cfg?.type!=='normal');
+    if(slide) restartCssAnimation(badge,'fx-next');
   }
 
   currentWaveAliveCount(){
@@ -1293,8 +1449,9 @@ class WaveSystem {
       }
       if(this.waveIndex >= RunConfig.waves().length-1){
         this.finished = true;
-        this.game.onClear();
+        this.game.onClear();          // 마지막 WAVE는 클리어 시네마틱이 받는다
       } else {
+        this.playWaveClearBeat();
         this.startWave(this.waveIndex+1);
       }
     }

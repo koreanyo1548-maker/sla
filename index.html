@@ -64,6 +64,10 @@
     </div>
     <div id="combat-wrap">
       <canvas id="combat-canvas" width="440" height="480"></canvas>
+      <!-- [2026-09-18 연출 세션 A] 저HP 경고 테두리와 보스 HP바. #combat-wrap의 ::before·::after는
+           이미 배경 그라디언트와 피격 비네트가 쓰고 있어 별도 요소로 둔다. -->
+      <div id="core-alert" aria-hidden="true"></div>
+      <div id="boss-hp" aria-hidden="true"><div id="boss-hp-fill"></div></div>
       <div id="wave-type-badge" aria-label="현재 WAVE 종류"><span class="wave-type-caption">WAVE</span><strong id="wave-type-name">혼성</strong></div>
       <div id="energy-status-row" aria-label="보유 에너지"><span class="energy-status-label">에너지</span><strong id="energy-display">0</strong></div>
       <div id="skill-row" aria-label="전투 스킬"></div>
@@ -118,6 +122,9 @@
 
   <div id="recruit-modal" class="reveal-overlay" hidden><section class="reveal-dialog" role="dialog" aria-modal="true" aria-labelledby="reveal-title"><div id="reveal-content"></div><div class="reveal-actions"><button id="reveal-skip" class="secondary" hidden>전체 공개</button><button id="reveal-close" class="primary">계속하기</button></div></section></div>
   <div id="manual-panel"></div>
+  <!-- [2026-09-18 연출 세션 A] 화면 경계를 넘나드는 연출용 계층. #combat-wrap은
+       overflow:hidden이라 보드에서 전장으로 날아가는 연출을 담을 수 없다. -->
+  <div id="fx-layer" aria-hidden="true"></div>
 </div>
 
 <script src="js/platform.js"></script>

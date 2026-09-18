@@ -181,7 +181,7 @@ class Game {
     $('#cinematic-sub').textContent='터치해서 결과 보기';
     layer.onclick=()=>this.finishRun(outcome);
     layer.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();this.finishRun(outcome);}};
-    layer.focus();GameAudio.play(outcome==='clear'?'reveal':'tap');
+    layer.focus();GameAudio.play(outcome==='clear'?'clear':'defeat');
   }
   finishRun(outcome){
     if(!this.running && !this.ending) return;
@@ -251,7 +251,7 @@ class Game {
     }).join('');
     $$('.skill-btn',row).forEach(btn=>{
       btn.onclick = ()=>{
-        if(this.skillSystem.activate(btn.dataset.skill)) restartCssAnimation(btn,'fx-use');
+        if(this.skillSystem.activate(btn.dataset.skill)){ GameAudio.play('skill_use'); restartCssAnimation(btn,'fx-use'); }
       };
     });
     this.renderSkillBar();
@@ -295,9 +295,19 @@ class Game {
   }
   updateHpUi(){
     const maxHp = RunConfig.playerStat('hp');
-    const pct = clamp(this.playerHpCurrent/maxHp,0,1)*100;
-    $('#player-hp-bar').style.width = pct+'%';
+    const ratio = clamp(this.playerHpCurrent/maxHp,0,1);
+    $('#player-hp-bar').style.width = ratio*100+'%';
     $('#player-hp-label').textContent = `용광로 핵 · ${Math.max(0,Math.round(this.playerHpCurrent))} / ${maxHp}`;
+    // [2026-09-18 연출 세션 A] 저HP 경고. 회복으로 기준을 넘으면 해제된다.
+    // 표시용 비율만 보고 판정에는 관여하지 않는다.
+    const low = this.running && ratio>0 && ratio<=CONFIG.presentation.coreLowPct;
+    $('#combat-wrap')?.classList.toggle('is-critical',!!low);
+    $('#hud')?.querySelector('.hp-wrap')?.classList.toggle('is-critical',!!low);
+    if(low && !this.coreLowAnnounced){ this.coreLowAnnounced=true; GameAudio.play('core_low'); }
+    if(!low) this.coreLowAnnounced=false;
+    // 핵 외형 단계 — 그리기 쪽이 읽는다.
+    const stages=CONFIG.presentation.coreStages||[];
+    this.coreStage=stages.reduce((n,edge)=>ratio<=edge?n+1:n,0);
   }
   applyDamageToPlayer(dmg,impact=this.playerPos){
     if(this.ending) return;
