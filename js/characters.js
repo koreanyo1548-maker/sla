@@ -363,7 +363,7 @@ const SkillCombatAdapter={
 };
 const CharacterGrowthSystem={
   // 기본 능력치와 레벨당 성장 모두에 희귀도 배율을 곱한다. 노말이 1.00이라
-  // 1레벨 기준 전투 밸런스(기본 공격력 1,000)는 그대로 남는다.
+  // 기존 전투 밸런스(기본 공격력 1,000)는 그대로 남는다.
   // [2026-09-15] 성급 누적 배율. 계산은 스킬과 같은 GrowthRules.starMultiplier를 쓴다.
   starMul(star){ return GrowthRules.starMultiplier(CONFIG.meta.character.starStepPct,star); },
   // [2026-09-18] 전속 미사일 배율. CONFIG.attackModules[key].baseDamageMul에 있던 값을 옮긴 것이라
