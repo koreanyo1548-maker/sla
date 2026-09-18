@@ -1,0 +1,25 @@
+/* ===== finish.css ===== */
+/* Restrained interface surfaces. Illustration, actionable gold and rarity color
+   carry hierarchy; ornamental boxes and continuous glows are removed. */
+:root{--radius:5px}
+html,body{background:var(--bg)}#app{background:var(--surface);box-shadow:none}
+button{transition:background .12s,transform .12s;letter-spacing:0}
+#app .primary,#start-btn,#retry-btn{background:var(--primary);color:var(--primary-text);border:1px solid var(--text-primary);border-bottom:3px solid var(--primary);border-radius:5px;box-shadow:none;text-shadow:none;font-weight:700}
+#app .primary:disabled,#start-btn:disabled{background:var(--surface-disabled);color:var(--text-disabled);border-color:var(--border-disabled)}
+#app .secondary,.icon-button{border-radius:4px;background:var(--surface-2);border:1px solid var(--border);box-shadow:none}
+.lobby-top,.wallet{background:var(--surface)}.brand-glyph{background:none;color:var(--primary);border:0;box-shadow:none;border-radius:0}.brand-lockup h1{font-size:25px;letter-spacing:.07em}.brand-lockup div>span{letter-spacing:.04em;color:var(--text-secondary)}
+.wallet{gap:8px;padding-bottom:13px}.wallet>div{border:0;border-radius:3px;box-shadow:none;background:var(--surface)}.wallet .wallet-add{background:var(--surface-2);border:0;border-radius:3px;font-size:20px}
+#lobby-scroll,#lobby-home,#screen-lobby{background:var(--surface)}.journey-scene{background-image:linear-gradient(color-mix(in srgb, var(--bg) 84%, transparent),color-mix(in srgb, var(--bg) 33%, transparent) 16%,transparent 32%,transparent 65%,var(--surface)),var(--forge-lobby)}/* 위쪽 스크림: 캡션(지역·웨이브·보상)과 마일스톤 pill이 배너 밝은 부분 위에 올라간다 */.journey-caption>span{letter-spacing:.06em}.journey-caption h2{font-size:25px}.forge-beacon{display:none}
+.home-controls{background:var(--surface)}.home-footnote{display:none}.lobby-party-member{border:1px solid var(--border);border-radius:3px;box-shadow:none;background:var(--surface)}.lobby-party-member .hero-art{background-color:var(--surface)}.lobby-party-member strong{font-size:12px}
+#lobby-nav{background:var(--surface);border-top:1px solid var(--border);box-shadow:none}#lobby-nav button{border-radius:0;background:none;box-shadow:none;color:var(--text-secondary)}#lobby-nav button[aria-current=page]{background:var(--surface-2);color:var(--text-primary);box-shadow:inset 0 2px var(--primary)}#lobby-nav button[aria-current=page]::after{display:none}
+.formation-panel{background:none;border:0;border-bottom:1px solid var(--border);border-radius:0;box-shadow:none;padding-left:0;padding-right:0}.formation-slot,.formation-slot.active{border-radius:3px;box-shadow:none}.character-filter,.character-filter.active{border-radius:3px;box-shadow:none}.character-filter.active{background:var(--border);border-color:var(--border)}
+#growth-list button[data-character-id]{border-radius:3px;box-shadow:none;background:var(--surface)}.character-roster .deployed-badge{border-radius:2px;background:var(--primary);color:var(--primary-text)}.character-roster .rarity-tag{border-radius:0}.character-page-head h2{font-size:22px;letter-spacing:0}
+.character-dialog{border-radius:6px;border:1px solid var(--border);background:var(--surface);box-shadow:0 8px 30px color-mix(in srgb, var(--bg) 53%, transparent)}.character-modal-body{background:var(--surface)}.character-stat,.passive-block,.growth-section,.growth-action{border-radius:3px;box-shadow:none}.growth-section{background:var(--surface-2)}.character-modal-close{border-radius:3px;box-shadow:none}
+.gacha-stage{background:none;border:0;box-shadow:none}.gacha-rays,.gacha-orbit{display:none}.gacha-chest{animation:none}.gacha-panel,.gacha-progress,.gacha-price,.gacha-odds{border-radius:4px;box-shadow:none;background:var(--surface-2)}.gacha-hero h2{letter-spacing:0}.reveal-card{border-radius:5px;box-shadow:0 8px 26px color-mix(in srgb, var(--bg) 53%, transparent)}
+#stage-brief,.skill-pick-card{border-radius:5px;box-shadow:none}.skill-pick-card{background:var(--surface-2);border-color:var(--border)}.skill-pick-card.selected{background:var(--border);border-color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}.skill-pick-icon{border-radius:4px;box-shadow:none;background:var(--surface)}
+#result-reward,.result-stat{border-radius:4px;box-shadow:none;background:var(--surface-2)}.result-emblem{filter:none}#result-title{text-shadow:none}
+#tools-toggle{border-radius:4px;background:var(--surface-2);box-shadow:none;border:1px solid var(--border)}
+#tutorial-card{border-radius:5px;border:1px solid var(--primary);background:color-mix(in srgb, var(--surface) 98%, transparent);box-shadow:0 4px 18px color-mix(in srgb, var(--bg) 33%, transparent)}#tutorial-card p{font-size:12px}
+
+.character-stats>div,.character-modal-section{border-radius:4px;background:var(--surface-2);border-color:var(--border);box-shadow:none}.character-modal-section>strong{color:var(--text-primary)}
+
