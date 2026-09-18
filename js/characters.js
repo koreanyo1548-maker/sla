@@ -52,10 +52,9 @@ const LevelGrowthFactor={
     const c=CONFIG.meta.character.growthCurve||{blend:0,expBase:1},
           blend=Number(c.blend)||0, expBase=Number(c.expBase)||1, key=`${blend}|${expBase}`;
     if(this.key===key&&this.cache) return this.cache;
-    const maxLevel=CharacterGrowthRules.maxStars*CharacterGrowthRules.levelsPerStar,
-          unit=this.shape(1,expBase), out=[0,0];
+    const unit=this.shape(1,expBase), out=[0,0];
     let sum=0;
-    for(let x=1;x<maxLevel;x++){ sum+=(1-blend)+blend*this.shape(x,expBase)/unit; out[x+1]=sum; }
+    for(let x=1;x<CharacterGrowthRules.maxLevel;x++){ sum+=(1-blend)+blend*this.shape(x,expBase)/unit; out[x+1]=sum; }
     this.key=key; this.cache=out; return out;
   },
   at(level){ const t=this.table(); return t[Math.max(1,Math.min(t.length-1,Math.floor(level)||1))]||0; },
@@ -63,7 +62,10 @@ const LevelGrowthFactor={
 // [2026-09-14] 확정(인철): 캐릭터는 뽑기로 연다. 다만 미사일 4슬롯을 채우지 못하면 전투
 // 자체가 불가능하므로, 노말 4명(미사일 1명씩)만 처음부터 지급한다.
 const CharacterGrowthRules={maxStars:6,levelsPerStar:10,freeRarityId:'normal'};
-const StarTable=Object.fromEntries(Array.from({length:CharacterGrowthRules.maxStars},(_,i)=>[i+1,{star:i+1,maxLevel:(i+1)*CharacterGrowthRules.levelsPerStar}]));
+// [2026-09-18] 확정(인철): 레벨업과 성급 돌파를 서로 독립으로 뗀다 — 레벨은 성급과 무관하게
+// 전역 상한(maxLevel)까지 바로 올릴 수 있고, 성급도 레벨 상한 도달 없이 조각만 있으면 올린다.
+// 예전에는 성급별 상한(1성=Lv.10, 2성=Lv.20 …)에 도달해야 다음 레벨업·승급이 열렸다(StarTable).
+CharacterGrowthRules.maxLevel=CharacterGrowthRules.maxStars*CharacterGrowthRules.levelsPerStar;
 const DEFAULT_EQUIPPED_SKILLS=['strong_single','defense'];
 // [2026-09-16] 확정(인철): 스킬 레벨업은 캐릭터와 같은 골드 비용표를 쓴다.
 const SKILL_COST_GROUP_ID='standard';
@@ -77,7 +79,7 @@ const SkillInventorySystem={
     DEFAULT_EQUIPPED_SKILLS.forEach(key=>{data.skills[key].owned=true;if(data.equipped.length<CONFIG.skillPickCount&&!data.equipped.includes(key))data.equipped.push(key);});
     return data;
   },
-  validate(data){return !!data&&Array.isArray(data.equipped)&&data.equipped.length===CONFIG.skillPickCount&&new Set(data.equipped).size===data.equipped.length&&data.equipped.every(key=>data.skills?.[key]?.owned)&&SKILL_KEYS.every(key=>{const x=data.skills?.[key];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.level)&&x.level>=1&&x.level<=StarTable[x.star]?.maxLevel&&Number.isInteger(x.star)&&x.star>=1&&x.star<=CharacterGrowthRules.maxStars&&Number.isInteger(x.shards)&&x.shards>=0;});},
+  validate(data){return !!data&&Array.isArray(data.equipped)&&data.equipped.length===CONFIG.skillPickCount&&new Set(data.equipped).size===data.equipped.length&&data.equipped.every(key=>data.skills?.[key]?.owned)&&SKILL_KEYS.every(key=>{const x=data.skills?.[key];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.level)&&x.level>=1&&x.level<=CharacterGrowthRules.maxLevel&&Number.isInteger(x.star)&&x.star>=1&&x.star<=CharacterGrowthRules.maxStars&&Number.isInteger(x.shards)&&x.shards>=0;});},
 };
 // [2026-09-14] 확정(인철): 성급 상승은 골드가 아니라 동일 캐릭터 조각으로 한다.
 // 그래서 rankUp 골드 행을 없앴다. 아래는 레벨업 기준 비용이며, 실제 청구액은
@@ -90,7 +92,7 @@ const SkillInventorySystem={
 // 기존 50+(x-1)×25(선형)는 초반이 비싸 4일차 등반이 11스테이지에서 멈췄다.
 function levelUpGold(x){ return Math.max(1,Math.round((28+3*x+38*Math.floor(x/10))*Math.pow(1.046,x))); }
 const GrowthCostTable=[
-  ...Array.from({length:CharacterGrowthRules.maxStars*CharacterGrowthRules.levelsPerStar-1},(_,i)=>(
+  ...Array.from({length:CharacterGrowthRules.maxLevel-1},(_,i)=>(
     {costGroupId:'standard',action:'levelUp',step:i+1,currencyId:'gold',amount:levelUpGold(i+1)})),
 ];
 // [2026-09-14] 캐릭터 패시브가 켤 수 있는 미사일 고유 규칙 목록. 규칙마다 어느 미사일에
@@ -266,7 +268,7 @@ const CharacterInventorySystem={
     return new Set(CONFIG.moduleKeys.map(module=>data.formation[module])).size===CONFIG.moduleKeys.length;
   },
   validate(data){return !!data&&this.validateFormation(data)&&CharacterRepository.list().every(c=>{
-    const x=data.characters[c.characterId];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.star)&&!!StarTable[x.star]&&Number.isInteger(x.level)&&x.level>=1&&x.level<=StarTable[x.star].maxLevel&&Number.isInteger(x.tier)&&x.tier>=0&&Number.isInteger(x.awakening)&&x.awakening>=0&&Number.isInteger(x.shards)&&x.shards>=0;
+    const x=data.characters[c.characterId];return x&&typeof x.owned==='boolean'&&Number.isInteger(x.star)&&x.star>=1&&x.star<=CharacterGrowthRules.maxStars&&Number.isInteger(x.level)&&x.level>=1&&x.level<=CharacterGrowthRules.maxLevel&&Number.isInteger(x.tier)&&x.tier>=0&&Number.isInteger(x.awakening)&&x.awakening>=0&&Number.isInteger(x.shards)&&x.shards>=0;
   });},
 };
 // Gold remains in the existing campaign field for reward compatibility; new currencies
@@ -282,10 +284,13 @@ const WalletSystem={
    [GrowthRules] 캐릭터·스킬 공통 성장 규칙
    ---------------------------------------------------------------------
    [2026-09-16 v0916_7] 두 시스템에 같은 코드로 복제돼 있던 허용 판정·거래 절차·성급 배율을 모았다.
-   레벨업은 골드 비용표, 승급은 상한 레벨에서 조각으로 한다. 대상별 차이(비용·조각 수)만 인자로 받는다.
+   레벨업은 골드 비용표, 승급은 조각으로 한다. 대상별 차이(비용·조각 수)만 인자로 받는다.
+   [2026-09-18] 확정(인철): 레벨업과 성급 돌파를 서로 독립으로 뗀다. 레벨업은 성급과 무관하게
+   전역 상한(CharacterGrowthRules.maxLevel)까지, 승급은 레벨 조건 없이 다음 성급이 남아있고
+   조각이 있으면 바로 연다 — 조각 보유 여부는 transact()가 별도로 확인한다.
    ===================================================================== */
 const GrowthRules={
-  allowed(x,action){return x?.owned&&(action==='levelUp'?x.level<StarTable[x.star].maxLevel:action==='rankUp'&&x.star<CharacterGrowthRules.maxStars&&x.level===StarTable[x.star].maxLevel);},
+  allowed(x,action){return x?.owned&&(action==='levelUp'?x.level<CharacterGrowthRules.maxLevel:action==='rankUp'&&x.star<CharacterGrowthRules.maxStars);},
   // 누적 성급 배율. 부동소수 누적 오차가 반올림 경계를 흔들지 않도록 소수 9자리에서 정리한다.
   starMultiplier(steps,star){
     const n=Math.max(1,Number(star)||1);
