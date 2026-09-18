@@ -32,18 +32,18 @@ const CampaignView={
   // 배너 캡션이 곧 스테이지 정보다. 별도 카드는 눌러도 아무 일이 없는 표시용이었다.
   stageHeader(st){
     $('#stage-eyebrow').textContent=t('lobby.stage.eyebrow',{id:String(st.id).padStart(2,'0')});
-    $('#stage-name').textContent=st.name;
+    $('#stage-name').textContent=t(st.nameKey);
     $('#stage-meta').innerHTML=t('lobby.stage.meta',{waves:st.waves,gold:CampaignEconomy.stageTotalGold(st)});
   },
   partySummary(party){
     // 평균 공격력은 편성 4인의 평균(party.stats.atk), 총 체력은 핵 체력 합계다.
     $('#home-party-atk').textContent=I18N.num(Math.round(party.stats.atk));
     $('#home-party-hp').textContent=I18N.num(party.stats.hp);
-    $('#lobby-party-summary').innerHTML=party.members.map(m=>`<button class="lobby-party-member" data-home-hero="${m.characterId}" aria-label="${t('lobby.party.memberAria',{name:m.name,level:m.level})}">${GameArt.portrait(m.characterId)}<span class="member-label">${GameArt.module(m.specialtyMissileId,'module-mini')}<b>${m.name}</b><em>${t('common.level',{n:m.level})}</em></span></button>`).join('');
+    $('#lobby-party-summary').innerHTML=party.members.map(m=>`<button class="lobby-party-member" data-home-hero="${m.characterId}" aria-label="${t('lobby.party.memberAria',{name:t(m.nameKey),level:m.level})}">${GameArt.portrait(m.characterId)}<span class="member-label">${GameArt.module(m.specialtyMissileId,'module-mini')}<b>${t(m.nameKey)}</b><em>${t('common.level',{n:m.level})}</em></span></button>`).join('');
     $$('[data-home-hero]').forEach(b=>b.onclick=()=>CharacterLobbyUI.open(Campaign,b.dataset.homeHero,b));
   },
   brief(st,party){
-    $('#stage-brief').innerHTML=`<div class="brief-scene"><span class="brief-kicker">${t('prepare.brief.kicker',{id:String(st.id).padStart(2,'0')})}</span><h2>${st.name}</h2><div><span>${t('prepare.brief.waves',{n:st.waves})}</span><span>${t('prepare.brief.clearGold',{gold:CampaignEconomy.stageTotalGold(st)})}</span></div></div><div class="brief-party">${party.members.map(m=>`<span>${GameArt.portrait(m.characterId)}<b>${t('common.level',{n:m.level})}</b></span>`).join('')}<div>${t('prepare.brief.coreHp')} <b>${I18N.num(party.stats.hp)}</b><br>${t('prepare.brief.teamDef')} <b>${party.stats.def}</b></div></div>`;
+    $('#stage-brief').innerHTML=`<div class="brief-scene"><span class="brief-kicker">${t('prepare.brief.kicker',{id:String(st.id).padStart(2,'0')})}</span><h2>${t(st.nameKey)}</h2><div><span>${t('prepare.brief.waves',{n:st.waves})}</span><span>${t('prepare.brief.clearGold',{gold:CampaignEconomy.stageTotalGold(st)})}</span></div></div><div class="brief-party">${party.members.map(m=>`<span>${GameArt.portrait(m.characterId)}<b>${t('common.level',{n:m.level})}</b></span>`).join('')}<div>${t('prepare.brief.coreHp')} <b>${I18N.num(party.stats.hp)}</b><br>${t('prepare.brief.teamDef')} <b>${party.stats.def}</b></div></div>`;
     $('#start-btn').textContent=t('prepare.start',{cost:CAMPAIGN_CONFIG.entryCost});
   },
   rerenderReward(){
@@ -88,14 +88,14 @@ const GachaLobbyUI={
   frontColor(r){return r.type==='skill'?(SKILL_DEFS[r.skillKey]?.color||PALETTE.skill):RarityTable[r.rarityId].color;},
   art(r){return r.type==='skill'?`<span class="pull-icon" style="--icon-color:${this.frontColor(r)}">${SKILL_DEFS[r.skillKey]?.icon||'◆'}</span>`:GameArt.portrait(r.characterId);},
   badge(r){return r.duplicate?`<span class="pull-badge dup">${t('gacha.badge.dup',{n:r.gained})}</span>`:`<span class="pull-badge">${t('gacha.badge.new')}</span>`;},
-  label(r){return r.type==='skill'?t('gacha.label.skill'):t('gacha.label.character',{rarity:RarityTable[r.rarityId].name});},
+  label(r){return r.type==='skill'?t('gacha.label.skill'):t('gacha.label.character',{rarity:t(RarityTable[r.rarityId].nameKey)});},
   reducedMotion(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}},
   reveal(res,campaign){
     this.revealFocus=document.activeElement;
     const results=res.results||[];
     this.batch={results,flipped:results.map(()=>false),phase:'cards'};this.flipLockUntil=0;
-    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.reveal.title',{n:results.length})}</h2><div class="pull-grid">${results.map((r,i)=>`<div class="pull-slot tier-${this.tierOf(r)}" style="--hint:${this.hintColor(r)};--front:${this.frontColor(r)}"><button class="pull-card" data-pull-index="${i}" aria-label="${t('gacha.reveal.cardAria',{n:i+1})}"><span class="pull-back"><i></i></span><span class="pull-front">${this.art(r)}<b>${r.name}</b>${this.badge(r)}</span></button></div>`).join('')}</div><div class="pull-legend" aria-label="${t('gacha.reveal.legendAria')}">${
-      RARITY_KEYS.map(id=>`<span><i style="background:${RarityTable[id].color}"></i>${RarityTable[id].name}</span>`).join('')
+    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.reveal.title',{n:results.length})}</h2><div class="pull-grid">${results.map((r,i)=>`<div class="pull-slot tier-${this.tierOf(r)}" style="--hint:${this.hintColor(r)};--front:${this.frontColor(r)}"><button class="pull-card" data-pull-index="${i}" aria-label="${t('gacha.reveal.cardAria',{n:i+1})}"><span class="pull-back"><i></i></span><span class="pull-front">${this.art(r)}<b>${t(r.nameKey)}</b>${this.badge(r)}</span></button></div>`).join('')}</div><div class="pull-legend" aria-label="${t('gacha.reveal.legendAria')}">${
+      RARITY_KEYS.map(id=>`<span><i style="background:${RarityTable[id].color}"></i>${t(RarityTable[id].nameKey)}</span>`).join('')
     }<span><i style="background:${PALETTE.skill}"></i>${t('gacha.reveal.legendSkill')}</span></div>
     <p class="pull-hint">${t('gacha.reveal.hint')}</p>`;
     $$('#reveal-content [data-pull-index]').forEach(b=>b.onclick=()=>this.flip(Number(b.dataset.pullIndex)));
@@ -110,7 +110,7 @@ const GachaLobbyUI={
     b.flipped[i]=true;
     const r=b.results[i],tier=this.tierOf(r),slot=$$('#reveal-content .pull-slot')[i];
     slot?.classList.add('flipped');
-    if(slot)slot.querySelector('.pull-card').setAttribute('aria-label',t('gacha.reveal.revealedAria',{name:r.name,label:this.label(r),state:r.duplicate?t('gacha.state.dup',{n:r.gained}):t('gacha.state.new')}));
+    if(slot)slot.querySelector('.pull-card').setAttribute('aria-label',t('gacha.reveal.revealedAria',{name:t(r.nameKey),label:this.label(r),state:r.duplicate?t('gacha.state.dup',{n:r.gained}):t('gacha.state.new')}));
     if(tier==='legend'&&!this.reducedMotion()){slot?.classList.add('burst');this.flipLockUntil=performance.now()+this.LEGEND_LOCK_MS;}
     else if(tier==='epic'&&!this.reducedMotion())slot?.classList.add('glint');
     GameAudio.play(tier==='legend'||tier==='epic'?'reveal':'tap');
@@ -132,7 +132,7 @@ const GachaLobbyUI={
     b.flipped=b.flipped.map(()=>true);b.phase='summary';this.flipLockUntil=0;
     const rows=b.results.map((r,i)=>({r,i})).sort((a,c)=>this.rank(c.r)-this.rank(a.r)||(a.r.type===c.r.type?0:a.r.type==='skill'?1:-1)||a.i-c.i);
     const fresh=b.results.filter(r=>!r.duplicate).length,shards=b.results.reduce((s,r)=>s+(r.duplicate?r.gained:0),0);
-    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.summary.title')}</h2><div class="pull-stats">${t('gacha.summary.stats',{fresh,shards})}</div><div class="pull-summary">${rows.map(({r})=>`<div class="pull-row tier-${this.tierOf(r)}" style="--front:${this.frontColor(r)}">${this.art(r)}<div><b>${r.name}</b><small>${this.label(r)}</small></div>${this.badge(r)}</div>`).join('')}</div>`;
+    $('#reveal-content').innerHTML=`<h2 id="reveal-title" class="reveal-kicker">${t('gacha.summary.title')}</h2><div class="pull-stats">${t('gacha.summary.stats',{fresh,shards})}</div><div class="pull-summary">${rows.map(({r})=>`<div class="pull-row tier-${this.tierOf(r)}" style="--front:${this.frontColor(r)}">${this.art(r)}<div><b>${t(r.nameKey)}</b><small>${this.label(r)}</small></div>${this.badge(r)}</div>`).join('')}</div>`;
     $('#reveal-skip').hidden=true;this.updateButtons();$('#reveal-close').focus();
   },
   closeReveal(campaign){$('#recruit-modal').hidden=true;$('#recruit-modal .reveal-dialog').classList.remove('pull-mode');this.batch=null;this.flipLockUntil=0;this.busy=false;this.render(campaign);if(this.revealFocus?.isConnected)this.revealFocus.focus();this.revealFocus=null;},
@@ -145,13 +145,13 @@ const GachaLobbyUI={
     $('#gacha-nav-dot').hidden=poor||locked;
     const g=CONFIG.meta.gacha;
     $('#gacha-hint').textContent=poor?t('gacha.hint.poor',{n:Math.max(0,price-balance)}):t('gacha.hint.odds',{character:g.characterWeight,skill:g.skillWeight});
-    $('#gacha-odds').innerHTML=`<div><span>${t('gacha.odds.character')}</span><b>${g.characterWeight}%</b></div><div><span>${t('gacha.odds.skill')}</span><b>${g.skillWeight}%</b></div>`+GachaSystem.odds().map(o=>{const r=RarityTable[o.rarityId];return `<div><span class="rarity-chip" style="--rarity-color:${r.color}">${t('gacha.odds.rarity',{rarity:r.name})}</span><span>${o.pct.toFixed(1)}%</span></div>`;}).join('');
+    $('#gacha-odds').innerHTML=`<div><span>${t('gacha.odds.character')}</span><b>${g.characterWeight}%</b></div><div><span>${t('gacha.odds.skill')}</span><b>${g.skillWeight}%</b></div>`+GachaSystem.odds().map(o=>{const r=RarityTable[o.rarityId];return `<div><span class="rarity-chip" style="--rarity-color:${r.color}">${t('gacha.odds.rarity',{rarity:t(r.nameKey)})}</span><span>${o.pct.toFixed(1)}%</span></div>`;}).join('');
     const chars=state.characterInventory.characters;
-    $('#gacha-progress').innerHTML=RARITY_KEYS.slice().reverse().map(k=>{const r=RarityTable[k],pool=CharacterRepository.list().filter(c=>c.rarityId===k);return `<div><span class="rarity-chip" style="--rarity-color:${r.color}">${t('gacha.odds.rarity',{rarity:r.name})}</span><span>${pool.filter(c=>chars[c.characterId]?.owned).length} / ${pool.length}</span></div>`;}).join('')+`<div><span>${t('gacha.progress.skills')}</span><span>${SKILL_KEYS.filter(key=>state.skillInventory.skills[key].owned).length} / ${SKILL_KEYS.length}</span></div>`;
+    $('#gacha-progress').innerHTML=RARITY_KEYS.slice().reverse().map(k=>{const r=RarityTable[k],pool=CharacterRepository.list().filter(c=>c.rarityId===k);return `<div><span class="rarity-chip" style="--rarity-color:${r.color}">${t('gacha.odds.rarity',{rarity:t(r.nameKey)})}</span><span>${pool.filter(c=>chars[c.characterId]?.owned).length} / ${pool.length}</span></div>`;}).join('')+`<div><span>${t('gacha.progress.skills')}</span><span>${SKILL_KEYS.filter(key=>state.skillInventory.skills[key].owned).length} / ${SKILL_KEYS.length}</span></div>`;
     const box=$('#gacha-result'),r=this.lastResult;box.hidden=!r;
     if(!r){box.innerHTML='';return;}
     const list=r.results||[],fresh=list.filter(x=>!x.duplicate).length,shards=list.reduce((s,x)=>s+(x.duplicate?x.gained:0),0),best=list.slice().sort((x,y)=>this.rank(y)-this.rank(x))[0];
-    box.innerHTML=`${best?this.art(best):''}<div><b>${t('gacha.recent.title',{n:list.length})}</b><p>${t('gacha.recent.body',{fresh,shards,best:best&&best.type!=='skill'?t('gacha.recent.best',{rarity:RarityTable[best.rarityId].name,name:best.name}):''})}</p></div>`;
+    box.innerHTML=`${best?this.art(best):''}<div><b>${t('gacha.recent.title',{n:list.length})}</b><p>${t('gacha.recent.body',{fresh,shards,best:best&&best.type!=='skill'?t('gacha.recent.best',{rarity:t(RarityTable[best.rarityId].nameKey),name:t(best.nameKey)}):''})}</p></div>`;
   },
 };
 

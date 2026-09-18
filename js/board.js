@@ -47,7 +47,8 @@ class MergeBoard {
     return true;
   }
   pieceLabel(piece){
-    return CONFIG.colors.labels[piece.color] || piece.color;
+    const key=CONFIG.colors.labelKeys[piece.color];
+    return key ? t(key) : piece.color;
   }
   pieceMaxTier(piece){
     return CONFIG.colors.maxTier; // 색깔 피스 공통 최대 티어(기본 4)
@@ -389,8 +390,9 @@ class OrderSheetSystem {
   }
   enhancementLabel(slot){
     const meta=MISSILE_DEFS[slot.module];
-    const statLabel=slot.stat==='damage'?t('order.stat.damage'):slot.stat==='speed'?t('order.stat.speed'):meta?.special.stat===slot.stat?meta.special.label:slot.stat;
-    return t('order.kindLabel',{module:meta?.label||CONFIG.attackModules[slot.module]?.label||slot.module,stat:statLabel});
+    const statLabel=slot.stat==='damage'?t('order.stat.damage'):slot.stat==='speed'?t('order.stat.speed'):meta?.special.stat===slot.stat?t(meta.special.labelKey):slot.stat;
+    const moduleKey=meta?.labelKey||CONFIG.attackModules[slot.module]?.labelKey;
+    return t('order.kindLabel',{module:moduleKey?t(moduleKey):slot.module,stat:statLabel});
   }
   resolveSlot(slotIdx){
     const slot = this.slots[slotIdx];
@@ -495,7 +497,7 @@ class OrderSheetSystem {
     this.detailSlot=slot;this.detailReturn=trigger;
     const p=this.preview(slot),progress=this.rewardProgress(slot,p);
     $('#order-detail-content').innerHTML=`<h3>${this.enhancementLabel(slot)}</h3>`
-      +`<p>${t('order.detail.requirements',{colors:slot.requirements.map(r=>CONFIG.colors.labels[r.color]).join(' + ')})}</p>`
+      +`<p>${t('order.detail.requirements',{colors:slot.requirements.map(r=>t(CONFIG.colors.labelKeys[r.color])).join(' + ')})}</p>`
       +`<p>${t('order.detail.levelRange',{min:progress.minLevel,max:progress.maxLevel})}</p>`
       +`<p>${t(this.game.attackModuleSystem.modules[slot.module].active?'order.detail.enhance':'order.detail.summon')}</p>`
       +`<small>${t('order.detail.note')}</small>`;
@@ -519,7 +521,7 @@ class OrderSheetSystem {
       const kindLabel=this.enhancementLabel(slot);
       const chips=slot.requirements.map(r=>{
         const tier=this.game.mergeBoard.cells.reduce((n,p)=>p?.color===r.color?Math.max(n,p.tier+1):n,0);
-        return `<span class="oc-chip${tier?' available':''}">${GameArt.sprite(CONFIG.colors.names.indexOf(r.color))}<b>${tier}</b><span class="sr-only">${t('order.chipAria',{color:CONFIG.colors.labels[r.color]})}</span></span>`;
+        return `<span class="oc-chip${tier?' available':''}">${GameArt.sprite(CONFIG.colors.names.indexOf(r.color))}<b>${tier}</b><span class="sr-only">${t('order.chipAria',{color:t(CONFIG.colors.labelKeys[r.color])})}</span></span>`;
       }).join('');
       const label=t(active?'order.action.enhance':'order.action.summon');
       const fx=slot.fx?` fx-${slot.fx}`:'';delete slot.fx;

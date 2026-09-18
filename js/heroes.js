@@ -26,7 +26,8 @@ class HeroFieldSystem {
     const p=this.slotPosition(key),color=CONFIG.attackModules[key].color;
     this.game.effects.ring(p.x,p.y,color,existing?27:44,.45,2);
     this.game.effects.emit(p.x,p.y-25,color,existing?5:16,20,90,.5,2);
-    const label=CharacterTable[this.units[key].id]?.name||CONFIG.attackModules[key].label;
+    const labelKey=CharacterTable[this.units[key].id]?.nameKey||CONFIG.attackModules[key].labelKey;
+    const label=t(labelKey);
     spawnFloatNumber(this.game.floatLayer,p.x,p.y-85,existing?t('battle.hero.upgrade',{n:level}):t('battle.hero.summon',{name:label}), 'enhance');
   }
   shot(key){
@@ -46,7 +47,7 @@ class HeroFieldSystem {
       if(!unit){
         ctx.strokeStyle='#3D4A4F88';ctx.lineWidth=1;ctx.stroke();
         ctx.fillStyle='#747A78';ctx.font='11px system-ui';ctx.textAlign='center';
-        ctx.fillText(CONFIG.attackModules[key].label,p.x,p.y+22);ctx.restore();continue;
+        ctx.fillText(t(CONFIG.attackModules[key].labelKey),p.x,p.y+22);ctx.restore();continue;
       }
       const ratio=reduced?1:clamp((now-unit.summonedAt)/450,0,1);
       const shot=reduced?0:Math.max(0,1-(now-unit.shotAt)/180);
@@ -61,7 +62,7 @@ class HeroFieldSystem {
       if(!ok){ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y-25,14,0,Math.PI*2);ctx.fill();}
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.textAlign='center';
       ctx.font='600 11px system-ui';ctx.fillStyle='#F2E9D8';
-      const name=CharacterTable[unit.id]?.name||MISSILE_DEFS[key].label;
+      const name=t(CharacterTable[unit.id]?.nameKey||MISSILE_DEFS[key].labelKey);
       ctx.fillText(`${MISSILE_DEFS[key].icon} ${name} Lv.${unit.level}`,p.x,spriteTop-6);
       ctx.restore();
     }

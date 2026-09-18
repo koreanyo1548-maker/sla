@@ -176,7 +176,7 @@ function collectKeyLiterals(){
   files.push(path.join(ROOT,'index.html'));
   for(const abs of files){
     const src = fs.readFileSync(abs, 'utf8');
-    for(const m of src.matchAll(/['"`]([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)['"`]/g)) literals.add(m[1]);
+    for(const m of src.matchAll(/['"`]([A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+)+)['"`]/g)) literals.add(m[1]);
     for(const m of src.matchAll(/data-i18n(?:-html|-aria|-title)?="([\w.]+)"/g)) literals.add(m[1]);
   }
   return literals;

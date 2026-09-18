@@ -2,7 +2,8 @@
 /* 캠페인 경제 가안 수치. 전투 CONFIG와 분리한다. */
 const CAMPAIGN_CONFIG = {
   saveKey:'slagma.campaign.v4', staminaMax:30, entryCost:5, recoveryMs:300000,
-  stageNames:['불씨의 길','잿빛 외곽','용광로 입구','끓는 심장','슬래그마 심층'],
+  // 표시 이름은 문자열 테이블에 있다. 여기에는 키만 둔다(세션 3B).
+  stageNameKeys:['stage.1','stage.2','stage.3','stage.4','stage.5'],
 };
 function stageEnemyDefense(stageId,enemyConfig=DEFAULT_CONFIG.enemy){
   const id=Math.max(1,Math.floor(Number(stageId)||1));
@@ -15,7 +16,7 @@ function campaignStage(id){
   const stageOneHpMul=stageId===1 ? DEFAULT_CONFIG.stage.stageOneHpMul : 1;
   return {
     id:stageId,
-    name:CAMPAIGN_CONFIG.stageNames[stageId-1]||'끝없는 심층',
+    nameKey:CAMPAIGN_CONFIG.stageNameKeys[stageId-1]||'stage.endless',
     waves:Math.min(stageId,3)*10,
     hpScale:(1+(stageId-1)*CONFIG.stage.hpScalePerStage)*stageOneHpMul,
     atkScale:1+(stageId-1)*.15,
@@ -26,17 +27,18 @@ function campaignStage(id){
 /* Character party meta v3: definition tables → 4-slot formation → growth/wallet → combat.
    Prototype defaults: all owned, 1★ Lv1, max 6★ Lv60. One innate passive can own
    multiple effect rows. Future tier/awakening rows remain locked until explicitly unlocked. */
-const IdentityTable={knight:'기사',noble:'귀족',engineer:'기술자',mercenary:'용병',exile:'추방자'};
-const RaceTable={human:'인간',elf:'엘프',dwarf:'드워프',beast:'야수인',demon:'마족'};
-const CurrencyTable={gold:{name:'골드',storageKey:'gold'},starfire:{name:'별불',storageKey:null}};
+// 아래 표는 전부 표시 문구가 아니라 문자열 키를 담는다(세션 3B).
+const IdentityTable={knight:'identity.knight',noble:'identity.noble',engineer:'identity.engineer',mercenary:'identity.mercenary',exile:'identity.exile'};
+const RaceTable={human:'race.human',elf:'race.elf',dwarf:'race.dwarf',beast:'race.beast',demon:'race.demon'};
+const CurrencyTable={gold:{nameKey:'currency.gold',storageKey:'gold'},starfire:{nameKey:'currency.starfire',storageKey:null}};
 // [2026-09-14] 희귀도 5단계. 이름·색·정렬만 여기서 정하고, 조절 대상 수치는 전부
 // CONFIG.meta.rarity에서 읽는다(밸런스 에디터에서 바로 만질 수 있게 하기 위함).
 const RarityTable={
-  normal:{rarityId:'normal',name:'노말',short:'N',color:'#B7B7AC',order:1},
-  magic: {rarityId:'magic', name:'매직',short:'M',color:'#5EDBF4',order:2},
-  rare:  {rarityId:'rare',  name:'레어',short:'R',color:'#5CCB8A',order:3},
-  epic:  {rarityId:'epic',  name:'영웅',short:'E',color:'#A876E8',order:4},
-  legend:{rarityId:'legend',name:'전설',short:'L',color:'#DDB86A',order:5},
+  normal:{rarityId:'normal',nameKey:'rarity.normal.name',shortKey:'rarity.normal.short',color:'#B7B7AC',order:1},
+  magic: {rarityId:'magic', nameKey:'rarity.magic.name', shortKey:'rarity.magic.short', color:'#5EDBF4',order:2},
+  rare:  {rarityId:'rare',  nameKey:'rarity.rare.name',  shortKey:'rarity.rare.short',  color:'#5CCB8A',order:3},
+  epic:  {rarityId:'epic',  nameKey:'rarity.epic.name',  shortKey:'rarity.epic.short',  color:'#A876E8',order:4},
+  legend:{rarityId:'legend',nameKey:'rarity.legend.name',shortKey:'rarity.legend.short',color:'#DDB86A',order:5},
 };
 const RARITY_KEYS=Object.keys(RarityTable).sort((a,b)=>RarityTable[a].order-RarityTable[b].order);
 function rarityConf(rarityId){ return CONFIG.meta.rarity[rarityId]||CONFIG.meta.rarity.normal; }
@@ -106,95 +108,95 @@ const MODULE_RULE_SPEC={
 };
 // 같은 상태가 다시 걸리면 중첩하지 않고 지속시간만 갱신한다(StatusEffectSystem.apply).
 const StatusEffectTable={
-  shocked:{name:'감전',short:'⚡',color:'#5EDBF4',duration:3},
-  melted:{name:'융해',short:'♨',color:'#F77A3D',duration:3},
+  shocked:{nameKey:'status.shocked',short:'⚡',color:'#5EDBF4',duration:3},
+  melted:{nameKey:'status.melted',short:'♨',color:'#F77A3D',duration:3},
 };
 const CharacterSeedTable=[
  // [2026-09-15] 확정(인철): 능력(factor) 구조는 남기되 배치 비중을 줄이고, 분류는
  // 훅 / 부여 / 참조 / 시너지 네 가지를 주로 쓴다. 상태는 감전·융해 2종.
  // 1번 행은 즉시, 2번 행(starEffects)은 3성 해금. 노말·매직은 1행뿐이며 수치 배율만 받는 거쳐가는 등급이다.
  // 슬롯마다 부여감전·부여융해·참조감전·참조융해 네 조합이 모두 있고, 등급마다 부여·참조가 같은 상태로 짝이 맞는다.
- {name:'아델',rarityId:'normal',identityId:'knight',raceId:'human',module:'chain',passiveName:'전류 개방',effects:[
+ {nameKey:'guardian.adel.name',rarityId:'normal',identityId:'knight',raceId:'human',module:'chain',passiveKey:'passive.adel.name',effects:[
   {kind:'status_on_hit',statusId:'shocked',chance:.30}]},
- {name:'리시아',rarityId:'normal',identityId:'noble',raceId:'elf',module:'explosion',passiveName:'과전 폭연',effects:[
+ {nameKey:'guardian.ricia.name',rarityId:'normal',identityId:'noble',raceId:'elf',module:'explosion',passiveKey:'passive.ricia.name',effects:[
   {kind:'damage_vs_status',statusId:'shocked',value:.40}]},
- {name:'브론',rarityId:'normal',identityId:'engineer',raceId:'dwarf',module:'scatter',passiveName:'정비 숙련',effects:[
+ {nameKey:'guardian.bron.name',rarityId:'normal',identityId:'engineer',raceId:'dwarf',module:'scatter',passiveKey:'passive.bron.name',effects:[
   {kind:'formation_factor',scope:'module',factorKey:'attackSpeedPct',value:.06,condition:{tagType:'identity',tagId:'engineer',count:2}}]},
- {name:'타르크',rarityId:'normal',identityId:'mercenary',raceId:'beast',module:'laser',passiveName:'야성 조준',effects:[
+ {nameKey:'guardian.tarq.name',rarityId:'normal',identityId:'mercenary',raceId:'beast',module:'laser',passiveKey:'passive.tarq.name',effects:[
   {kind:'formation_factor',scope:'module',factorKey:'damagePct',value:.08,condition:{tagType:'race',tagId:'beast',count:2}}]},
- {name:'벨카',rarityId:'magic',identityId:'exile',raceId:'demon',module:'chain',passiveName:'무법 결속',effects:[
+ {nameKey:'guardian.belka.name',rarityId:'magic',identityId:'exile',raceId:'demon',module:'chain',passiveKey:'passive.belka.name',effects:[
   {kind:'formation_factor',scope:'global',factorKey:'attackPct',value:.05,condition:{tagType:'identity',tagId:'exile',count:2}}]},
- {name:'카일',rarityId:'magic',identityId:'mercenary',raceId:'human',module:'explosion',passiveName:'인간 전술',effects:[
+ {nameKey:'guardian.kyle.name',rarityId:'magic',identityId:'mercenary',raceId:'human',module:'explosion',passiveKey:'passive.kyle.name',effects:[
   {kind:'formation_factor',scope:'module',factorKey:'attackSpeedPct',value:.07,condition:{tagType:'race',tagId:'human',count:2}}]},
- {name:'세리아',rarityId:'magic',identityId:'knight',raceId:'elf',module:'scatter',passiveName:'용융 탄환',effects:[
+ {nameKey:'guardian.seria.name',rarityId:'magic',identityId:'knight',raceId:'elf',module:'scatter',passiveKey:'passive.seria.name',effects:[
   {kind:'status_on_hit',statusId:'melted',chance:.30}]},
- {name:'도르만',rarityId:'magic',identityId:'noble',raceId:'dwarf',module:'laser',passiveName:'용융 절단',effects:[
+ {nameKey:'guardian.dorman.name',rarityId:'magic',identityId:'noble',raceId:'dwarf',module:'laser',passiveKey:'passive.dorman.name',effects:[
   {kind:'damage_vs_status',statusId:'melted',value:.40}]},
- {name:'로칸',rarityId:'rare',identityId:'exile',raceId:'beast',module:'chain',passiveName:'추적 전류',effects:[
+ {nameKey:'guardian.rokan.name',rarityId:'rare',identityId:'exile',raceId:'beast',module:'chain',passiveKey:'passive.rokan.name',effects:[
   {kind:'damage_vs_status',statusId:'shocked',value:.50}],
-  starPassiveName:'무법자의 연대',starEffects:[
+  starPassiveKey:'passive.rokanStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'damagePct',value:.06,condition:{tagType:'identity',tagId:'exile',count:2}}]},
- {name:'아즈라',rarityId:'rare',identityId:'engineer',raceId:'demon',module:'explosion',passiveName:'열충격',effects:[
+ {nameKey:'guardian.azra.name',rarityId:'rare',identityId:'engineer',raceId:'demon',module:'explosion',passiveKey:'passive.azra.name',effects:[
   {kind:'status_on_hit',statusId:'shocked',chance:.35}],
-  starPassiveName:'마족 공명',starEffects:[
+  starPassiveKey:'passive.azraStar.name',starEffects:[
   {kind:'formation_factor',scope:'module',factorKey:'pierceRate',value:.08,condition:{tagType:'race',tagId:'demon',count:2}}]},
- {name:'유나',rarityId:'rare',identityId:'noble',raceId:'human',module:'scatter',passiveName:'표식 산개',effects:[
+ {nameKey:'guardian.yuna.name',rarityId:'rare',identityId:'noble',raceId:'human',module:'scatter',passiveKey:'passive.yuna.name',effects:[
   {kind:'damage_vs_status',statusId:'melted',value:.50}],
-  starPassiveName:'귀족 지휘',starEffects:[
+  starPassiveKey:'passive.yunaStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'damagePct',value:.06,condition:{tagType:'identity',tagId:'noble',count:2}}]},
- {name:'엘리온',rarityId:'rare',identityId:'exile',raceId:'elf',module:'laser',passiveName:'용융 관통',effects:[
+ {nameKey:'guardian.elion.name',rarityId:'rare',identityId:'exile',raceId:'elf',module:'laser',passiveKey:'passive.elion.name',effects:[
   {kind:'status_on_hit',statusId:'melted',chance:.35}],
-  starPassiveName:'엘프 정밀',starEffects:[
+  starPassiveKey:'passive.elionStar.name',starEffects:[
   {kind:'formation_factor',scope:'module',factorKey:'critChance',value:.07,condition:{tagType:'race',tagId:'elf',count:2}}]},
- {name:'그림',rarityId:'epic',identityId:'mercenary',raceId:'dwarf',module:'chain',passiveName:'용해 전류',effects:[
+ {nameKey:'guardian.grim.name',rarityId:'epic',identityId:'mercenary',raceId:'dwarf',module:'chain',passiveKey:'passive.grim.name',effects:[
   {kind:'status_on_hit',statusId:'melted',chance:.35}],
-  starPassiveName:'용병 연대',starEffects:[
+  starPassiveKey:'passive.grimStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'critDamagePct',value:.15,condition:{tagType:'identity',tagId:'mercenary',count:2}}]},
- {name:'테온',rarityId:'epic',identityId:'engineer',raceId:'beast',module:'explosion',passiveName:'열파 증폭',effects:[
+ {nameKey:'guardian.teon.name',rarityId:'epic',identityId:'engineer',raceId:'beast',module:'explosion',passiveKey:'passive.teon.name',effects:[
   {kind:'damage_vs_status',statusId:'melted',value:.50}],
-  starPassiveName:'정비 라인',starEffects:[
+  starPassiveKey:'passive.teonStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'attackSpeedPct',value:.08,condition:{tagType:'identity',tagId:'engineer',count:3}}]},
- {name:'니아',rarityId:'epic',identityId:'knight',raceId:'demon',module:'scatter',passiveName:'감전 산탄',effects:[
+ {nameKey:'guardian.nia.name',rarityId:'epic',identityId:'knight',raceId:'demon',module:'scatter',passiveKey:'passive.nia.name',effects:[
   {kind:'status_on_hit',statusId:'shocked',chance:.35}],
-  starPassiveName:'기사 서약',starEffects:[
+  starPassiveKey:'passive.niaStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'bossDamagePct',value:.10,condition:{tagType:'identity',tagId:'knight',count:2}}]},
- {name:'미렌',rarityId:'epic',identityId:'engineer',raceId:'human',module:'laser',passiveName:'전도 절단',effects:[
+ {nameKey:'guardian.miren.name',rarityId:'epic',identityId:'engineer',raceId:'human',module:'laser',passiveKey:'passive.miren.name',effects:[
   {kind:'damage_vs_status',statusId:'shocked',value:.50}],
-  starPassiveName:'인류 연합',starEffects:[
+  starPassiveKey:'passive.mirenStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'attackPct',value:.09,condition:{tagType:'race',tagId:'human',count:3}}]},
  // [2026-09-15] 연쇄·폭발·산탄의 신규 훅은 아직 설계 전이다. 그 자리를 능력 패시브로
  // 임시로 채운다(인철 지시). 훅이 확정되면 이 세 행을 module_rule로 교체한다.
- {name:'아스텔',rarityId:'legend',identityId:'mercenary',raceId:'elf',module:'chain',passiveName:'고전압 증폭',effects:[
+ {nameKey:'guardian.astel.name',rarityId:'legend',identityId:'mercenary',raceId:'elf',module:'chain',passiveKey:'passive.astel.name',effects:[
   {kind:'factor',scope:'module',factorKey:'damagePct',value:.18}],
-  starPassiveName:'엘프 결계',starEffects:[
+  starPassiveKey:'passive.astelStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'critChance',value:.06,condition:{tagType:'race',tagId:'elf',count:2}}]},
- {name:'볼칸',rarityId:'legend',identityId:'knight',raceId:'dwarf',module:'explosion',passiveName:'작열 각인',effects:[
+ {nameKey:'guardian.volkan.name',rarityId:'legend',identityId:'knight',raceId:'dwarf',module:'explosion',passiveKey:'passive.volkan.name',effects:[
   {kind:'factor',scope:'module',factorKey:'critDamagePct',value:.30}],
-  starPassiveName:'드워프 제련',starEffects:[
+  starPassiveKey:'passive.volkanStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'defenseIgnore',value:.10,condition:{tagType:'race',tagId:'dwarf',count:2}}]},
- {name:'키라',rarityId:'legend',identityId:'noble',raceId:'beast',module:'scatter',passiveName:'관통 산개',effects:[
+ {nameKey:'guardian.kira.name',rarityId:'legend',identityId:'noble',raceId:'beast',module:'scatter',passiveKey:'passive.kira.name',effects:[
   {kind:'factor',scope:'module',factorKey:'defenseIgnore',value:.14}],
-  starPassiveName:'귀족 대열',starEffects:[
+  starPassiveKey:'passive.kiraStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'damagePct',value:.10,condition:{tagType:'identity',tagId:'noble',count:3}}]},
- {name:'세라프',rarityId:'legend',identityId:'exile',raceId:'demon',module:'laser',passiveName:'초점 수렴',effects:[
+ {nameKey:'guardian.seraph.name',rarityId:'legend',identityId:'exile',raceId:'demon',module:'laser',passiveKey:'passive.seraph.name',effects:[
   {kind:'module_rule',scope:'module',ruleId:'focused',params:{damagePct:.50}}],
-  starPassiveName:'마족 강림',starEffects:[
+  starPassiveKey:'passive.seraphStar.name',starEffects:[
   {kind:'formation_factor',scope:'global',factorKey:'pierceRate',value:.10,condition:{tagType:'race',tagId:'demon',count:3}}]},
- {name:'루헨',rarityId:'legend',identityId:'engineer',raceId:'elf',module:'chain',passiveName:'잔류 방전',effects:[
+ {nameKey:'guardian.ruhen.name',rarityId:'legend',identityId:'engineer',raceId:'elf',module:'chain',passiveKey:'passive.ruhen.name',effects:[
   {kind:'module_rule',scope:'module',ruleId:'unusedTargetBonus',params:{value:.50}}],
-  starPassiveName:'용융 잔류',starEffects:[
+  starPassiveKey:'passive.ruhenStar.name',starEffects:[
   {kind:'damage_vs_status',statusId:'melted',value:.65}]},
- {name:'모르가',rarityId:'legend',identityId:'mercenary',raceId:'beast',module:'explosion',passiveName:'연쇄 붕괴',effects:[
+ {nameKey:'guardian.morga.name',rarityId:'legend',identityId:'mercenary',raceId:'beast',module:'explosion',passiveKey:'passive.morga.name',effects:[
   {kind:'module_rule',scope:'module',ruleId:'secondary',params:{damagePct:.50,radiusPct:.80}}],
-  starPassiveName:'용융 붕괴',starEffects:[
+  starPassiveKey:'passive.morgaStar.name',starEffects:[
   {kind:'status_on_hit',statusId:'melted',chance:.45}]},
- {name:'샨',rarityId:'legend',identityId:'noble',raceId:'demon',module:'scatter',passiveName:'정조준',effects:[
+ {nameKey:'guardian.shan.name',rarityId:'legend',identityId:'noble',raceId:'demon',module:'scatter',passiveKey:'passive.shan.name',effects:[
   {kind:'module_rule',scope:'module',ruleId:'centerDamageBonus',params:{value:1.00}}],
-  starPassiveName:'감전 정밀',starEffects:[
+  starPassiveKey:'passive.shanStar.name',starEffects:[
   {kind:'damage_vs_status',statusId:'shocked',value:.65}]},
- {name:'오르넬',rarityId:'legend',identityId:'exile',raceId:'human',module:'laser',passiveName:'임계 출력',effects:[
+ {nameKey:'guardian.ornel.name',rarityId:'legend',identityId:'exile',raceId:'human',module:'laser',passiveKey:'passive.ornel.name',effects:[
   {kind:'module_rule',scope:'module',ruleId:'empowered',params:{chance:.35,damagePct:.70,widthPct:1.00}}],
-  starPassiveName:'임계 감전',starEffects:[
+  starPassiveKey:'passive.ornelStar.name',starEffects:[
   {kind:'status_on_hit',statusId:'shocked',chance:.45}]},
 ];
 const CharacterTable={},PassiveTable={},PassiveEffectTable=[],PassiveUnlockTable=[];
@@ -204,13 +206,13 @@ const STAR_PASSIVE_UNLOCK = 3;
 CharacterSeedTable.forEach((seed,i)=>{
   const suffix=String(i+1).padStart(3,'0'),characterId=`CHR_${suffix}`,passiveId=`CP_${suffix}`;
   const starPassiveId=seed.starEffects?`${passiveId}S`:null;
-  CharacterTable[characterId]={characterId,name:seed.name,rarityId:seed.rarityId,identityId:seed.identityId,raceId:seed.raceId,specialtyMissileId:seed.module,innatePassiveId:passiveId,starPassiveId,passiveSlots:{innate:passiveId,star:starPassiveId?[starPassiveId]:[],tier:[],awakening:[]},baseStats:{atk:1000,def:5,hp:300},growthProfileId:'standard',costGroupId:'standard',sortOrder:i};
+  CharacterTable[characterId]={characterId,nameKey:seed.nameKey,rarityId:seed.rarityId,identityId:seed.identityId,raceId:seed.raceId,specialtyMissileId:seed.module,innatePassiveId:passiveId,starPassiveId,passiveSlots:{innate:passiveId,star:starPassiveId?[starPassiveId]:[],tier:[],awakening:[]},baseStats:{atk:1000,def:5,hp:300},growthProfileId:'standard',costGroupId:'standard',sortOrder:i};
   const addRows=(pid,rows,unlockType)=>rows.forEach((effect,effectIndex)=>PassiveEffectTable.push({effectId:`${pid}_E${effectIndex+1}`,passiveId:pid,sourceId:seed.module,operation:'add',stackMode:'add',unlockType,...effect,duration:effect.statusId?(effect.duration??StatusEffectTable[effect.statusId].duration):effect.duration,targetId:effect.scope==='module'?seed.module:(effect.targetId??null)}));
-  PassiveTable[passiveId]={passiveId,name:seed.passiveName,category:'innate'};
+  PassiveTable[passiveId]={passiveId,nameKey:seed.passiveKey,category:'innate'};
   PassiveUnlockTable.push({characterId,passiveId,unlockType:'base',unlockValue:1});
   addRows(passiveId,seed.effects,'base');
   if(starPassiveId){
-    PassiveTable[starPassiveId]={passiveId:starPassiveId,name:seed.starPassiveName,category:'star'};
+    PassiveTable[starPassiveId]={passiveId:starPassiveId,nameKey:seed.starPassiveKey,category:'star'};
     PassiveUnlockTable.push({characterId,passiveId:starPassiveId,unlockType:'star',unlockValue:STAR_PASSIVE_UNLOCK});
     addRows(starPassiveId,seed.starEffects,'star');
   }
@@ -354,7 +356,7 @@ const SkillGrowthSystem={
 const SkillCombatAdapter={
   snapshot(state){
     const inv=state.skillInventory;
-    const equipped=inv.equipped.map(key=>{const owned=inv.skills[key];return {key,name:CONFIG.skills[key].name,level:owned.level,star:owned.star,effect:SkillGrowthSystem.effect(key,owned),duration:SkillGrowthSystem.duration(key,owned),cooldownSec:SkillGrowthSystem.cooldown(key),stats:SkillGrowthSystem.stats(key,owned)};});
+    const equipped=inv.equipped.map(key=>{const owned=inv.skills[key];return {key,nameKey:CONFIG.skills[key].nameKey,level:owned.level,star:owned.star,effect:SkillGrowthSystem.effect(key,owned),duration:SkillGrowthSystem.duration(key,owned),cooldownSec:SkillGrowthSystem.cooldown(key),stats:SkillGrowthSystem.stats(key,owned)};});
     const stats=equipped.reduce((sum,item)=>{for(const key of ['atk','def','hp'])sum[key]+=item.stats[key];return sum;},{atk:0,def:0,hp:0});
     return {equipped,stats};
   },
@@ -434,12 +436,12 @@ const ShardLedger={
     Object.entries(state?.characterInventory?.characters||{}).forEach(([id,x])=>{
       if(!CharacterTable[id]||!x?.owned)return;
       const e=this.character(id,x);
-      if(e.surplus>0){characters.push({id,name:CharacterTable[id].name,rarityId:CharacterTable[id].rarityId,...e});total+=e.surplus;}
+      if(e.surplus>0){characters.push({id,nameKey:CharacterTable[id].nameKey,rarityId:CharacterTable[id].rarityId,...e});total+=e.surplus;}
     });
     Object.entries(state?.skillInventory?.skills||{}).forEach(([key,x])=>{
       if(!CONFIG.skills[key]||!x?.owned)return;
       const e=this.skill(x);
-      if(e.surplus>0){skills.push({key,name:CONFIG.skills[key].name,...e});total+=e.surplus;}
+      if(e.surplus>0){skills.push({key,nameKey:CONFIG.skills[key].nameKey,...e});total+=e.surplus;}
     });
     return {characters,skills,total};
   },
@@ -474,13 +476,13 @@ const GachaSystem={
     if(type==='skill'){
       const skillKey=choice(SKILL_KEYS),def=CONFIG.skills[skillKey],x=next.skillInventory.skills[skillKey],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(CONFIG.meta.skill.duplicateShards)||0):0;
       if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
-      return {type,skillKey,name:def.name,duplicate,gained,shards:x.shards,surplus:ShardLedger.skill(x).surplus};
+      return {type,skillKey,nameKey:def.nameKey,duplicate,gained,shards:x.shards,surplus:ShardLedger.skill(x).surplus};
     }
     const rarityId=this.rollRarity();if(!rarityId)return {error:'gacha.error.noRarity'};
     const pool=CharacterRepository.list().filter(c=>c.rarityId===rarityId);if(!pool.length)return {error:'gacha.error.emptyPool'};
     const c=choice(pool),x=next.characterInventory.characters[c.characterId],duplicate=!!x.owned,gained=duplicate?Math.max(0,Number(rarityConf(rarityId).duplicateShards)||0):0;
     if(duplicate){x.shards+=gained;next.lifetime.shardsGained=(Number(next.lifetime.shardsGained)||0)+gained;}else x.owned=true;
-    return {type,characterId:c.characterId,name:c.name,rarityId,duplicate,gained,shards:x.shards,surplus:ShardLedger.character(c.characterId,x).surplus};
+    return {type,characterId:c.characterId,nameKey:c.nameKey,rarityId,duplicate,gained,shards:x.shards,surplus:ShardLedger.character(c.characterId,x).surplus};
   },
   // [2026-09-16] 확정(인철): 별불 200개에 결과 10개. 결과 전체를 한 번에 저장한 뒤 공개 연출을 시작한다.
   pull(campaign){
@@ -511,7 +513,7 @@ const PartyCombatAdapter={
     const inv=state.characterInventory,factors={global:{},modules:{}},members=[],effects=[],moduleRules={};
     CONFIG.moduleKeys.forEach(module=>{
       const id=inv.formation[module],c=CharacterTable[id],owned=inv.characters[id],stats=CharacterGrowthSystem.stats(id,owned);
-      members.push({characterId:id,name:c.name,identityId:c.identityId,raceId:c.raceId,specialtyMissileId:module,level:owned.level,star:owned.star,stats,passiveIds:this.unlockedPassiveIds(c,owned)});
+      members.push({characterId:id,nameKey:c.nameKey,identityId:c.identityId,raceId:c.raceId,specialtyMissileId:module,level:owned.level,star:owned.star,stats,passiveIds:this.unlockedPassiveIds(c,owned)});
     });
     const passiveIds=new Set(members.flatMap(m=>m.passiveIds));
     PassiveEffectTable.filter(e=>passiveIds.has(e.passiveId)).forEach(e=>{

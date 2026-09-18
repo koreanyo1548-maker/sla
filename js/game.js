@@ -251,10 +251,10 @@ class Game {
       const def = CONFIG.skills[key];
       const meta=SKILL_DEFS[key]||{icon:'◆',color:PALETTE.arcane};
       const entry=this.skillSystem.entry(key);
-      return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${def.name} ${t('common.level',{n:entry?.level||1})}">
+      return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${t(def.nameKey)} ${t('common.level',{n:entry?.level||1})}">
         <span class="sk-cd"></span>
         <span class="sk-icon">${meta.icon}</span>
-        <span class="sk-name">${def.name}</span>
+        <span class="sk-name">${t(def.nameKey)}</span>
         <span class="sk-level">${t('common.level',{n:entry?.level||1})}</span>
         <span class="sk-cost"></span>
       </button>`;
@@ -290,7 +290,7 @@ class Game {
         costEl.classList.toggle('short', this.energy<need);
       }
       const titleCost=this.skillSystem.energyCost(key);
-      btn.title=t('battle.skill.tooltip',{name:def.name,level:this.skillSystem.entry(key)?.level||1,
+      btn.title=t('battle.skill.tooltip',{name:t(def.nameKey),level:this.skillSystem.entry(key)?.level||1,
         cost:titleCost>0?t('battle.skill.costEnergy',{n:titleCost}):t('battle.skill.costFree')});
     });
   }
@@ -460,7 +460,7 @@ class Game {
    ===================================================================== */
 function buildStartScreen(state=Campaign.state){
   const list=$('#skill-pick-list'),inv=state.skillInventory;
-  list.innerHTML=inv.equipped.map(key=>{const x=inv.skills[key],def=CONFIG.skills[key],meta=SKILL_DEFS[key];return `<div class="skill-slot" style="--skill-accent:${meta.color}"><span class="skill-icon">${meta.icon}</span><b>${def.name}</b><small>${t('prepare.skillSlot',{level:x.level,effect:SkillLobbyUI.effectText(key,x),sec:SkillGrowthSystem.cooldown(key)})}</small></div>`;}).join('');
+  list.innerHTML=inv.equipped.map(key=>{const x=inv.skills[key],def=CONFIG.skills[key],meta=SKILL_DEFS[key];return `<div class="skill-slot" style="--skill-accent:${meta.color}"><span class="skill-icon">${meta.icon}</span><b>${t(def.nameKey)}</b><small>${t('prepare.skillSlot',{level:x.level,effect:SkillLobbyUI.effectText(key,x),sec:SkillGrowthSystem.cooldown(key)})}</small></div>`;}).join('');
   $('#start-btn').disabled=false;
   $('#start-btn').textContent=t('prepare.start',{cost:CAMPAIGN_CONFIG.entryCost});
   $('#start-btn').onclick=()=>Campaign.enter();

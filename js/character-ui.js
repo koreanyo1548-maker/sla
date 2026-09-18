@@ -9,16 +9,16 @@ const CharacterLobbyUI={
       const unlock=PassiveUnlockTable.find(u=>u.characterId===c.characterId&&u.passiveId===pid);
       const need=unlock&&unlock.unlockType==='star'?unlock.unlockValue:0;
       const open=!need||(Number(owned?.star)||1)>=need;
-      return {passiveId:pid,name:PassiveTable[pid]?.name||'',text:this.passiveText(pid),open,need};
+      return {passiveId:pid,name:PassiveTable[pid]?.nameKey?t(PassiveTable[pid].nameKey):'',text:this.passiveText(pid),open,need};
     });
   },
   passiveText(id){
-    const labels=Object.fromEntries(COMBAT_FACTOR_KEYS.map(key=>[key,COMBAT_FACTOR_LABELS[key].short]));
+    const labels=Object.fromEntries(COMBAT_FACTOR_KEYS.map(key=>[key,t(COMBAT_FACTOR_LABELS[key].shortKey)]));
     return PassiveEffectTable.filter(e=>e.passiveId===id).map(e=>{
       const pct=v=>Math.round((Number(v)||0)*100);
-      if(e.kind==='factor')return t('passive.factor',{scope:e.scope==='global'?t('passive.scopeAll'):MISSILE_DEFS[e.targetId].label,stat:labels[e.factorKey]||e.factorKey,pct:pct(e.value)});
-      if(e.kind==='status_on_hit')return t('passive.statusOnHit',{chance:pct(e.chance),status:StatusEffectTable[e.statusId].name,duration:StatusEffectTable[e.statusId].duration});
-      if(e.kind==='damage_vs_status')return t('passive.damageVsStatus',{status:StatusEffectTable[e.statusId].name,pct:pct(e.value)});
+      if(e.kind==='factor')return t('passive.factor',{scope:e.scope==='global'?t('passive.scopeAll'):t(MISSILE_DEFS[e.targetId].labelKey),stat:labels[e.factorKey]||e.factorKey,pct:pct(e.value)});
+      if(e.kind==='status_on_hit')return t('passive.statusOnHit',{chance:pct(e.chance),status:t(StatusEffectTable[e.statusId].nameKey),duration:StatusEffectTable[e.statusId].duration});
+      if(e.kind==='damage_vs_status')return t('passive.damageVsStatus',{status:t(StatusEffectTable[e.statusId].nameKey),pct:pct(e.value)});
       if(e.kind==='module_rule'){
         const q=e.params||{};
         if(e.ruleId==='unusedTargetBonus')return t('passive.rule.unusedTargetBonus',{pct:pct(q.value)});
@@ -27,8 +27,8 @@ const CharacterLobbyUI={
         if(e.ruleId==='empowered')return t('passive.rule.empowered',{chance:pct(q.chance),damage:pct(q.damagePct),width:pct(q.widthPct)});
         if(e.ruleId==='focused')return t('passive.rule.focused',{damage:pct(q.damagePct)});
       }
-      const c=e.condition,label=c.tagType==='race'?RaceTable[c.tagId]:c.tagType==='identity'?IdentityTable[c.tagId]:MISSILE_DEFS[c.tagId]?.label;
-      return t('passive.formation',{tag:label,count:c.count,scope:e.scope==='module'?MISSILE_DEFS[e.targetId].label:t('passive.scopeAll'),stat:labels[e.factorKey],pct:pct(e.value)});
+      const c=e.condition,tagKey=c.tagType==='race'?RaceTable[c.tagId]:c.tagType==='identity'?IdentityTable[c.tagId]:MISSILE_DEFS[c.tagId]?.labelKey;
+      return t('passive.formation',{tag:tagKey?t(tagKey):'',count:c.count,scope:e.scope==='module'?t(MISSILE_DEFS[e.targetId].labelKey):t('passive.scopeAll'),stat:labels[e.factorKey],pct:pct(e.value)});
     }).join(' / ');
   },
   init(campaign){
@@ -40,12 +40,12 @@ const CharacterLobbyUI={
       const action=event.target.closest('[data-character-action]');
       if(action&&this.modalCharacterId){
         const id=this.modalCharacterId;
-        if(CharacterGrowthSystem.transact(campaign,id,action.dataset.characterAction)){GameFeedback.burst($('#character-modal-content'));GameFeedback.toast(t('character.toast.grown',{name:CharacterTable[id].name}));}
+        if(CharacterGrowthSystem.transact(campaign,id,action.dataset.characterAction)){GameFeedback.burst($('#character-modal-content'));GameFeedback.toast(t('character.toast.grown',{name:t(CharacterTable[id].nameKey)}));}
         else campaign.render();return;
       }
       if(event.target.closest('[data-character-deploy]')&&this.modalCharacterId){
         const c=CharacterTable[this.modalCharacterId];
-        if(CharacterGrowthSystem.assign(campaign,this.modalCharacterId)){GameAudio.play('up');this.close();GameFeedback.toast(t('character.toast.deployed',{name:c.name,module:MISSILE_DEFS[c.specialtyMissileId].label}));}
+        if(CharacterGrowthSystem.assign(campaign,this.modalCharacterId)){GameAudio.play('up');this.close();GameFeedback.toast(t('character.toast.deployed',{name:t(c.nameKey),module:t(MISSILE_DEFS[c.specialtyMissileId].labelKey)}));}
       }
     });
     document.addEventListener('keydown',event=>{
@@ -61,10 +61,10 @@ const CharacterLobbyUI={
   },
   canGrow(campaign,id){const x=campaign.state.characterInventory.characters[id];return ['levelUp','rankUp'].some(action=>CharacterGrowthSystem.allowed(x,action)&&CharacterGrowthSystem.payable(campaign,id,x,action));},
   renderFormation(party){
-    return `<div class="formation-panel"><strong>${t('character.formation.title')} <small>${t('character.formation.hint')}</small></strong><div class="formation-grid">${party.members.map(m=>`<button class="formation-slot ${this.filter===m.specialtyMissileId?'active':''}" data-formation-module="${m.specialtyMissileId}" aria-label="${t('character.formation.slotAria',{module:MISSILE_DEFS[m.specialtyMissileId].label,name:m.name,level:m.level})}">${GameArt.portrait(m.characterId)}${GameArt.module(m.specialtyMissileId,'formation-module')}<b>${m.name}</b><em>${t('common.level',{n:m.level})}</em></button>`).join('')}</div><div class="formation-total"><span>${t('character.formation.hp')} <b>${I18N.num(party.stats.hp)}</b></span><span>${t('character.formation.def')} <b>${party.stats.def}</b></span><span>${t('character.formation.atk')} <b>${I18N.num(Math.round(party.stats.atk))}</b></span></div></div>`;
+    return `<div class="formation-panel"><strong>${t('character.formation.title')} <small>${t('character.formation.hint')}</small></strong><div class="formation-grid">${party.members.map(m=>`<button class="formation-slot ${this.filter===m.specialtyMissileId?'active':''}" data-formation-module="${m.specialtyMissileId}" aria-label="${t('character.formation.slotAria',{module:t(MISSILE_DEFS[m.specialtyMissileId].labelKey),name:t(m.nameKey),level:m.level})}">${GameArt.portrait(m.characterId)}${GameArt.module(m.specialtyMissileId,'formation-module')}<b>${t(m.nameKey)}</b><em>${t('common.level',{n:m.level})}</em></button>`).join('')}</div><div class="formation-total"><span>${t('character.formation.hp')} <b>${I18N.num(party.stats.hp)}</b></span><span>${t('character.formation.def')} <b>${party.stats.def}</b></span><span>${t('character.formation.atk')} <b>${I18N.num(Math.round(party.stats.atk))}</b></span></div></div>`;
   },
   renderFilters(){
-    return `<div class="character-filters" aria-label="${t('character.filter.aria')}">${['all',...CONFIG.moduleKeys].map(id=>`<button class="character-filter ${this.filter===id?'active':''}" data-character-filter="${id}" aria-pressed="${this.filter===id}">${id==='all'?t('character.filter.all'):GameArt.module(id)+MISSILE_DEFS[id].label}</button>`).join('')}</div>`;
+    return `<div class="character-filters" aria-label="${t('character.filter.aria')}">${['all',...CONFIG.moduleKeys].map(id=>`<button class="character-filter ${this.filter===id?'active':''}" data-character-filter="${id}" aria-pressed="${this.filter===id}">${id==='all'?t('character.filter.all'):GameArt.module(id)+t(MISSILE_DEFS[id].labelKey)}</button>`).join('')}</div>`;
   },
   renderRoster(campaign){
     const inv=campaign.state.characterInventory;
@@ -72,7 +72,7 @@ const CharacterLobbyUI={
       .sort((a,b)=>Number(inv.characters[b.characterId].owned)-Number(inv.characters[a.characterId].owned)||(RarityTable[b.rarityId].order-RarityTable[a.rarityId].order)||a.sortOrder-b.sortOrder);
     return `<div class="roster-toolbar"><span>${t('character.roster.sort')}</span><button data-owned-toggle aria-pressed="${this.ownedOnly}">${this.ownedOnly?'☑':'☐'} ${t('character.roster.ownedOnly')}</button></div><div class="character-roster">${list.map(c=>{
       const x=inv.characters[c.characterId],deployed=inv.formation[c.specialtyMissileId]===c.characterId,r=RarityTable[c.rarityId];
-      return `<button data-character-id="${c.characterId}" class="${deployed?'chosen':''}${x.owned?'':' locked'}" style="--character-color:${r.color}" aria-label="${t('character.roster.aria',{name:c.name,rarity:r.name,state:x.owned?t('character.roster.levelState',{level:x.level}):t('common.notOwned')})}"><span class="roster-art-wrap">${GameArt.portrait(c.characterId)}<span class="roster-rarity">${r.short}</span>${deployed?`<span class="deployed-badge">${t('character.roster.deployed')}</span>`:''}${x.owned&&this.canGrow(campaign,c.characterId)?`<span class="growth-ready" aria-label="${t('character.roster.growable')}">↑</span>`:''}</span><div class="roster-copy"><b>${c.name}</b><small>${x.owned?`${'★'.repeat(x.star)} <span>${t('common.level',{n:x.level})}</span>`:t('common.notOwned')} </small>${GameArt.module(c.specialtyMissileId,'module-mini')}</div></button>`;
+      return `<button data-character-id="${c.characterId}" class="${deployed?'chosen':''}${x.owned?'':' locked'}" style="--character-color:${r.color}" aria-label="${t('character.roster.aria',{name:t(c.nameKey),rarity:t(r.nameKey),state:x.owned?t('character.roster.levelState',{level:x.level}):t('common.notOwned')})}"><span class="roster-art-wrap">${GameArt.portrait(c.characterId)}<span class="roster-rarity">${t(r.shortKey)}</span>${deployed?`<span class="deployed-badge">${t('character.roster.deployed')}</span>`:''}${x.owned&&this.canGrow(campaign,c.characterId)?`<span class="growth-ready" aria-label="${t('character.roster.growable')}">↑</span>`:''}</span><div class="roster-copy"><b>${t(c.nameKey)}</b><small>${x.owned?`${'★'.repeat(x.star)} <span>${t('common.level',{n:x.level})}</span>`:t('common.notOwned')} </small>${GameArt.module(c.specialtyMissileId,'module-mini')}</div></button>`;
     }).join('')}</div>`;
   },
   render(campaign){
@@ -110,19 +110,20 @@ const CharacterLobbyUI={
         :(x.star>=CharacterGrowthRules.maxStars?t('character.detail.rankMax'):t('character.detail.rankCost',{n:CharacterGrowthSystem.shardCost(id,x)}));
       return `<button class="primary" data-character-action="${action}" ${locked||!ok||!payable?'disabled':''}>${label}<small>${detail}</small></button>`;
     };
-    $('#character-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${r.name}</span><h2 id="character-modal-title">${c.name}</h2><span class="character-stars">${'★'.repeat(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${IdentityTable[c.identityId]}</span><span>${RaceTable[c.raceId]}</span><span style="color:${def.color}">${t('character.detail.specialty',{module:def.label})}</span></div><div class="character-level-bar"><b>${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</b><div class="level-track"><span style="width:${x.level/CharacterGrowthRules.maxLevel*100}%"></span></div><span>${CharacterGrowthRules.maxLevel}</span></div><div class="character-stats">${[['atk','character.detail.statAtk'],['def','character.detail.statDef'],['hp','character.detail.statHp']].map(([k,labelKey])=>`<div><small>${t(labelKey)}</small><b>${I18N.num(stats[k])}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?t('character.detail.nextStat',{value:next[k]}):canRank?t('character.detail.rankUpStat',{value:rankNext[k]}):t('character.detail.baseStat')}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?t('character.detail.starPassive',{n:pv.need}):t('character.detail.innatePassive')}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(line=>`<li>${line}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${t('character.detail.shards',{name:c.name})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div>`:`<p class="meta-note">${t('character.detail.recruitHint',{rarity:r.name,pct:GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)})}</p>`}</div></div><div class="character-modal-footer">${x.owned?`<div class="character-actions">${button('levelUp',t('character.detail.levelUp'))}${button('rankUp',t('character.detail.rankUp'))}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?t('character.detail.deployed',{module:def.label}):t('character.detail.deploy')}</button>`:`<button class="primary character-deploy-button" data-go-recruit>${t('character.detail.goRecruit')}</button>`}</div>`;
+    $('#character-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="character-modal-hero">${GameArt.portrait(id)}<div class="character-hero-name"><span class="rarity-chip" style="--rarity-color:${r.color}">${t(r.nameKey)}</span><h2 id="character-modal-title">${t(c.nameKey)}</h2><span class="character-stars">${'★'.repeat(x.star)}</span></div></div><div class="character-modal-body"><div class="character-tags"><span>${t(IdentityTable[c.identityId])}</span><span>${t(RaceTable[c.raceId])}</span><span style="color:${def.color}">${t('character.detail.specialty',{module:t(def.labelKey)})}</span></div><div class="character-level-bar"><b>${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</b><div class="level-track"><span style="width:${x.level/CharacterGrowthRules.maxLevel*100}%"></span></div><span>${CharacterGrowthRules.maxLevel}</span></div><div class="character-stats">${[['atk','character.detail.statAtk'],['def','character.detail.statDef'],['hp','character.detail.statHp']].map(([k,labelKey])=>`<div><small>${t(labelKey)}</small><b>${I18N.num(stats[k])}</b><small>${x.owned&&CharacterGrowthSystem.allowed(x,'levelUp')?t('character.detail.nextStat',{value:next[k]}):canRank?t('character.detail.rankUpStat',{value:rankNext[k]}):t('character.detail.baseStat')}</small></div>`).join('')}</div>${passives.map(pv=>`<div class="character-modal-section character-modal-passive${pv.open?'':' passive-locked'}"><strong>${pv.need?t('character.detail.starPassive',{n:pv.need}):t('character.detail.innatePassive')}</strong><b>${pv.name}${pv.open?'':' 🔒'}</b><ul class="passive-lines">${pv.text.split(' / ').map(line=>`<li>${line}</li>`).join('')}</ul></div>`).join('')}${x.owned?`<div class="shard-line"><span>${t('character.detail.shards',{name:t(c.nameKey)})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+CharacterGrowthSystem.shardCost(id,x):''}</b></div>`:`<p class="meta-note">${t('character.detail.recruitHint',{rarity:t(r.nameKey),pct:GachaSystem.odds().find(o=>o.rarityId===c.rarityId).pct.toFixed(1)})}</p>`}</div></div><div class="character-modal-footer">${x.owned?`<div class="character-actions">${button('levelUp',t('character.detail.levelUp'))}${button('rankUp',t('character.detail.rankUp'))}</div><button class="secondary character-deploy-button" data-character-deploy ${locked||assigned?'disabled':''}>${assigned?t('character.detail.deployed',{module:t(def.labelKey)}):t('character.detail.deploy')}</button>`:`<button class="primary character-deploy-button" data-go-recruit>${t('character.detail.goRecruit')}</button>`}</div>`;
   },
 };
 
 // [2026-09-16] 확정(인철): 마일스톤은 한 번으로 끝나지 않고 반복한다. 목표·보상 수치는 CONFIG.meta.milestones.
 // 스테이지 돌파만 별불, 나머지는 골드다. 저장에는 항목별 수령 단계 수(milestoneClaims)만 남긴다.
+// [2026-09-18 세션 3B] 이름·설명은 문자열 키다. 표시 시점에 t()로 바꾼다.
 const MILESTONE_TABLE=[
-  {id:'stage_clear',icon:'⚑',name:'불씨 전선 돌파',description:'새로운 최고 스테이지 클리어',metric:'stagesCleared',currencyId:'starfire'},
-  {id:'waves',icon:'〽',name:'전선 유지',description:'WAVE 통과',metric:'waves',currencyId:'gold'},
-  {id:'bosses',icon:'♛',name:'강적 사냥',description:'보스 처치',metric:'bosses',currencyId:'gold'},
-  {id:'skills_used',icon:'✦',name:'전술 운용',description:'스킬 사용',metric:'skillsUsed',currencyId:'gold'},
-  {id:'orders',icon:'▤',name:'숙련된 제작자',description:'주문서 완료',metric:'orders',currencyId:'gold'},
-  {id:'merges',icon:'◆',name:'융합의 손길',description:'머지 성공',metric:'merges',currencyId:'gold'},
+  {id:'stage_clear',icon:'⚑',nameKey:'milestone.stage_clear.name',descKey:'milestone.stage_clear.desc',metric:'stagesCleared',currencyId:'starfire'},
+  {id:'waves',icon:'〽',nameKey:'milestone.waves.name',descKey:'milestone.waves.desc',metric:'waves',currencyId:'gold'},
+  {id:'bosses',icon:'♛',nameKey:'milestone.bosses.name',descKey:'milestone.bosses.desc',metric:'bosses',currencyId:'gold'},
+  {id:'skills_used',icon:'✦',nameKey:'milestone.skills_used.name',descKey:'milestone.skills_used.desc',metric:'skillsUsed',currencyId:'gold'},
+  {id:'orders',icon:'▤',nameKey:'milestone.orders.name',descKey:'milestone.orders.desc',metric:'orders',currencyId:'gold'},
+  {id:'merges',icon:'◆',nameKey:'milestone.merges.name',descKey:'milestone.merges.desc',metric:'merges',currencyId:'gold'},
 ];
 // [2026-09-16] 확정(인철): 반복이 안 되는 수집·승급 목표(스킬 4종 보유, 스킬 2성)는 목록에서 빼고
 // 판정 팩터만 남긴다. 플레이 패턴이 확정되면 목록에 다시 섞는다. progress()가 계속 계산한다.
@@ -157,7 +158,7 @@ const MilestoneSystem={
     if(!WalletSystem.earn(next,row.currencyId,st.total))return false;
     if(!campaign.commit(next))return false;
     Analytics.track('milestone_claim',{id,tier:st.tier+st.count});
-    campaign.render();MilestoneUI.render(campaign);GameFeedback.toast(t('milestone.toast.claimed',{currency:CurrencyTable[row.currencyId].name,amount:st.total}));return true;
+    campaign.render();MilestoneUI.render(campaign);GameFeedback.toast(t('milestone.toast.claimed',{currency:t(CurrencyTable[row.currencyId].nameKey),amount:st.total}));return true;
   },
   claimableCount(state){return MILESTONE_TABLE.filter(row=>this.claimable(state,row)).length;},
 };
@@ -187,18 +188,18 @@ const SkillLobbyUI={
       case 'defenseBuff': return t('skill.effect.defenseBuff',{pct:pct(v),sec:dur});
       case 'regen': return t('skill.effect.regen',{pct:pct(v),sec:dur,total:pct(v*dur)});
     }
-    return def.description;
+    return t(def.descKey);
   },
   statsText(key,x){const s=SkillGrowthSystem.stats(key,x);return t('skill.statsLine',{atk:s.atk,def:s.def,hp:s.hp});},
   render(campaign){
     const inv=campaign.state.skillInventory,equipped=inv.equipped;
     $('#skill-count').textContent=t('skill.count',{owned:SKILL_KEYS.filter(key=>inv.skills[key].owned).length,total:SKILL_KEYS.length});
-    const slotHtml=equipped.map((key,index)=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-slot" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-icon">${m.icon}</span><b>${t('skill.slotName',{index:index+1,name:d.name})}</b><small>${t('skill.slotLine',{level:x.level,effect:this.effectText(key,x)})}</small></button>`;}).join('');
-    $('#skill-lobby-content').innerHTML=`<div class="skill-equipped-panel"><strong>${t('skill.equipped.title')}</strong><div class="skill-equipped-grid">${slotHtml}</div></div><div class="skill-card-grid">${SKILL_KEYS.map(key=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-card${x.owned?'':' locked'}${equipped.includes(key)?' equipped':''}" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-level">${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</span><span class="skill-icon">${m.icon}</span><b>${d.name}</b><small>${x.owned?this.effectText(key,x):t('skill.card.locked')}</small><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div></button>`;}).join('')}</div>`;
+    const slotHtml=equipped.map((key,index)=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-slot" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-icon">${m.icon}</span><b>${t('skill.slotName',{index:index+1,name:t(d.nameKey)})}</b><small>${t('skill.slotLine',{level:x.level,effect:this.effectText(key,x)})}</small></button>`;}).join('');
+    $('#skill-lobby-content').innerHTML=`<div class="skill-equipped-panel"><strong>${t('skill.equipped.title')}</strong><div class="skill-equipped-grid">${slotHtml}</div></div><div class="skill-card-grid">${SKILL_KEYS.map(key=>{const x=inv.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key];return `<button class="skill-card${x.owned?'':' locked'}${equipped.includes(key)?' equipped':''}" data-skill-open="${key}" style="--skill-accent:${m.color}"><span class="skill-level">${x.owned?t('common.level',{n:x.level}):t('common.notOwned')}</span><span class="skill-icon">${m.icon}</span><b>${t(d.nameKey)}</b><small>${x.owned?this.effectText(key,x):t('skill.card.locked')}</small><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div></button>`;}).join('')}</div>`;
     $$('[data-skill-open]').forEach(button=>button.onclick=()=>this.open(campaign,button.dataset.skillOpen,button));
     const ready=SKILL_KEYS.some(key=>{const x=inv.skills[key];return SkillGrowthSystem.allowed(x,'levelUp')&&SkillGrowthSystem.costs(x).length>0&&WalletSystem.canPay(campaign.state,SkillGrowthSystem.costs(x))||SkillGrowthSystem.allowed(x,'rankUp')&&x.shards>=SkillGrowthSystem.shardCost(x);});
     $('#skill-nav-dot').hidden=!ready;
-    $('#home-skill-summary').innerHTML=equipped.map(key=>{const m=SKILL_DEFS[key];return `<span class="hs-skill-icon" style="--skill-accent:${m.color}">${m.icon}<em>${CONFIG.skills[key].name}</em></span>`;}).join('');
+    $('#home-skill-summary').innerHTML=equipped.map(key=>{const m=SKILL_DEFS[key];return `<span class="hs-skill-icon" style="--skill-accent:${m.color}">${m.icon}<em>${t(CONFIG.skills[key].nameKey)}</em></span>`;}).join('');
     if(this.selectedKey&&!$('#skill-modal').hidden)this.renderModal(campaign,this.selectedKey);
   },
   open(campaign,key,focus){this.selectedKey=key;this.lastFocus=focus||document.activeElement;this.renderModal(campaign,key);$('#skill-modal').hidden=false;$('#skill-modal').setAttribute('aria-hidden','false');},
@@ -206,7 +207,7 @@ const SkillLobbyUI={
   renderModal(campaign,key){
     const x=campaign.state.skillInventory.skills[key],d=CONFIG.skills[key],m=SKILL_DEFS[key],stats=SkillGrowthSystem.stats(key,x),nextStats=SkillGrowthSystem.stats(key,{...x,level:x.level+1}),equipped=campaign.state.skillInventory.equipped;
     const levelAllowed=SkillGrowthSystem.allowed(x,'levelUp'),rankAllowed=SkillGrowthSystem.allowed(x,'rankUp'),levelCost=SkillGrowthSystem.levelCost(x),rankCost=SkillGrowthSystem.shardCost(x);
-    $('#skill-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${d.name}</h2><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div><small>${x.owned?t('skill.detail.levelOfMax',{level:x.level,max:CharacterGrowthRules.maxLevel}):t('common.notOwned')}</small></div></div><div class="character-modal-section"><strong>${t('skill.detail.active')}</strong><p>${m.description}</p><b>${this.effectText(key,x)}</b><small>${t('skill.detail.cooldown',{sec:SkillGrowthSystem.cooldown(key),growth:d.growth==='duration'?t('skill.detail.growthDuration',{sec:d.durationPerStar}):t('skill.detail.growthEffect')})}</small></div><div class="character-modal-section"><strong>${t('skill.detail.stats')}</strong><div class="character-stats">${[['atk','skill.detail.statAtk'],['def','skill.detail.statDef'],['hp','skill.detail.statHp']].map(([s,labelKey])=>`<div><small>${t(labelKey)}</small><b>+${stats[s]}</b><small>${levelAllowed?t('skill.detail.nextStat',{value:nextStats[s]}):t('skill.detail.maxStat')}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${t('skill.detail.shards',{name:d.name})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div>`:`<p class="meta-note">${t('skill.detail.gachaHint')}</p>`}</div><div class="character-modal-footer">${x.owned?`<div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>${t('skill.detail.levelUp')}<small>${levelAllowed?t('skill.detail.levelCost',{amount:levelCost}):t('skill.detail.levelMax')}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>${t('skill.detail.rankUp')}<small>${t('skill.detail.rankCost',{n:rankCost})}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?t('skill.detail.slotEquipped',{n:slot+1}):t('skill.detail.slotEquip',{n:slot+1})}</button>`).join('')}</div>`:''}</div>`;
+    $('#skill-modal-content').innerHTML=`<div class="character-modal-scroll"><div class="skill-detail-head" style="--skill-accent:${m.color}"><div class="skill-detail-icon">${m.icon}</div><div><h2 id="skill-modal-title">${t(d.nameKey)}</h2><div class="skill-stars">${'★'.repeat(x.star)}${'☆'.repeat(CharacterGrowthRules.maxStars-x.star)}</div><small>${x.owned?t('skill.detail.levelOfMax',{level:x.level,max:CharacterGrowthRules.maxLevel}):t('common.notOwned')}</small></div></div><div class="character-modal-section"><strong>${t('skill.detail.active')}</strong><p>${t(m.descKey)}</p><b>${this.effectText(key,x)}</b><small>${t('skill.detail.cooldown',{sec:SkillGrowthSystem.cooldown(key),growth:d.growth==='duration'?t('skill.detail.growthDuration',{sec:d.durationPerStar}):t('skill.detail.growthEffect')})}</small></div><div class="character-modal-section"><strong>${t('skill.detail.stats')}</strong><div class="character-stats">${[['atk','skill.detail.statAtk'],['def','skill.detail.statDef'],['hp','skill.detail.statHp']].map(([s,labelKey])=>`<div><small>${t(labelKey)}</small><b>+${stats[s]}</b><small>${levelAllowed?t('skill.detail.nextStat',{value:nextStats[s]}):t('skill.detail.maxStat')}</small></div>`).join('')}</div></div>${x.owned?`<div class="shard-line"><span>${t('skill.detail.shards',{name:t(d.nameKey)})}</span><b>${x.shards}${x.star<CharacterGrowthRules.maxStars?' / '+rankCost:''}</b></div>`:`<p class="meta-note">${t('skill.detail.gachaHint')}</p>`}</div><div class="character-modal-footer">${x.owned?`<div class="skill-detail-actions"><button class="primary" data-skill-action="levelUp" ${!levelAllowed||WalletSystem.balance(campaign.state,'gold')<levelCost?'disabled':''}>${t('skill.detail.levelUp')}<small>${levelAllowed?t('skill.detail.levelCost',{amount:levelCost}):t('skill.detail.levelMax')}</small></button><button class="secondary" data-skill-action="rankUp" ${!rankAllowed||x.shards<rankCost?'disabled':''}>${t('skill.detail.rankUp')}<small>${t('skill.detail.rankCost',{n:rankCost})}</small></button></div><div class="skill-equip-actions">${Array.from({length:CONFIG.skillPickCount},(_,slot)=>slot).map(slot=>`<button class="secondary" data-skill-slot="${slot}">${equipped[slot]===key?t('skill.detail.slotEquipped',{n:slot+1}):t('skill.detail.slotEquip',{n:slot+1})}</button>`).join('')}</div>`:''}</div>`;
     $$('[data-skill-action]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.transact(campaign,key,button.dataset.skillAction)){this.renderModal(campaign,key);MilestoneUI.render(campaign);}});
     $$('[data-skill-slot]').forEach(button=>button.onclick=()=>{if(SkillGrowthSystem.equip(campaign,key,Number(button.dataset.skillSlot)))this.renderModal(campaign,key);});
   },
@@ -221,7 +222,7 @@ const MilestoneUI={
     if(ready.length){
       const totals={};
       ready.forEach(row=>{const st=MilestoneSystem.status(state,row);totals[row.currencyId]=(totals[row.currencyId]||0)+st.total;});
-      const reward=Object.entries(totals).map(([id,n])=>t('milestone.card.reward',{currency:CurrencyTable[id].name,amount:n})).join(' · ');
+      const reward=Object.entries(totals).map(([id,n])=>t('milestone.card.reward',{currency:t(CurrencyTable[id].nameKey),amount:n})).join(' · ');
       return {ready:true,text:t('milestone.strip.claim'),sub:t('milestone.strip.count',{n:ready.length}),pct:100,reward};
     }
     let best=null;
@@ -230,7 +231,7 @@ const MilestoneUI={
       if(!best||pct>best.pct)best={row,st,pct};
     });
     if(!best)return {ready:false,text:t('milestone.strip.none'),sub:'',pct:0};
-    return {ready:false,text:best.row.name,
+    return {ready:false,text:t(best.row.nameKey),
       sub:t('milestone.strip.progress',{current:best.st.current,need:best.st.need}),
       pct:Math.min(100,best.pct*100)};
   },
@@ -247,7 +248,7 @@ const MilestoneUI={
     const state=campaign.state;if(!state)return;const count=MilestoneSystem.claimableCount(state);
     $('#milestone-home-dot').hidden=!count;
     this.renderStrip(campaign);
-    $('#milestone-list').innerHTML=MILESTONE_TABLE.map(row=>{const st=MilestoneSystem.status(state,row),cur=CurrencyTable[row.currencyId].name,pct=Math.min(100,st.current/st.need*100);return `<article class="milestone-card${st.ready?' claimable':''}"><span class="milestone-icon">${row.icon}</span><div class="milestone-copy"><b>${row.name}<em class="milestone-tier">${t('milestone.tier',{n:st.tier+1})}</em></b><small>${t('milestone.card.progress',{description:row.description,current:st.current,need:st.need})}</small><div class="milestone-progress"><i style="width:${pct}%"></i></div><div class="milestone-reward">${t('milestone.card.reward',{currency:cur,amount:st.ready?st.total:st.reward})}${st.count>1?t('milestone.card.bulk',{n:st.count}):''}</div></div><button data-claim-milestone="${row.id}" ${st.ready?'':'disabled'}>${t(st.ready?'milestone.card.claim':'milestone.card.inProgress')}</button></article>`;}).join('');
+    $('#milestone-list').innerHTML=MILESTONE_TABLE.map(row=>{const st=MilestoneSystem.status(state,row),cur=t(CurrencyTable[row.currencyId].nameKey),pct=Math.min(100,st.current/st.need*100);return `<article class="milestone-card${st.ready?' claimable':''}"><span class="milestone-icon">${row.icon}</span><div class="milestone-copy"><b>${t(row.nameKey)}<em class="milestone-tier">${t('milestone.tier',{n:st.tier+1})}</em></b><small>${t('milestone.card.progress',{description:t(row.descKey),current:st.current,need:st.need})}</small><div class="milestone-progress"><i style="width:${pct}%"></i></div><div class="milestone-reward">${t('milestone.card.reward',{currency:cur,amount:st.ready?st.total:st.reward})}${st.count>1?t('milestone.card.bulk',{n:st.count}):''}</div></div><button data-claim-milestone="${row.id}" ${st.ready?'':'disabled'}>${t(st.ready?'milestone.card.claim':'milestone.card.inProgress')}</button></article>`;}).join('');
     $$('[data-claim-milestone]').forEach(button=>button.onclick=()=>MilestoneSystem.claim(campaign,button.dataset.claimMilestone));
   },
 };

@@ -15,7 +15,8 @@ const NORMAL_COUNT_CURVE = { startWave: 5, endWave: 29, startCount: 8, endCount:
 // 적 타입 목록의 단일 소스. WAVE 구성·위협 예산·스폰·보스 HP가 모두 이 순서를 공유한다.
 // CONFIG.enemy.types의 키와 같아야 하며, 타입을 늘릴 때 여기와 CONFIG 양쪽을 함께 고친다.
 const ENEMY_TYPE_KEYS = ['melee','ranged','tank'];
-const ENEMY_TYPE_LABELS = { melee:'근접', ranged:'원거리', tank:'탱커' };
+// 표시 이름은 문자열 테이블에 있다. 여기에는 키만 둔다(세션 3B).
+const ENEMY_TYPE_NAME_KEYS = { melee:'enemy.type.melee', ranged:'enemy.type.ranged', tank:'enemy.type.tank' };
 
 // [2026-09-09 주석 정정] 기존 12웨이브 표의 증가 패턴을 그 스테이지의 총 WAVE 수까지 확장한다.
 // 총 WAVE 수는 buildStageWaves의 total 인자로 들어오며, 현재 상한은 DEFAULT_STAGE_COUNT(30)다.
@@ -79,17 +80,17 @@ function normalCompositionForStage(stage,curve=NORMAL_COUNT_CURVE){
    동시에 만족시킬 수 없어서이며, 물량전이 가장 위험한 WAVE가 되는 것은 의도한 결과다.
    ===================================================================== */
 const WAVE_ARCHETYPES = {
-  fortress:{ short:'탱커',   label:'탱커전',      mix:{tank:1},          budgetMul:1.00, speedMul:1.0,
+  fortress:{ shortKey:'wave.fortress.short', labelKey:'wave.fortress.label', mix:{tank:1},          budgetMul:1.00, speedMul:1.0,
     timing:{ spawnTimesSec:[0], spawnRatios:[1], durationSec:14 } },
-  rush:    { short:'돌격',   label:'돌격전',      mix:{melee:1},         budgetMul:0.70, speedMul:1.4,
+  rush:    { shortKey:'wave.rush.short',     labelKey:'wave.rush.label',     mix:{melee:1},         budgetMul:0.70, speedMul:1.4,
     timing:{ spawnTimesSec:[0], spawnRatios:[1], durationSec:7 } },
-  siege:   { short:'원거리', label:'원거리 압박', mix:{melee:1,ranged:3}, budgetMul:1.00, speedMul:1.0,
+  siege:   { shortKey:'wave.siege.short',    labelKey:'wave.siege.label',    mix:{melee:1,ranged:3}, budgetMul:1.00, speedMul:1.0,
     timing:{ spawnTimesSec:[0,2], spawnRatios:[0.40,0.60], durationSec:11 } },
   // 4배치로 끊임없이 밀려온다. 간격 1초·길이 11초는 마지막 배치(7초 도달)까지 전원이
   // 공격 기회를 얻는 가장 긴 조합이다 — 간격을 더 벌리면 뒷배치가 도달 전에 WAVE가 끝난다.
-  horde:   { short:'물량',   label:'물량전',      mix:{melee:1},         budgetMul:1.00, speedMul:1.0,
+  horde:   { shortKey:'wave.horde.short',    labelKey:'wave.horde.label',    mix:{melee:1},         budgetMul:1.00, speedMul:1.0,
     timing:{ spawnTimesSec:[0,1,2,3], spawnRatios:[0.25,0.25,0.25,0.25], durationSec:11 } },
-  standard:{ short:'혼성',   label:'혼성',        mix:null,              budgetMul:1.00, speedMul:1.0, timing:null },
+  standard:{ shortKey:'wave.standard.short', labelKey:'wave.standard.label', mix:null,              budgetMul:1.00, speedMul:1.0, timing:null },
 };
 // [2026-09-17 2차] 확정(인철): 탱커 → 돌격 → 원거리 → 물량 → 혼성 → 보스 6슬롯 루프.
 // 보스가 루프 안에 들어가므로 보스 주기가 4WAVE에서 6WAVE로 바뀐다. 30 WAVE는 6의 배수라
@@ -135,12 +136,17 @@ function waveTimingFor(waveCfg){
 function waveSpeedMul(waveCfg){ return Number(WAVE_ARCHETYPES[waveCfg?.archetype]?.speedMul)||1; }
 // WAVE 종류 표기. 보스 WAVE는 아키타입이 없으므로 여기서 함께 처리한다.
 // form='short'는 전장 좌상단 배지용(폭이 좁다), 'label'은 행동 로그용이다.
-const BOSS_WAVE_NAMES = { midboss:{short:'보스', label:'보스전'}, finalboss:{short:'최종보스', label:'최종보스전'} };
+const BOSS_WAVE_NAMES = {
+  midboss:  {shortKey:'wave.midboss.short',   labelKey:'wave.midboss.label'},
+  finalboss:{shortKey:'wave.finalboss.short', labelKey:'wave.finalboss.label'},
+};
+// 정의에는 키만 있고 여기서 현재 언어로 바꿔 돌려준다 — 호출부는 form만 고르면 된다.
 function waveTypeName(waveCfg, form='short'){
   if(!waveCfg) return '';
+  const field=form==='label'?'labelKey':'shortKey';
   const boss=BOSS_WAVE_NAMES[waveCfg.type];
-  if(boss) return boss[form];
-  return (WAVE_ARCHETYPES[waveCfg.archetype] ?? WAVE_ARCHETYPES.standard)[form];
+  const source=boss ?? (WAVE_ARCHETYPES[waveCfg.archetype] ?? WAVE_ARCHETYPES.standard);
+  return t(source[field]);
 }
 
 // [2026-09-04] bossEnergy 제거 — 에너지는 처치 점수(ScoreSystem)로만 지급한다.
@@ -195,32 +201,32 @@ function buildBossCompositions(total=DEFAULT_STAGE_COUNT, curve=NORMAL_COUNT_CUR
    ===================================================================== */
 const MISSILE_DEFS = {
   chain:{
-    label:'연쇄', icon:'ϟ', color:'#5EDBF4',
-    special:{stat:'targets',label:'추가 타깃',icon:'ϟ',table:'targetBonusByLevel',base:'baseTargets'},
+    labelKey:'missile.chain.label', icon:'ϟ', color:'#5EDBF4',
+    special:{stat:'targets',labelKey:'missile.chain.stat',icon:'ϟ',table:'targetBonusByLevel',base:'baseTargets'},
     designatedColors:{damage:'blue',speed:'red',targets:'yellow'},
     fire:{mode:'projectile',option:'chainTargets',motion:'homing'},
     hit:'chain',
     render:{shape:'bolt'},
   },
   explosion:{
-    label:'폭발', icon:'●', color:'#F77A3D',
-    special:{stat:'radius',label:'폭발 범위',icon:'◎',table:'radiusBonusByLevel',base:'baseRadius'},
+    labelKey:'missile.explosion.label', icon:'●', color:'#F77A3D',
+    special:{stat:'radius',labelKey:'missile.explosion.stat',icon:'◎',table:'radiusBonusByLevel',base:'baseRadius'},
     designatedColors:{damage:'red',speed:'green',radius:'yellow'},
     fire:{mode:'projectile',option:'radius',motion:'homing'},
     hit:'splash',
     render:{shape:'orb',radius:6},
   },
   scatter:{
-    label:'산탄', icon:'✣', color:'#48C986',
-    special:{stat:'projectiles',label:'발사 수',icon:'✣',table:'projectileBonusByLevel',base:'baseProjectiles'},
+    labelKey:'missile.scatter.label', icon:'✣', color:'#48C986',
+    special:{stat:'projectiles',labelKey:'missile.scatter.stat',icon:'✣',table:'projectileBonusByLevel',base:'baseProjectiles'},
     designatedColors:{damage:'green',speed:'blue',projectiles:'purple'},
     fire:{mode:'method',method:'fireScatter',motion:'linear'},
     hit:'single',
     render:{shape:'orb',radius:4},
   },
   laser:{
-    label:'레이저', icon:'━', color:'#A876E8',
-    special:{stat:'width',label:'광선 폭',icon:'▬',table:'widthBonusByLevel',base:'baseWidth'},
+    labelKey:'missile.laser.label', icon:'━', color:'#A876E8',
+    special:{stat:'width',labelKey:'missile.laser.stat',icon:'▬',table:'widthBonusByLevel',base:'baseWidth'},
     designatedColors:{damage:'blue',speed:'purple',width:'green'},
     fire:{mode:'method',method:'fireLaser',motion:'instant'},
     hit:null,          // 즉시 판정 — 비행하는 투사체가 없다
@@ -245,17 +251,17 @@ function missileDesignatedColors(){
    새 스킬은 여기와 CONFIG.skills에만 추가한다. 새 처리 방식일 때만 EFFECTS/SKILL_FX에 항목을 더한다.
    ===================================================================== */
 const SKILL_DEFS = {
-  strong_single:{ name:'분쇄창', description:'가장 강한 적에게 고화력 투사체를 발사합니다.', icon:'➤', color:'#F77A3D', damageColor:'#A876E8', effect:'projectile', requires:'enemy', fx:'lance' },
-  aoe:          { name:'낙뢰 폭격', description:'현재 전장의 모든 적을 동시에 공격합니다.', icon:'✦', color:'#DDB86A', effect:'damageAll', requires:'enemy', fx:'bombard' },
-  defense:      { name:'용광 방벽', description:'일정 시간 용광로 핵이 받는 피해를 줄입니다.', icon:'◆', color:'#5EDBF4', effect:'damageReduction', requires:null, fx:'shield' },
-  heal:         { name:'재생 불씨', description:'용광로 핵의 최대 체력 일부를 회복합니다.', icon:'✚', color:'#5CCB8A', effect:'heal', requires:'missingHp', fx:'heal' },
-  energy_surge: { name:'불씨 충전', description:'에너지를 즉시 얻습니다.', icon:'⚡', color:'#5EDBF4', effect:'energy', requires:null, fx:'energy' },
-  attack_buff:  { name:'달군 칼날', description:'일정 시간 일반 공격력(기본 공격·미사일)을 높입니다. 스킬 피해에는 적용되지 않습니다.', icon:'⚔', color:'#F77A3D', effect:'attackBuff', requires:null, fx:'aura' },
-  defense_buff: { name:'강철 외피', description:'일정 시간 수호자들의 방어력을 높입니다.', icon:'⛨', color:'#B7B7AC', effect:'defenseBuff', requires:null, fx:'aura' },
-  stun:         { name:'굉음 충격', description:'모든 적에게 피해를 주고 잠시 기절시킵니다.', icon:'✺', color:'#DDB86A', effect:'damageAll', control:'stun', requires:'enemy', fx:'control' },
-  slow:         { name:'슬래그 늪', description:'모든 적에게 피해를 주고 이동속도와 공격속도를 낮춥니다.', icon:'≋', color:'#5EDBF4', effect:'damageAll', control:'slow', requires:'enemy', fx:'control' },
-  knockback:    { name:'열풍 분출', description:'모든 적에게 피해를 주고 용광로 핵에서 멀리 밀어냅니다.', icon:'➹', color:'#F2645A', damageColor:'#F77A3D', effect:'damageAll', control:'knockback', requires:'enemy', fx:'control' },
-  regen:        { name:'치유 잔불', description:'일정 시간 매초 용광로 핵의 최대 체력 일부를 회복합니다.', icon:'❋', color:'#5CCB8A', effect:'regen', requires:'missingHp', fx:'aura' },
+  strong_single:{ nameKey:'skill.strong_single.name', descKey:'skill.strong_single.desc', icon:'➤', color:'#F77A3D', damageColor:'#A876E8', effect:'projectile', requires:'enemy', fx:'lance' },
+  aoe:          { nameKey:'skill.aoe.name', descKey:'skill.aoe.desc', icon:'✦', color:'#DDB86A', effect:'damageAll', requires:'enemy', fx:'bombard' },
+  defense:      { nameKey:'skill.defense.name', descKey:'skill.defense.desc', icon:'◆', color:'#5EDBF4', effect:'damageReduction', requires:null, fx:'shield' },
+  heal:         { nameKey:'skill.heal.name', descKey:'skill.heal.desc', icon:'✚', color:'#5CCB8A', effect:'heal', requires:'missingHp', fx:'heal' },
+  energy_surge: { nameKey:'skill.energy_surge.name', descKey:'skill.energy_surge.desc', icon:'⚡', color:'#5EDBF4', effect:'energy', requires:null, fx:'energy' },
+  attack_buff:  { nameKey:'skill.attack_buff.name', descKey:'skill.attack_buff.desc', icon:'⚔', color:'#F77A3D', effect:'attackBuff', requires:null, fx:'aura' },
+  defense_buff: { nameKey:'skill.defense_buff.name', descKey:'skill.defense_buff.desc', icon:'⛨', color:'#B7B7AC', effect:'defenseBuff', requires:null, fx:'aura' },
+  stun:         { nameKey:'skill.stun.name', descKey:'skill.stun.desc', icon:'✺', color:'#DDB86A', effect:'damageAll', control:'stun', requires:'enemy', fx:'control' },
+  slow:         { nameKey:'skill.slow.name', descKey:'skill.slow.desc', icon:'≋', color:'#5EDBF4', effect:'damageAll', control:'slow', requires:'enemy', fx:'control' },
+  knockback:    { nameKey:'skill.knockback.name', descKey:'skill.knockback.desc', icon:'➹', color:'#F2645A', damageColor:'#F77A3D', effect:'damageAll', control:'knockback', requires:'enemy', fx:'control' },
+  regen:        { nameKey:'skill.regen.name', descKey:'skill.regen.desc', icon:'❋', color:'#5CCB8A', effect:'regen', requires:'missingHp', fx:'aura' },
 };
 const SKILL_KEYS = Object.keys(SKILL_DEFS);
 const SKILL_DAMAGE_EFFECTS = ['projectile','damageAll'];
@@ -388,7 +394,7 @@ const DEFAULT_CONFIG = {
   // 파워업 주문서와 스킬 주문서로 나눠야해" (인철). 색깔 개수는 에디터에서 조정.
   colors: {
     names:  ['red','blue','green','yellow','purple'],
-    labels: { red:'빨강', blue:'파랑', green:'초록', yellow:'노랑', purple:'보라' },
+    labelKeys: { red:'color.red', blue:'color.blue', green:'color.green', yellow:'color.yellow', purple:'color.purple' },
     count: 5,      // 활성 색깔 수(3~5) — 3색 주문서를 위해 최소 3종 필요
     maxTier: 4,    // 피스 최대 티어(T1~T4) — 기존 파워업 4티어 체계를 그대로 승계
   },
@@ -398,7 +404,7 @@ const DEFAULT_CONFIG = {
     damageBonusByLevel: [0.10,0.18,0.25,0.35,0.45,0.58,0.72,0.88,1.06,1.26,1.48,1.72],
     speedBonusByLevel:  [0.08,0.13,0.18,0.24,0.30,0.37,0.44,0.52,0.60,0.69,0.78,0.88],
     chain: {
-      label:MISSILE_DEFS.chain.label, color:MISSILE_DEFS.chain.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.chain.labelKey, color:MISSILE_DEFS.chain.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
       baseTargets:2, targetBonusByLevel:[1,2,3,4,5,6,7,8,9,10,11,12],
       // [2026-09-14] 확정(인철): 미사일 고유 규칙은 기본 동작이 아니라 캐릭터 고정 패시브로만
       // 켜진다 — "이 훅들이 기본값이면 안되 이건 패시브 스킬로 쓸 훅들이야". 그래서 아래 전역
@@ -407,13 +413,13 @@ const DEFAULT_CONFIG = {
       unusedTargetBonus:0,
     },
     explosion: {
-      label:MISSILE_DEFS.explosion.label, color:MISSILE_DEFS.explosion.color, baseDamageMul:1.20, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.explosion.labelKey, color:MISSILE_DEFS.explosion.color, baseDamageMul:1.20, baseAttacksPerSec:1.00,
       baseRadius:42, radiusBonusByLevel:[4,8,12,16,20,24,28,32,36,40,44,48],
       // [2026-09-14] 2차 폭발. 전역 기본값 0 — 캐릭터 패시브로만 켜진다.
       secondary:{ damagePct:0, radiusPct:0 },
     },
     scatter: {
-      label:MISSILE_DEFS.scatter.label, color:MISSILE_DEFS.scatter.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.scatter.labelKey, color:MISSILE_DEFS.scatter.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
       // [2026-09-07] 확정(인철): 산탄은 활성화 즉시 중앙·좌·우 3발로 시작한다. 중앙 1발만 나가면
       // 산탄이라는 이름의 의미가 없다. 발사 수 옵션 최초 적용에 1발을 보정하던 처리는 제거하고,
       // 강화는 아래 증가량을 그대로 누적한다 — Lv.1 반복 기준 3→4→5…
@@ -428,7 +434,7 @@ const DEFAULT_CONFIG = {
     // 레이저는 이동시간 없이 직선상의 적을 즉시 타격하며 단일 대상에도 온전히 유효해서,
     // 연쇄·폭발·산탄의 전용 옵션이 보스전에서 무효인 문제를 미사일 구성 단계에서 보완한다.
     laser: {
-      label:MISSILE_DEFS.laser.label, color:MISSILE_DEFS.laser.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.laser.labelKey, color:MISSILE_DEFS.laser.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
       baseWidth:10, widthBonusByLevel:[2,4,6,8,10,12,14,16,18,20,22,24],
       // [2026-09-14] 강화 발동. 전역 기본값 0 — 캐릭터 패시브로만 켜진다.
       empowered:{ chance:0, damagePct:0, widthPct:0 },
@@ -492,13 +498,13 @@ const DEFAULT_CONFIG = {
   // 이름·설명·분류·아이콘은 SKILL_DEFS에 있고 여기는 조정 수치만 둔다(미사일의 MISSILE_DEFS/attackModules와 같은 구조).
   skillPickCount: 2,
   skills: {
-    strong_single: { name:SKILL_DEFS.strong_single.name, baseEffect:4.00, cooldownSec:24,
+    strong_single: { nameKey:SKILL_DEFS.strong_single.nameKey, baseEffect:4.00, cooldownSec:24,
       stats:{base:{atk:60,def:0,hp:0},perLevel:{atk:8,def:0,hp:0}} },
-    aoe:           { name:SKILL_DEFS.aoe.name, baseEffect:2.00, cooldownSec:30,
+    aoe:           { nameKey:SKILL_DEFS.aoe.nameKey, baseEffect:2.00, cooldownSec:30,
       stats:{base:{atk:45,def:0,hp:15},perLevel:{atk:6,def:0,hp:3}} },
-    defense:       { name:SKILL_DEFS.defense.name, baseEffect:0.1017, durationSec:5, cooldownSec:40,
+    defense:       { nameKey:SKILL_DEFS.defense.nameKey, baseEffect:0.1017, durationSec:5, cooldownSec:40,
       stats:{base:{atk:0,def:1,hp:30},perLevel:{atk:0,def:0.25,hp:5}} },
-    heal:          { name:SKILL_DEFS.heal.name, baseEffect:0.1083, cooldownSec:36,
+    heal:          { nameKey:SKILL_DEFS.heal.nameKey, baseEffect:0.1083, cooldownSec:36,
       stats:{base:{atk:0,def:0,hp:45},perLevel:{atk:0,def:0.15,hp:7}} },
     // [2026-09-16] 신규 7종. 확정(인철): 제어(스턴·감속·넉백)는 성급이 피해를 올리고, 버프·지속 회복은 성급마다
     // 지속 +1초. 피해 계수 스턴 < 넉백 < 감속, 지속 회복 1회 총량 > 재생 불씨. 제어는 보스에게도 그대로 적용.
@@ -507,19 +513,19 @@ const DEFAULT_CONFIG = {
     // ASSUMPTION: 아래 수치는 전부 Claude 가안(인철 위임). 근거는 implNotes v0916_4.
     // [2026-09-17] 확정(인철): 에너지를 얻는 스킬이 에너지를 소모하는 것은 이해가 충돌한다.
     // energyFree로 비용을 면제하고, 대신 쿨타임을 2배(40→80)로 늘려 가치를 되받는다.
-    energy_surge:  { name:SKILL_DEFS.energy_surge.name, baseEffect:5, growth:'effect', cooldownSec:80, energyFree:true,
+    energy_surge:  { nameKey:SKILL_DEFS.energy_surge.nameKey, baseEffect:5, growth:'effect', cooldownSec:80, energyFree:true,
       stats:{base:{atk:30,def:0,hp:20},perLevel:{atk:4,def:0,hp:3}} },
-    attack_buff:   { name:SKILL_DEFS.attack_buff.name, baseEffect:0.25, growth:'duration', durationSec:5, durationPerStar:1, cooldownSec:23.6,
+    attack_buff:   { nameKey:SKILL_DEFS.attack_buff.nameKey, baseEffect:0.25, growth:'duration', durationSec:5, durationPerStar:1, cooldownSec:23.6,
       stats:{base:{atk:55,def:0,hp:0},perLevel:{atk:7,def:0,hp:0}} },
-    defense_buff:  { name:SKILL_DEFS.defense_buff.name, baseEffect:1.00, growth:'duration', durationSec:5, durationPerStar:1, cooldownSec:23.6,
+    defense_buff:  { nameKey:SKILL_DEFS.defense_buff.nameKey, baseEffect:1.00, growth:'duration', durationSec:5, durationPerStar:1, cooldownSec:23.6,
       stats:{base:{atk:0,def:1,hp:25},perLevel:{atk:0,def:0.25,hp:4}} },
-    stun:          { name:SKILL_DEFS.stun.name, baseEffect:0.80, growth:'effect', stunSec:2, cooldownSec:36,
+    stun:          { nameKey:SKILL_DEFS.stun.nameKey, baseEffect:0.80, growth:'effect', stunSec:2, cooldownSec:36,
       stats:{base:{atk:40,def:0,hp:10},perLevel:{atk:5,def:0,hp:2}} },
-    slow:          { name:SKILL_DEFS.slow.name, baseEffect:1.20, growth:'effect', slowPct:0.40, slowSec:4, cooldownSec:32,
+    slow:          { nameKey:SKILL_DEFS.slow.nameKey, baseEffect:1.20, growth:'effect', slowPct:0.40, slowSec:4, cooldownSec:32,
       stats:{base:{atk:40,def:0,hp:10},perLevel:{atk:5,def:0,hp:2}} },
-    knockback:     { name:SKILL_DEFS.knockback.name, baseEffect:1.00, growth:'effect', knockbackPx:45, cooldownSec:32,
+    knockback:     { nameKey:SKILL_DEFS.knockback.nameKey, baseEffect:1.00, growth:'effect', knockbackPx:45, cooldownSec:32,
       stats:{base:{atk:40,def:0,hp:10},perLevel:{atk:5,def:0,hp:2}} },
-    regen:         { name:SKILL_DEFS.regen.name, baseEffect:0.02, growth:'duration', durationSec:6, durationPerStar:1, cooldownSec:25.8,
+    regen:         { nameKey:SKILL_DEFS.regen.nameKey, baseEffect:0.02, growth:'duration', durationSec:6, durationPerStar:1, cooldownSec:25.8,
       stats:{base:{atk:0,def:0,hp:45},perLevel:{atk:0,def:0.15,hp:7}} },
   },
   enemy: {

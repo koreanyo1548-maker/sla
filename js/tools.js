@@ -23,8 +23,8 @@ function buildGameManual(){
   const maxLevel=CharacterGrowthRules.maxLevel;
   const gacha=CONFIG.meta.gacha, stamina=CAMPAIGN_CONFIG;
   const stageWaves=[1,2,3].map(id=>campaignStage(id).waves).join('·');
-  const travel=ENEMY_TYPE_KEYS.map(k=>`${ENEMY_TYPE_LABELS[k]} ${CONFIG.enemy.types[k].travelTimeSec}초`).join(' · ');
-  const loop=ARCHETYPE_LOOP.map(k=>k===BOSS_SLOT?'보스':WAVE_ARCHETYPES[k].short).join(' → ');
+  const travel=ENEMY_TYPE_KEYS.map(k=>`${t(ENEMY_TYPE_NAME_KEYS[k])} ${CONFIG.enemy.types[k].travelTimeSec}초`).join(' · ');
+  const loop=ARCHETYPE_LOOP.map(k=>t(k===BOSS_SLOT?BOSS_WAVE_NAMES.midboss.shortKey:WAVE_ARCHETYPES[k].shortKey)).join(' → ');
   const durations=Object.values(WAVE_ARCHETYPES).map(a=>a.timing?.durationSec ?? CONFIG.waveTiming.durationSec);
   const dopamine=[
     CONFIG.featureFlags.criticalMerge&&CONFIG.criticalMerge.chance>0
@@ -51,7 +51,7 @@ function buildGameManual(){
     { title: '③ 스킬', body: [
       `로비에서 고른 ${CONFIG.skillPickCount}종이 전장 오른쪽 아래에 나온다. 쿨타임이 길어 타이밍이 중요하다.`,
       `스킬은 <b>에너지를 쓴다</b>. 각 스킬의 첫 사용은 ${CONFIG.skillEnergy.firstCost}이고, 그 스킬을 쓸 때마다 ${CONFIG.skillEnergy.costStep}씩 올라간다(${[0,1,2,3].map(n=>CONFIG.skillEnergy.firstCost+n*CONFIG.skillEnergy.costStep).join(' → ')} …). 비용은 스킬마다 따로 쌓이고 한 판 동안 내려가지 않는다. 버튼에 다음 비용이 표시된다.`,
-      `${SKILL_KEYS.filter(k=>CONFIG.skills[k]?.energyFree).map(k=>`<b>${CONFIG.skills[k].name}</b>`).join(' · ')}은 예외로 에너지를 쓰지 않는다. 대신 쿨타임이 길다.`,
+      `${SKILL_KEYS.filter(k=>CONFIG.skills[k]?.energyFree).map(k=>`<b>${t(CONFIG.skills[k].nameKey)}</b>`).join(' · ')}은 예외로 에너지를 쓰지 않는다. 대신 쿨타임이 길다.`,
       `전체 ${SKILL_KEYS.length}종이 공격 · 제어(스턴/감속/밀어내기) · 강화 · 회복 · 에너지로 나뉜다. 제어는 보스에게도 걸린다.`,
       '공격 스킬의 피해는 그때까지 쌓은 공격력 강화를 함께 반영한다 — 강화가 붙을수록 스킬도 세진다.',
     ]},
@@ -131,12 +131,14 @@ class TutorialSystem {
     this.active=true;
     this.setStep('energy');
   }
+  /* [2026-09-18 세션 3B] 문구는 문자열 테이블에 있고 여기에는 키와 자리표시자 값만 둔다.
+     CONFIG 수치를 문장에 박지 않으므로 밸런스를 바꿔도 안내가 따로 낡지 않는다. */
   data(){
     return {
-      energy:{index:'1 / 4',title:'에너지로 피스를 만드세요',body:`생성기를 누르면 에너지 ${CONFIG.generator.costPerPiece}을 사용해 피스가 생성됩니다.\n적을 처치해 ${CONFIG.scoring.pointsPerGrant}점을 채우면 에너지 ${CONFIG.scoring.energyPerGrant}을 받습니다.`,targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
-      order:{index:'2 / 4',title:'주문서에 필요한 피스를 모으세요',body:'주문서에 표시된 색의 피스를 보드에 준비하세요.\n같은 색과 같은 티어의 피스는 합칠 수 있습니다.',targets:['#order-sheet-panel','#board'],anchor:'#order-sheet-panel'},
-      ready:{index:'3 / 4',title:'주문서를 완성하세요',body:'조건이 충족되었습니다.\n빛나는 주문서를 누르면 영웅이 소환됩니다.\n같은 미사일의 다음 주문서는 영웅을 강화합니다.',targets:['.order-card.ready'],anchor:'.order-card.ready'},
-      skill:{index:'4 / 4',title:'스킬은 에너지를 쓰고 쿨타임이 흐릅니다',body:`로비에서 장착한 스킬입니다. 버튼에 표시된 에너지를 소모하며, 같은 스킬을 쓸수록 비용이 ${CONFIG.skillEnergy.costStep}씩 올라갑니다.`,targets:['#skill-row'],anchor:'#skill-row'},
+      energy:{index:'1 / 4',titleKey:'tutorial.energy.title',bodyKey:'tutorial.energy.body',params:{cost:CONFIG.generator.costPerPiece,points:CONFIG.scoring.pointsPerGrant,energy:CONFIG.scoring.energyPerGrant},targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
+      order:{index:'2 / 4',titleKey:'tutorial.order.title',bodyKey:'tutorial.order.body',targets:['#order-sheet-panel','#board'],anchor:'#order-sheet-panel'},
+      ready:{index:'3 / 4',titleKey:'tutorial.ready.title',bodyKey:'tutorial.ready.body',targets:['.order-card.ready'],anchor:'.order-card.ready'},
+      skill:{index:'4 / 4',titleKey:'tutorial.skill.title',bodyKey:'tutorial.skill.body',params:{step:CONFIG.skillEnergy.costStep},targets:['#skill-row'],anchor:'#skill-row'},
     }[this.step];
   }
   setStep(step){
@@ -156,9 +158,9 @@ class TutorialSystem {
     d.targets.forEach(selector=>document.querySelectorAll(selector).forEach(el=>{
       el.classList.add('tutorial-focus');this.focused.push(el);
     }));
-    $('#tutorial-step').textContent=`튜토리얼 ${d.index}`;
-    $('#tutorial-title').textContent=d.title;
-    $('#tutorial-body').textContent=d.body;
+    $('#tutorial-step').textContent=t('tutorial.step',{index:d.index});
+    $('#tutorial-title').textContent=t(d.titleKey);
+    $('#tutorial-body').textContent=t(d.bodyKey,d.params);
     layer.hidden=false;
     requestAnimationFrame(()=>this.placeCard(document.querySelector(d.anchor)));
   }

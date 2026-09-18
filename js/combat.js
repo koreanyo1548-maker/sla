@@ -311,11 +311,16 @@ const COMBAT_FACTOR_KEYS = [
   'defenseIgnore','pierceRate','attackSpeedPct','bossDamagePct',
 ];
 // 전투 팩터 표시 이름. 밸런스 에디터는 '증가율'이 붙은 긴 이름, 패시브 문구는 짧은 이름을 쓴다.
+// [2026-09-18 세션 3B] 표시 문구가 아니라 문자열 키를 담는다.
 const COMBAT_FACTOR_LABELS = {
-  attackPct:{short:'공격력',long:'공격력 증가율'}, damagePct:{short:'피해량',long:'피해량 증가율'},
-  critChance:{short:'치명타율',long:'치명타율'}, critDamagePct:{short:'치명타 피해',long:'치명타 피해량'},
-  defenseIgnore:{short:'방어 무시율',long:'방어 무시율'}, pierceRate:{short:'관통 피해율',long:'관통 피해율'},
-  attackSpeedPct:{short:'공격속도',long:'공격속도 증가율'}, bossDamagePct:{short:'보스 피해',long:'보스 피해 증가율'},
+  attackPct:{shortKey:'factor.attackPct.short',longKey:'factor.attackPct.long'},
+  damagePct:{shortKey:'factor.damagePct.short',longKey:'factor.damagePct.long'},
+  critChance:{shortKey:'factor.critChance.short',longKey:'factor.critChance.long'},
+  critDamagePct:{shortKey:'factor.critDamagePct.short',longKey:'factor.critDamagePct.long'},
+  defenseIgnore:{shortKey:'factor.defenseIgnore.short',longKey:'factor.defenseIgnore.long'},
+  pierceRate:{shortKey:'factor.pierceRate.short',longKey:'factor.pierceRate.long'},
+  attackSpeedPct:{shortKey:'factor.attackSpeedPct.short',longKey:'factor.attackSpeedPct.long'},
+  bossDamagePct:{shortKey:'factor.bossDamagePct.short',longKey:'factor.bossDamagePct.long'},
 };
 function freshCombatFactors(){
   return Object.fromEntries(COMBAT_FACTOR_KEYS.map(key=>[key,0]));
@@ -584,7 +589,7 @@ class SkillSystem {
   // 플레이어 입력 진입점 — 성공 발동한 경우에만 개별 쿨타임을 시작한다.
   activate(skillKey){
     const reason = this.blockReason(skillKey);
-    if(reason){ logAction(`${CONFIG.skills[skillKey]?.name||'스킬'} 사용 불가 (${reason})`); return false; }
+    if(reason){ logAction(`${CONFIG.skills[skillKey]?.nameKey||'skill'} 사용 불가 (${reason})`); return false; }
     // 비용은 발동이 확정된 뒤에 뺀다 — use()가 false를 돌려주면 에너지를 잃지 않는다.
     const cost=this.energyCost(skillKey);
     if(!this.use(skillKey)) return false;
@@ -607,7 +612,7 @@ class SkillSystem {
     const detail=SkillSystem.EFFECTS[SKILL_DEFS[skillKey].effect](this,skillKey,entry,cfg);
     if(detail===false) return false;
     Analytics.track('skill_used',{skill:skillKey,wave:this.game.currentWaveCfg?.wave||0});
-    logAction(`${cfg.name} ${entry.star}성 → ${detail}`);
+    logAction(`${cfg.nameKey} ${entry.star}성 → ${detail}`);
     return true;
   }
   static REQUIRES = {
