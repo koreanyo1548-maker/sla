@@ -400,6 +400,9 @@ const DEFAULT_CONFIG = {
   },
   // 공격 모듈은 서로 독립된 주기로 동시에 발사된다. 아래 값은 기획 미확정 초기값이며
   // 에디터에서 조정한다. 각 주문서 완료 시 소모 피스의 티어 합계를 레벨로 사용한다.
+  // [2026-09-18] 확정(인철): 미사일별 baseDamageMul을 전부 1.00으로 맞추고, 피해 격차는
+  // 캐릭터 능력치 쪽 meta.character.moduleAtkMul로 옮겼다(값도 거기서 새로 정한다).
+  // 이제 미사일 계수는 피해에 관여하지 않는다.
   attackModules: {
     damageBonusByLevel: [0.10,0.18,0.25,0.35,0.45,0.58,0.72,0.88,1.06,1.26,1.48,1.72],
     speedBonusByLevel:  [0.08,0.13,0.18,0.24,0.30,0.37,0.44,0.52,0.60,0.69,0.78,0.88],
@@ -413,13 +416,13 @@ const DEFAULT_CONFIG = {
       unusedTargetBonus:0,
     },
     explosion: {
-      labelKey:MISSILE_DEFS.explosion.labelKey, color:MISSILE_DEFS.explosion.color, baseDamageMul:1.20, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.explosion.labelKey, color:MISSILE_DEFS.explosion.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
       baseRadius:42, radiusBonusByLevel:[4,8,12,16,20,24,28,32,36,40,44,48],
       // [2026-09-14] 2차 폭발. 전역 기본값 0 — 캐릭터 패시브로만 켜진다.
       secondary:{ damagePct:0, radiusPct:0 },
     },
     scatter: {
-      labelKey:MISSILE_DEFS.scatter.labelKey, color:MISSILE_DEFS.scatter.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.scatter.labelKey, color:MISSILE_DEFS.scatter.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
       // [2026-09-07] 확정(인철): 산탄은 활성화 즉시 중앙·좌·우 3발로 시작한다. 중앙 1발만 나가면
       // 산탄이라는 이름의 의미가 없다. 발사 수 옵션 최초 적용에 1발을 보정하던 처리는 제거하고,
       // 강화는 아래 증가량을 그대로 누적한다 — Lv.1 반복 기준 3→4→5…
@@ -434,7 +437,7 @@ const DEFAULT_CONFIG = {
     // 레이저는 이동시간 없이 직선상의 적을 즉시 타격하며 단일 대상에도 온전히 유효해서,
     // 연쇄·폭발·산탄의 전용 옵션이 보스전에서 무효인 문제를 미사일 구성 단계에서 보완한다.
     laser: {
-      labelKey:MISSILE_DEFS.laser.labelKey, color:MISSILE_DEFS.laser.color, baseDamageMul:0.85, baseAttacksPerSec:1.00,
+      labelKey:MISSILE_DEFS.laser.labelKey, color:MISSILE_DEFS.laser.color, baseDamageMul:1.00, baseAttacksPerSec:1.00,
       baseWidth:10, widthBonusByLevel:[2,4,6,8,10,12,14,16,18,20,22,24],
       // [2026-09-14] 강화 발동. 전역 기본값 0 — 캐릭터 패시브로만 켜진다.
       empowered:{ chance:0, damagePct:0, widthPct:0 },
@@ -617,10 +620,18 @@ const DEFAULT_CONFIG = {
   // [2026-09-14] 메타 성장 — 희귀도 5단계, 골드 뽑기, 동일 캐릭터 조각 승급.
   // ASSUMPTION: 아래 수치는 전부 Claude 초기값이다(인철 확정 전). 근거는 시뮬레이션이며
   // implNotes의 "메타 성장 v3" 항목에 목표별 예상 뽑기 횟수·골드·판수를 적어 두었다.
-  // statMul  — 노말을 1.00으로 두어 기존 전투 밸런스(기본 공격력 1,000)를 그대로 보존한다.
+  // statMul  — 노말을 1.00으로 두어 1레벨 기준 전투 밸런스(기본 공격력 1,000)를 그대로 보존한다.
+  // [2026-09-18] 확정(인철): 한 등급 위가 20레벨만큼 앞서도록 잡는다 — 노말 30레벨 = 매직 10레벨,
+  //                매직 30레벨 = 레어 10레벨 … 식이다. 20레벨 격차 배율
+  //                r = (1000 + LevelGrowthFactor.at(30)×100) / (1000 + LevelGrowthFactor.at(10)×100) = 4.108995 이고,
+  //                등급 n번째(노말 0)의 statMul은 r^n이다. atk·hp는 기본값이 레벨당 증가폭의 10배라
+  //                정확히 맞물리지만, def는 5배(5/1)여서 이 대각선에서 벗어난다.
+  //                growthCurve(blend·expBase)를 바꾸면 r도 다시 구해야 한다.
   // levelCostMul — 레벨업 골드 배율. 뽑기 총액과 레벨업 총액이 비슷해지도록 맞췄다.
   //                (2026-09-16 소환이 별불로 바뀌어 이 근거는 더 이상 성립하지 않는다 — openItems 메타 경제)
   // gachaWeight  — 등급 가중치(합 100). 등급 안에서는 캐릭터를 균등 추첨한다.
+  // [2026-09-18] 확정(인철): 한 등급이 바로 위 등급의 정확히 2배가 되도록 잡는다.
+  //                노말:매직:레어:에픽:전설 = 16:8:4:2:1을 합 100으로 환산한 값이다.
   // duplicateShards — 이미 가진 캐릭터가 또 나왔을 때 주는 조각 수.
   // shardSteps      — 1→2·2→3·3→4·4→5·5→6성에 필요한 조각 수.
   // [2026-09-16 v0916_7] 캐릭터와 스킬이 같은 성장 형식을 쓴다 — starStepPct(성급 상승률)·shardSteps·duplicateShards.
@@ -663,13 +674,20 @@ const DEFAULT_CONFIG = {
       // blend 만큼만 섞어(나머지는 기존 선형) 초반 체감은 유지하고 후반만 무겁게 한다.
       // blend를 1에 가깝게 올리면 몰빵이 유리해져 4인 균등 육성 유인이 사라진다.
       growthCurve:{ blend:0.35, expBase:1.030 },
+      // [2026-09-18] 확정(인철): 미사일별 피해 격차를 캐릭터 공격력 계수로 옮겼다.
+      // CONFIG.attackModules[key].baseDamageMul은 전부 1.00이 되어 피해에 관여하지 않는다.
+      // 캐릭터는 specialtyMissileId가 고정이라 편성 슬롯과 1:1로 맞물린다.
+      // 공격력에만 곱한다 — baseDamageMul이 피해만 건드렸고 방어력·체력은 건드리지 않았다.
+      // [2026-09-18] 확정(인철): 값을 옮기기 전 격차(연쇄 1.00·폭발 1.20·산탄 0.85·레이저 0.85)를
+      // 그대로 쓰지 않고 연쇄·레이저를 올린 구성으로 바꿨다.
+      moduleAtkMul:{ chain:1.20, explosion:1.00, scatter:1.00, laser:1.20 },
     },
     rarity: {
-      normal:{ statMul:1.00, levelCostMul:1.00, gachaWeight:35, duplicateShards:1, shardSteps:[2,3,4,6,8] },
-      magic: { statMul:1.15, levelCostMul:1.05, gachaWeight:27, duplicateShards:1, shardSteps:[2,3,4,5,7] },
-      rare:  { statMul:1.32, levelCostMul:1.10, gachaWeight:21, duplicateShards:1, shardSteps:[1,2,3,5,6] },
-      epic:  { statMul:1.52, levelCostMul:1.15, gachaWeight:11, duplicateShards:1, shardSteps:[1,2,3,4,5] },
-      legend:{ statMul:1.75, levelCostMul:1.20, gachaWeight:6,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
+      normal:{ statMul:1.0000,   levelCostMul:1.00, gachaWeight:51.6129, duplicateShards:1, shardSteps:[2,3,4,6,8] },
+      magic: { statMul:4.1090,   levelCostMul:1.05, gachaWeight:25.8065, duplicateShards:1, shardSteps:[2,3,4,5,7] },
+      rare:  { statMul:16.8838,  levelCostMul:1.10, gachaWeight:12.9032, duplicateShards:1, shardSteps:[1,2,3,5,6] },
+      epic:  { statMul:69.3756,  levelCostMul:1.15, gachaWeight:6.4516,  duplicateShards:1, shardSteps:[1,2,3,4,5] },
+      legend:{ statMul:285.0640, levelCostMul:1.20, gachaWeight:3.2258,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
     },
   },
 };
