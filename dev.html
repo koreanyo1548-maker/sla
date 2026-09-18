@@ -146,6 +146,20 @@
 <script src="js/campaign.js"></script>
 <script src="js/dev.js"></script>
 
+<!-- [2026-09-18 세션 4] 폰 가로 회전 안내.
+     #app 바깥에 둔다 — #app이 fixed 자식의 컨테이닝 블록이 되므로 안에 두면 앱 열만 덮는다
+     (#manual-panel이 그 경우다). 여기서는 뷰포트 전체를 덮어야 한다.
+     표시 판정은 css/overrides.css의 미디어쿼리 하나뿐이고 JS는 관여하지 않는다. 게임 루프도
+     멈추지 않으므로 세로로 되돌리면 진행 중이던 전투가 그대로 이어진다.
+     문구는 아직 한글 리터럴이다 — 세션 3의 "index.html에 한글 리터럴이 없다" 완료 조건이
+     이것도 함께 걷어간다. dev.html은 생성물이므로 index.html만 고치고 build-dev를 돌리면 된다. -->
+<div id="rotate-notice">
+  <div class="rotate-card">
+    <span class="rotate-icon" aria-hidden="true">📱</span>
+    <strong>화면을 세로로 돌려주세요</strong>
+    <p>이 게임은 세로 화면에 맞춰져 있습니다.</p>
+  </div>
+</div>
 
 </body>
 </html>
