@@ -617,7 +617,13 @@ const DEFAULT_CONFIG = {
   // [2026-09-14] 메타 성장 — 희귀도 5단계, 골드 뽑기, 동일 캐릭터 조각 승급.
   // ASSUMPTION: 아래 수치는 전부 Claude 초기값이다(인철 확정 전). 근거는 시뮬레이션이며
   // implNotes의 "메타 성장 v3" 항목에 목표별 예상 뽑기 횟수·골드·판수를 적어 두었다.
-  // statMul  — 노말을 1.00으로 두어 기존 전투 밸런스(기본 공격력 1,000)를 그대로 보존한다.
+  // statMul  — 노말을 1.00으로 두어 1레벨 기준 전투 밸런스(기본 공격력 1,000)를 그대로 보존한다.
+  // [2026-09-18] 확정(인철): 한 등급 위가 20레벨만큼 앞서도록 잡는다 — 노말 30레벨 = 매직 10레벨,
+  //                매직 30레벨 = 레어 10레벨 … 식이다. 20레벨 격차 배율
+  //                r = (1000 + LevelGrowthFactor.at(30)×100) / (1000 + LevelGrowthFactor.at(10)×100) = 4.108995 이고,
+  //                등급 n번째(노말 0)의 statMul은 r^n이다. atk·hp는 기본값이 레벨당 증가폭의 10배라
+  //                정확히 맞물리지만, def는 5배(5/1)여서 이 대각선에서 벗어난다.
+  //                growthCurve(blend·expBase)를 바꾸면 r도 다시 구해야 한다.
   // levelCostMul — 레벨업 골드 배율. 뽑기 총액과 레벨업 총액이 비슷해지도록 맞췄다.
   //                (2026-09-16 소환이 별불로 바뀌어 이 근거는 더 이상 성립하지 않는다 — openItems 메타 경제)
   // gachaWeight  — 등급 가중치(합 100). 등급 안에서는 캐릭터를 균등 추첨한다.
@@ -667,11 +673,11 @@ const DEFAULT_CONFIG = {
       growthCurve:{ blend:0.35, expBase:1.030 },
     },
     rarity: {
-      normal:{ statMul:1.00, levelCostMul:1.00, gachaWeight:51.6129, duplicateShards:1, shardSteps:[2,3,4,6,8] },
-      magic: { statMul:1.15, levelCostMul:1.05, gachaWeight:25.8065, duplicateShards:1, shardSteps:[2,3,4,5,7] },
-      rare:  { statMul:1.32, levelCostMul:1.10, gachaWeight:12.9032, duplicateShards:1, shardSteps:[1,2,3,5,6] },
-      epic:  { statMul:1.52, levelCostMul:1.15, gachaWeight:6.4516,  duplicateShards:1, shardSteps:[1,2,3,4,5] },
-      legend:{ statMul:1.75, levelCostMul:1.20, gachaWeight:3.2258,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
+      normal:{ statMul:1.0000,   levelCostMul:1.00, gachaWeight:51.6129, duplicateShards:1, shardSteps:[2,3,4,6,8] },
+      magic: { statMul:4.1090,   levelCostMul:1.05, gachaWeight:25.8065, duplicateShards:1, shardSteps:[2,3,4,5,7] },
+      rare:  { statMul:16.8838,  levelCostMul:1.10, gachaWeight:12.9032, duplicateShards:1, shardSteps:[1,2,3,5,6] },
+      epic:  { statMul:69.3756,  levelCostMul:1.15, gachaWeight:6.4516,  duplicateShards:1, shardSteps:[1,2,3,4,5] },
+      legend:{ statMul:285.0640, levelCostMul:1.20, gachaWeight:3.2258,  duplicateShards:1, shardSteps:[1,1,2,2,3] },
     },
   },
 };
