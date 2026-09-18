@@ -36,8 +36,8 @@ function linearNormalTotal(stage, curve=NORMAL_COUNT_CURVE){
   const lastGroupIndex=Math.floor((curve.endWave-curve.startWave)/4);
   const lastPosition=(curve.endWave-curve.startWave)%4;
   const lastNormalIndex=Math.max(1,lastGroupIndex*3+lastPosition);
-  const t=Math.max(0,Math.min(1,normalIndex/lastNormalIndex));
-  return Math.round(curve.startCount+(curve.endCount-curve.startCount)*t);
+  const ratio=Math.max(0,Math.min(1,normalIndex/lastNormalIndex));
+  return Math.round(curve.startCount+(curve.endCount-curve.startCount)*ratio);
 }
 function allocateTypeCounts(base,total){
   const keys=ENEMY_TYPE_KEYS;

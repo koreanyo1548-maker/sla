@@ -313,7 +313,6 @@ I18N.register("ko", "한국어", {
 
   /* ── options ── */
   "options.language.title": "언어",
-  "options.language.closeAria": "언어 선택 닫기",
   "options.language.note": "전투 중에는 바꿀 수 없습니다.",
 
   /* ── notice ── */

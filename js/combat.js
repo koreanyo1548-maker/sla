@@ -37,10 +37,10 @@ class VisualEffects {
     const points=[];
     const segments=7;
     for(let i=0;i<=segments;i++){
-      const t=i/segments;
+      const ratio=i/segments;
       points.push({
-        x:from.x+(to.x-from.x)*t+(i===0||i===segments?0:rand(-7,7)),
-        y:from.y+(to.y-from.y)*t+(i===0||i===segments?0:rand(-7,7)),
+        x:from.x+(to.x-from.x)*ratio+(i===0||i===segments?0:rand(-7,7)),
+        y:from.y+(to.y-from.y)*ratio+(i===0||i===segments?0:rand(-7,7)),
       });
     }
     this.lightningArcs.push({points,color,life:.18,maxLife:.18});
@@ -240,7 +240,7 @@ class VisualEffects {
       p.vx*=Math.pow(.985,dt*60); p.vy*=Math.pow(.985,dt*60);
     });
     this.particles=this.particles.filter(p=>p.life>0);
-    this.rings.forEach(r=>{r.life-=dt; const t=1-r.life/r.maxLife; r.radius=5+(r.maxRadius-5)*t;});
+    this.rings.forEach(r=>{r.life-=dt; const ratio=1-r.life/r.maxLife; r.radius=5+(r.maxRadius-5)*ratio;});
     this.rings=this.rings.filter(r=>r.life>0);
     this.lightningArcs.forEach(a=>a.life-=dt);
     this.lightningArcs=this.lightningArcs.filter(a=>a.life>0);
@@ -262,9 +262,9 @@ class VisualEffects {
   draw(ctx){
     ctx.save();
     (this.ghosts||[]).forEach(gh=>{
-      const t=clamp(gh.life/gh.maxLife,0,1);
-      ctx.globalAlpha=t*.55;
-      const size=gh.size*(1+(1-t)*(gh.boss ? .55 : .35));
+      const ratio=clamp(gh.life/gh.maxLife,0,1);
+      ctx.globalAlpha=ratio*.55;
+      const size=gh.size*(1+(1-ratio)*(gh.boss ? .55 : .35));
       if(!GameArt.drawSprite(ctx,gh.sprite,gh.x,gh.y,size)){
         ctx.fillStyle=gh.boss ? PALETTE.energy : PALETTE.ember;
         ctx.beginPath();ctx.arc(gh.x,gh.y,size*.3,0,Math.PI*2);ctx.fill();
@@ -968,8 +968,8 @@ class CombatSystem {
   }
   segmentDistance(px,py,x1,y1,x2,y2){
     const dx=x2-x1,dy=y2-y1,len2=dx*dx+dy*dy;
-    const t=len2?clamp(((px-x1)*dx+(py-y1)*dy)/len2,0,1):0;
-    return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));
+    const proj=len2?clamp(((px-x1)*dx+(py-y1)*dy)/len2,0,1):0;
+    return Math.hypot(px-(x1+proj*dx),py-(y1+proj*dy));
   }
   // [2026-09-14] 투사체 렌더도 MISSILE_DEFS.render에서 모양을 읽는다.
   // 정의가 없는 종류(기본 공격, 적 탄)는 기본 구체로 떨어진다.
@@ -999,8 +999,8 @@ class CombatSystem {
       const color=p.owner==='enemy' ? PALETTE.hp : (CONFIG.attackModules[p.kind]?.color || PALETTE.accent);
       ctx.strokeStyle=color; ctx.shadowBlur=6; ctx.shadowColor=color; ctx.lineCap='round';
       for(let i=1;i<p.trail.length;i++){
-        const t=i/p.trail.length;
-        ctx.globalAlpha=t*.45; ctx.lineWidth=1+t*2;
+        const ratio=i/p.trail.length;
+        ctx.globalAlpha=ratio*.45; ctx.lineWidth=1+ratio*2;
         ctx.beginPath(); ctx.moveTo(p.trail[i-1].x,p.trail[i-1].y); ctx.lineTo(p.trail[i].x,p.trail[i].y); ctx.stroke();
       }
       if(p.trail.length){
@@ -1080,9 +1080,9 @@ class EnemySystem {
     const comp = RunConfig.bossComposition(waveCfg.wave);
     const mul = this.hpMultiplier(waveCfg.difficulty);
     let total = 0;
-    ENEMY_TYPE_KEYS.forEach(t=>{
-      const cnt = comp?.[t] || 0;
-      total += cnt * RunConfig.enemyBaseStat('hp') * mul * (CONFIG.enemy.types[t]?.hpMul || 0);
+    ENEMY_TYPE_KEYS.forEach(type=>{
+      const cnt = comp?.[type] || 0;
+      total += cnt * RunConfig.enemyBaseStat('hp') * mul * (CONFIG.enemy.types[type]?.hpMul || 0);
     });
     return Math.round(total);
   }
@@ -1318,7 +1318,7 @@ class EnemySystem {
         ctx.fillText(def.short,e.x+(index-(statuses.length-1)/2)*10,e.y+visualSize*.42+8);ctx.restore();
       });
       const cc=[];if(e.stunLeft>0)cc.push(SKILL_DEFS.stun);if(e.slowLeft>0)cc.push(SKILL_DEFS.slow);
-      cc.forEach(({icon:t,color:c},i)=>{ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle=c;ctx.shadowBlur=5;ctx.shadowColor=c;ctx.fillText(t,e.x+ox+(i-(cc.length-1)/2)*11,e.y+oy-visualSize*.42-5);ctx.restore();});
+      cc.forEach(({icon,color:c},i)=>{ctx.save();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillStyle=c;ctx.shadowBlur=5;ctx.shadowColor=c;ctx.fillText(icon,e.x+ox+(i-(cc.length-1)/2)*11,e.y+oy-visualSize*.42-5);ctx.restore();});
     });
   }
 }
@@ -1428,7 +1428,7 @@ class WaveSystem {
         if(s.boss){
           this.game.enemySystem.spawnBoss(cfg, s.boss);
         } else {
-          s.types.forEach(t=>this.game.enemySystem.spawnEnemy(t, cfg.difficulty, this.waveIndex, waveSpeedMul(cfg)));
+          s.types.forEach(type=>this.game.enemySystem.spawnEnemy(type, cfg.difficulty, this.waveIndex, waveSpeedMul(cfg)));
         }
       }
     });

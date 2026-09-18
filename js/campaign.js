@@ -164,9 +164,11 @@ const CampaignEconomy = {
    ===================================================================== */
 const Campaign = {
   state:null,selectedStage:1,broken:false,currentLobbyPage:'home',
+  // 지금 경고 줄에 떠 있는 문자열 키. 언어가 바뀌면 이 키로 다시 그린다.
+  warnKey:'',
   fresh(){ return CampaignStore.fresh(); },
   // 빈 문자열은 경고 줄을 지우라는 뜻이라 그대로 넘긴다. 그 밖에는 문자열 키다.
-  warn(key){ CampaignView.warn(key?t(key):''); },
+  warn(key){ this.warnKey=key||''; CampaignView.warn(key?t(key):''); },
   read(){
     const r=CampaignStore.read();
     if(!r.ok){ this.broken=true; this.warn(r.error); return false; }
@@ -374,22 +376,37 @@ const LanguageUI = {
     $('#lang-close').onclick=()=>this.close();
     $('#lang-panel').onclick=event=>{ if(event.target===$('#lang-panel')) this.close(); };
     document.addEventListener('keydown',event=>{
-      if($('#lang-panel').hidden) return;
+      const panel=$('#lang-panel');
+      if(panel.hidden) return;
       if(event.key==='Escape'){ event.preventDefault(); this.close(); }
+      // 다른 모달(캐릭터·주문서·소환)과 같이 Tab을 팝업 안에 가둔다.
+      if(event.key==='Tab'){
+        const focusable=[...panel.querySelectorAll('button:not(:disabled)')];
+        if(!focusable.length) return;
+        event.preventDefault();
+        const index=focusable.indexOf(document.activeElement);
+        const next=event.shiftKey
+          ? (index<=0 ? focusable.at(-1) : focusable[index-1])
+          : (index<0||index===focusable.length-1 ? focusable[0] : focusable[index+1]);
+        next.focus();
+      }
     });
-    // 언어가 바뀌면 지금 보고 있는 화면을 다시 그린다.
-    I18N.onChange(()=>{ this.render(); Screens.rerender(); });
+    // 언어가 바뀌면 지금 보고 있는 화면을 다시 그린다. 효과음 버튼 툴팁은
+    // GameAudio가 직접 세우므로(마크업 키가 아니라) 여기서 같이 불러 준다.
+    I18N.onChange(()=>{ this.render(); GameAudio.render(); Screens.rerender(); });
   },
   render(){
     const list=$('#lang-list'); if(!list) return;
+    // 전투 중에는 버튼을 잠근다 — 눌러도 아무 일이 없는 것보다 낫다.
+    const blocked=!this.available();
     list.innerHTML=I18N.languages().map(({code,label})=>
-      `<button data-lang="${code}" aria-current="${code===I18N.current}">${label}</button>`).join('');
+      `<button data-lang="${code}" aria-current="${code===I18N.current}"${blocked?' disabled':''}>${label}</button>`).join('');
     $$('[data-lang]',list).forEach(button=>button.onclick=()=>{
       if(!this.available()) return;
       I18N.setLanguage(button.dataset.lang);
       this.close();
     });
-    $('#lang-panel .lang-note').hidden=this.available();
+    $('#lang-panel .lang-note').hidden=!blocked;
   },
   open(){
     this.lastFocus=document.activeElement;
@@ -412,6 +429,8 @@ const LanguageUI = {
    ===================================================================== */
 const Screens = {
   rerender(){
+    // 경고 줄은 화면과 무관하게 떠 있을 수 있다.
+    Campaign.warn(Campaign.warnKey);
     switch(GameState.current){
       case 'lobby':
         Campaign.render();
@@ -422,7 +441,9 @@ const Screens = {
         break;
       case 'clear': case 'defeat':
         RunHost.current?.renderResultScreen();
-        if(Campaign.state?.lastResult) CampaignView.reward(Campaign.state.lastResult);
+        // 보상 저장에 실패해 재시도 버튼이 떠 있을 수 있다 — 마지막으로 그린
+        // 쪽을 그대로 다시 그린다. lastResult로 새로 그리면 재시도 버튼이 사라진다.
+        CampaignView.rerenderReward();
         break;
     }
   },
