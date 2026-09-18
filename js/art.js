@@ -149,7 +149,7 @@ const GameAudio={
     try{
       const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
       const ctx=this.context??=new C();if(ctx.state==='suspended')ctx.resume();
-      melody.forEach((freq,i)=>{const osc=ctx.createOscillator(),gain=ctx.createGain(),t=ctx.currentTime+i*.075;osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(0,t);gain.gain.linearRampToValueAtTime(.04,t+.01);gain.gain.exponentialRampToValueAtTime(.001,t+.17);osc.connect(gain);gain.connect(ctx.destination);osc.start(t);osc.stop(t+.18);});
+      melody.forEach((freq,i)=>{const osc=ctx.createOscillator(),gain=ctx.createGain(),startAt=ctx.currentTime+i*.075;osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(0,startAt);gain.gain.linearRampToValueAtTime(.04,startAt+.01);gain.gain.exponentialRampToValueAtTime(.001,startAt+.17);osc.connect(gain);gain.connect(ctx.destination);osc.start(startAt);osc.stop(startAt+.18);});
     }catch(_){}
   },
 };

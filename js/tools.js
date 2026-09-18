@@ -90,12 +90,12 @@ const ManualPanel = {
       ${GAME_MANUAL.sections.map(sec=>`
         <div class="doc-section">
           <h3>${sec.title}</h3>
-          <ul>${sec.body.map(t=>`<li>${t}</li>`).join('')}</ul>
+          <ul>${sec.body.map(line=>`<li>${line}</li>`).join('')}</ul>
         </div>
       `).join('')}
       <div class="doc-rules">
         <h3>💡 실전 팁</h3>
-        <ul>${GAME_MANUAL.tips.map(t=>`<li>${t}</li>`).join('')}</ul>
+        <ul>${GAME_MANUAL.tips.map(tip=>`<li>${tip}</li>`).join('')}</ul>
       </div>
       <div class="editor-buttons">
         <button id="close-manual-btn">닫기</button>

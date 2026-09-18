@@ -57,7 +57,7 @@ const LevelGrowthFactor={
     for(let x=1;x<CharacterGrowthRules.maxLevel;x++){ sum+=(1-blend)+blend*this.shape(x,expBase)/unit; out[x+1]=sum; }
     this.key=key; this.cache=out; return out;
   },
-  at(level){ const t=this.table(); return t[Math.max(1,Math.min(t.length-1,Math.floor(level)||1))]||0; },
+  at(level){ const table=this.table(); return table[Math.max(1,Math.min(table.length-1,Math.floor(level)||1))]||0; },
 };
 // [2026-09-14] 확정(인철): 캐릭터는 뽑기로 연다. 다만 미사일 4슬롯을 채우지 못하면 전투
 // 자체가 불가능하므로, 노말 4명(미사일 1명씩)만 처음부터 지급한다.

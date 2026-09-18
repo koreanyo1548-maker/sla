@@ -48,15 +48,15 @@ class HeroFieldSystem {
         ctx.fillStyle='#747A78';ctx.font='11px system-ui';ctx.textAlign='center';
         ctx.fillText(CONFIG.attackModules[key].label,p.x,p.y+22);ctx.restore();continue;
       }
-      const t=reduced?1:clamp((now-unit.summonedAt)/450,0,1);
+      const ratio=reduced?1:clamp((now-unit.summonedAt)/450,0,1);
       const shot=reduced?0:Math.max(0,1-(now-unit.shotAt)/180);
       // [2026-09-18 연출 세션 A] 0.55 → 0.9초. 주문서 스파크가 도착한 뒤에도 남아 있어야
       // 어느 영웅이 강해졌는지 눈에 들어온다.
       const pulse=Math.max(0,1-(now-unit.upgradedAt)/900);
-      ctx.strokeStyle=color;ctx.globalAlpha=.5;ctx.lineWidth=1.5;ctx.stroke();ctx.globalAlpha=t;
+      ctx.strokeStyle=color;ctx.globalAlpha=.5;ctx.lineWidth=1.5;ctx.stroke();ctx.globalAlpha=ratio;
       if(pulse>0){ctx.shadowColor=color;ctx.shadowBlur=12*pulse;}
       const bob=reduced?0:Math.sin(g.elapsedTime*2.6+CONFIG.moduleKeys.indexOf(key))*1.2;
-      const size=104,spriteTop=p.y-size*.88+(1-t)*18+bob+shot*4;
+      const size=104,spriteTop=p.y-size*.88+(1-ratio)*18+bob+shot*4;
       const ok=GameArt.drawFighter(ctx,unit.id,p.x-size/2,spriteTop,size);
       if(!ok){ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y-25,14,0,Math.PI*2);ctx.fill();}
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.textAlign='center';

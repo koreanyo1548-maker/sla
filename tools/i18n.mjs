@@ -78,6 +78,12 @@ function writeLanguage(code, label, table, source){
 }
 
 /* ---------- index.html 의 <script> 줄 ---------- */
+// 기준 언어를 맨 앞에 두고 나머지는 알파벳순. 언어 선택 목록 순서가 이 순서다.
+function orderedCodes(){
+  const all = listLanguages();
+  return [...all.filter(c=>c===SOURCE), ...all.filter(c=>c!==SOURCE)];
+}
+
 function syncHtml(codes){
   const abs = path.join(ROOT, 'index.html');
   const html = fs.readFileSync(abs, 'utf8');
@@ -99,8 +105,10 @@ function buildDev(){
 /* ---------- CSV ---------- */
 // 셀 안의 줄바꿈은 \n 으로 적는다 — 스프레드시트를 오갈 때 줄이 깨지지 않게.
 const csvEncode = v => String(v ?? '').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n');
-const csvDecode = v => String(v ?? '').replace(/\\n/g,'\n').replace(/\\\\/g,'\\');
-const csvCell = v => /[",\n]/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
+const csvDecode = v => String(v ?? '').replace(/\\(.)/g, (whole,ch)=> ch==='n' ? '\n' : ch);
+// 앞뒤 공백이 있는 값도 감싼다. "CRIT " 처럼 공백이 의미를 갖는 값이 있고,
+// 감싸지 않으면 엑셀·구글 시트가 열 때 다듬어 버린다.
+const csvCell = v => /[",\n]/.test(v) || /^\s|\s$/.test(v) ? `"${v.replace(/"/g,'""')}"` : v;
 
 function csvParse(text){
   const rows = [];
@@ -143,30 +151,44 @@ function checkLanguage(source, target){
       problems.push(['자리표시자 불일치', k, `${placeholders(source.table[k])||'없음'} ↔ ${placeholders(value)||'없음'}`]);
     if(htmlTags(source.table[k]) !== htmlTags(value))
       problems.push(['태그 불일치', k, `${htmlTags(source.table[k])||'없음'} ↔ ${htmlTags(value)||'없음'}`]);
+    // "CRIT " 처럼 앞뒤 공백이 의미를 갖는 값이 있다. 번역에서 사라지면 붙어 나온다.
+    const edge = text => `${/^\s/.test(text)?'앞':''}${/\s$/.test(text)?'뒤':''}`;
+    if(edge(source.table[k]) !== edge(value))
+      problems.push(['앞뒤 공백 불일치', k, `원문 ${edge(source.table[k])||'없음'} ↔ 번역 ${edge(value)||'없음'}`]);
   });
   return problems;
 }
 
-/* 코드가 t('키') 로 직접 부르는 키가 기준 언어에 있는지 본다. 변수로 조립하는
-   호출(t('color.'+name))은 여기서 보이지 않으므로 검사하지 않는다. */
-function checkCodeKeys(source){
-  const used = new Set();
-  const scan = dir => fs.readdirSync(dir).forEach(name=>{
-    const abs = path.join(dir, name);
-    if(fs.statSync(abs).isDirectory()) return;
-    if(!/\.(js|html)$/.test(name)) return;
+/* 코드가 부르는 키와 언어 파일을 맞춰 본다.
+
+   t('키') 리터럴만 찾으면 t(clear?'a':'b') · t(labelKey) · 배열에 키를 담아
+   도는 형태가 전부 빠져나간다(295키 중 39개가 그랬다). 그래서 소스 안의
+   "점이 들어간 문자열 리터럴"을 전부 후보로 모은 뒤, 기준 언어에 있는
+   접두어(battle. order. lobby. …)로 시작하는 것만 키로 본다.
+   'slagma.lang' 같은 저장 키는 접두어가 달라 자동으로 걸러진다. */
+function collectKeyLiterals(){
+  const literals = new Set();
+  const files = fs.readdirSync(path.join(ROOT,'js'))
     // i18n.js 는 t() 자체를 정의하는 파일이라 주석의 예시(t('key'))가 키로 잡힌다.
-    if(name === 'i18n.js') return;
+    .filter(name=>name.endsWith('.js') && name!=='i18n.js')
+    .map(name=>path.join(ROOT,'js',name));
+  files.push(path.join(ROOT,'index.html'));
+  for(const abs of files){
     const src = fs.readFileSync(abs, 'utf8');
-    for(const m of src.matchAll(/\bt\(\s*'([\w.]+)'/g)) used.add(m[1]);
-    for(const m of src.matchAll(/data-i18n(?:-html|-aria|-title)?="([\w.]+)"/g)) used.add(m[1]);
-  });
-  scan(path.join(ROOT,'js'));
-  [ 'index.html' ].forEach(f=>{
-    const src = fs.readFileSync(path.join(ROOT,f),'utf8');
-    for(const m of src.matchAll(/data-i18n(?:-html|-aria|-title)?="([\w.]+)"/g)) used.add(m[1]);
-  });
-  return [...used].filter(key=>!(key in source.table)).sort();
+    for(const m of src.matchAll(/'([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g)) literals.add(m[1]);
+    for(const m of src.matchAll(/data-i18n(?:-html|-aria|-title)?="([\w.]+)"/g)) literals.add(m[1]);
+  }
+  return literals;
+}
+
+function checkCodeKeys(source){
+  const prefixes = new Set(Object.keys(source.table).map(key=>key.split('.')[0]));
+  const literals = collectKeyLiterals();
+  const referenced = [...literals].filter(key=>prefixes.has(key.split('.')[0]));
+  return {
+    missing: referenced.filter(key=>!(key in source.table)).sort(),
+    unused: Object.keys(source.table).filter(key=>!literals.has(key)).sort(),
+  };
 }
 
 /* ---------- 명령 ---------- */
@@ -203,7 +225,7 @@ else if(command === 'new'){
   if(fs.existsSync(filePath(code))){ console.error(`i18n/${code}.js 가 이미 있다.`); process.exit(1); }
   const source = loadSource();
   writeLanguage(code, label, {}, source);
-  syncHtml(listLanguages());
+  syncHtml(orderedCodes());
   buildDev();
   console.log(`i18n/${code}.js 를 만들고 index.html 에 등록했다. 키 ${Object.keys(source.table).length}개가 비어 있다.`);
   console.log(`다음: node tools/i18n.mjs export ${code}  →  i18n/csv/${code}.csv 를 채운다  →  node tools/i18n.mjs import ${code}`);
@@ -218,7 +240,7 @@ else if(command === 'sync'){
     const after = Object.keys(readLanguage(code).table).length;
     console.log(`${code}: 키 ${before} → ${after}`);
   }
-  if(syncHtml(listLanguages())){ console.log('index.html 의 언어 목록을 갱신했다.'); buildDev(); }
+  if(syncHtml(orderedCodes())){ console.log('index.html 의 언어 목록을 갱신했다.'); buildDev(); }
 }
 
 else if(command === 'export'){
@@ -265,11 +287,18 @@ else if(command === 'import'){
 else if(command === 'check'){
   const source = loadSource();
   let bad = 0;
-  const unknownKeys = checkCodeKeys(source);
-  if(unknownKeys.length){
+  const {missing, unused} = checkCodeKeys(source);
+  if(missing.length){
     bad++;
-    console.log(`코드가 부르지만 i18n/${SOURCE}.js 에 없는 키 ${unknownKeys.length}개:`);
-    unknownKeys.forEach(k=>console.log(`  ${k}`));
+    console.log(`코드가 부르지만 i18n/${SOURCE}.js 에 없는 키 ${missing.length}개:`);
+    missing.forEach(k=>console.log(`  ${k}`));
+    console.log('');
+  }
+  // 쓰지 않는 키는 번역 부담만 늘린다. 오타로 이름이 어긋났을 때도 여기 뜬다.
+  // 검사를 실패로 만들지는 않는다 — 앞으로 쓸 자리를 미리 넣어 둘 수도 있다.
+  if(unused.length){
+    console.log(`어디서도 쓰지 않는 키 ${unused.length}개:`);
+    unused.forEach(k=>console.log(`  ${k}`));
     console.log('');
   }
   for(const code of listLanguages()){

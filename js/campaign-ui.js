@@ -6,6 +6,8 @@
    저장·경제 코드를 건드릴 일이 없다. 진행 상태는 Campaign이 소유한다.
    ===================================================================== */
 const CampaignView={
+  // 결과 화면에 마지막으로 그린 보상 카드. 언어가 바뀌면 이 상태 그대로 다시 그린다.
+  rewardState:null,
   warn(message){$('#save-status').textContent=message;},
   notice(message){GameFeedback.toast(message);},
   lobbyPage(page){
@@ -15,7 +17,7 @@ const CampaignView={
   scrollLobbyTop(){$('#lobby-scroll').scrollTop=0;},
   wallet({recovered,gold,starfire,chargeClicks,locked,selectedStage}){
     const max=CAMPAIGN_CONFIG.staminaMax,entry=CAMPAIGN_CONFIG.entryCost,sec=CampaignEconomy.secondsToNextTick(recovered);
-    $('#stamina-value').textContent=`${recovered.stamina} / ${max}`;
+    $('#stamina-value').textContent=`${I18N.num(recovered.stamina)} / ${I18N.num(max)}`;
     $('#gold-value').textContent=I18N.num(gold);
     $('#starfire-value').textContent=I18N.num(starfire);
     $('#stamina-timer').textContent=recovered.stamina>=max?t('lobby.stamina.full'):t('lobby.stamina.timer',{time:`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`});
@@ -44,11 +46,18 @@ const CampaignView={
     $('#stage-brief').innerHTML=`<div class="brief-scene"><span class="brief-kicker">${t('prepare.brief.kicker',{id:String(st.id).padStart(2,'0')})}</span><h2>${st.name}</h2><div><span>${t('prepare.brief.waves',{n:st.waves})}</span><span>${t('prepare.brief.clearGold',{gold:CampaignEconomy.stageTotalGold(st)})}</span></div></div><div class="brief-party">${party.members.map(m=>`<span>${GameArt.portrait(m.characterId)}<b>${t('common.level',{n:m.level})}</b></span>`).join('')}<div>${t('prepare.brief.coreHp')} <b>${I18N.num(party.stats.hp)}</b><br>${t('prepare.brief.teamDef')} <b>${party.stats.def}</b></div></div>`;
     $('#start-btn').textContent=t('prepare.start',{cost:CAMPAIGN_CONFIG.entryCost});
   },
+  rerenderReward(){
+    const state=this.rewardState;
+    if(!state) return;
+    if(state.kind==='reward') this.reward(state.r);
+    else this.rewardFailure(state.onRetry);
+  },
   reward(r){
+    this.rewardState={kind:'reward',r};
     $('#retry-btn').disabled=false;
     $('#result-reward').innerHTML=`<span>${t('result.reward.gold')}</span><strong>+${I18N.num(r.total)}</strong><div class="reward-breakdown"><span>${t('result.reward.waves')} <b>+${I18N.num(r.waveGold)}</b></span><span>${t('result.reward.bonus')} <b>+${I18N.num(r.bonus)}</b></span></div><p>${r.clear?t('result.reward.unlocked',{stage:r.stageId+1}):t('result.reward.retryHint')}</p><small>${t('result.reward.done')}</small>`;
   },
-  rewardFailure(onRetry){$('#result-reward').innerHTML=`<p>${t('result.reward.failed')}</p><button class="secondary" id="retry-reward">${t('result.reward.retrySave')}</button>`;$('#retry-reward').onclick=onRetry;$('#retry-btn').disabled=true;},
+  rewardFailure(onRetry){this.rewardState={kind:'failure',onRetry};$('#result-reward').innerHTML=`<p>${t('result.reward.failed')}</p><button class="secondary" id="retry-reward">${t('result.reward.retrySave')}</button>`;$('#retry-reward').onclick=onRetry;$('#retry-btn').disabled=true;},
 };
 
 const GachaLobbyUI={
