@@ -561,6 +561,18 @@ const DEFAULT_CONFIG = {
     squashSec: 0.12,            // 피격 압축 지속
     squashAmount: 0.16,         // 가로 +비율 / 세로 -비율
     killAfterimageSec: 0.22,    // 처치 잔상 지속(보스는 1.8배)
+    // [2026-09-18 연출 세션 A] 적 공격 텔레그래프와 핵 반응. 전부 표시 계층 전용이다 —
+    // 적 좌표·공격 주기·피해량은 건드리지 않는다.
+    windupSec: 0.25,            // 근접 예비동작 길이. 공격 쿨다운이 이 구간에 들어오면 기울기·확대가 시작된다
+    windupScale: 0.12,          // 예비동작 끝에서의 확대량(1.0 → 1+이 값)
+    windupLeanPx: 5,            // 예비동작 중 핵 쪽으로 기우는 거리
+    coreImpactRadius: 18,       // 핵 피격 링 반경
+    coreImpactParticles: 5,     // 핵 피격 파편 수(4~6)
+    coreFlashSec: 0.08,         // 핵 흰 플래시 지속
+    coreStages: [0.7,0.4,0.15], // 핵 외형이 바뀌는 공용 HP 비율 경계
+    coreLowPct: 0.15,           // 저HP 경고가 켜지는 비율(coreStages의 마지막과 같게 둔다)
+    projectileTrailLen: 4,      // 투사체 잔상 프레임 수(0이면 끔)
+    muzzleFlashSec: 0.12,       // 적 원거리 발사 머즐 플래시 지속
   },
   boss: {
     midHpExtraMul: 1.0,

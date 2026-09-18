@@ -32,8 +32,9 @@ class HeroFieldSystem {
   shot(key){
     const unit=this.units[key];if(!unit)return;
     unit.shotAt=performance.now();
-    const p=this.origin(key);
-    this.game.effects.emit(p.x,p.y,CONFIG.attackModules[key].color,3,15,60,.16,2);
+    // [2026-09-18 연출 세션 A] 머즐 플래시 구현은 VisualEffects.playerShot 한 곳에 둔다.
+    // 영웅이 있을 때는 그 영웅 위치, 없을 때는 핵 위치에서 같은 연출이 난다.
+    this.game.effects.playerShot(key,this.origin(key));
   }
   draw(ctx){
     const g=this.game,now=performance.now(),reduced=g.prefersReducedMotion();
@@ -49,7 +50,9 @@ class HeroFieldSystem {
       }
       const t=reduced?1:clamp((now-unit.summonedAt)/450,0,1);
       const shot=reduced?0:Math.max(0,1-(now-unit.shotAt)/180);
-      const pulse=Math.max(0,1-(now-unit.upgradedAt)/550);
+      // [2026-09-18 연출 세션 A] 0.55 → 0.9초. 주문서 스파크가 도착한 뒤에도 남아 있어야
+      // 어느 영웅이 강해졌는지 눈에 들어온다.
+      const pulse=Math.max(0,1-(now-unit.upgradedAt)/900);
       ctx.strokeStyle=color;ctx.globalAlpha=.5;ctx.lineWidth=1.5;ctx.stroke();ctx.globalAlpha=t;
       if(pulse>0){ctx.shadowColor=color;ctx.shadowBlur=12*pulse;}
       const bob=reduced?0:Math.sin(g.elapsedTime*2.6+CONFIG.moduleKeys.indexOf(key))*1.2;
