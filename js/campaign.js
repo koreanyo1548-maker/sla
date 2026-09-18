@@ -369,7 +369,10 @@ const Campaign = {
    ===================================================================== */
 const LanguageUI = {
   lastFocus:null,
-  available(){ return GameState.current!=='playing' || !RunHost.running; },
+  // 전투 화면 전체를 막는다. RunHost.running만 보면 승패 연출 구간(awaitResult가
+  // running=false로 만든 뒤 "터치해서 결과 보기"가 떠 있는 동안)이 열려 버리는데,
+  // 그 화면은 Screens.rerender()가 다시 그리는 대상이 아니라 이전 언어로 남는다.
+  available(){ return GameState.current!=='playing'; },
   init(){
     const toggle=$('#lang-toggle'); if(!toggle) return;
     toggle.onclick=()=>{ $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙'; this.open(); };

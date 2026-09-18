@@ -134,6 +134,9 @@ function csvParse(text){
 const placeholders = s => (String(s).match(/\{\w+\}/g) || []).sort().join(',');
 const htmlTags = s => (String(s).match(/<\/?\w+>/g) || []).sort().join(',');
 
+// 앞뒤 공백이 의미를 갖는 값("CRIT " 등)이 번역에서 공백을 잃었는지 본다.
+const edgeSpace = text => `${/^\s/.test(text)?'앞':''}${/\s$/.test(text)?'뒤':''}`;
+
 function checkLanguage(source, target){
   const problems = [];
   const sourceKeys = Object.keys(source.table);
@@ -151,10 +154,8 @@ function checkLanguage(source, target){
       problems.push(['자리표시자 불일치', k, `${placeholders(source.table[k])||'없음'} ↔ ${placeholders(value)||'없음'}`]);
     if(htmlTags(source.table[k]) !== htmlTags(value))
       problems.push(['태그 불일치', k, `${htmlTags(source.table[k])||'없음'} ↔ ${htmlTags(value)||'없음'}`]);
-    // "CRIT " 처럼 앞뒤 공백이 의미를 갖는 값이 있다. 번역에서 사라지면 붙어 나온다.
-    const edge = text => `${/^\s/.test(text)?'앞':''}${/\s$/.test(text)?'뒤':''}`;
-    if(edge(source.table[k]) !== edge(value))
-      problems.push(['앞뒤 공백 불일치', k, `원문 ${edge(source.table[k])||'없음'} ↔ 번역 ${edge(value)||'없음'}`]);
+    if(edgeSpace(source.table[k]) !== edgeSpace(value))
+      problems.push(['앞뒤 공백 불일치', k, `원문 ${edgeSpace(source.table[k])||'없음'} ↔ 번역 ${edgeSpace(value)||'없음'}`]);
   });
   return problems;
 }
@@ -175,7 +176,7 @@ function collectKeyLiterals(){
   files.push(path.join(ROOT,'index.html'));
   for(const abs of files){
     const src = fs.readFileSync(abs, 'utf8');
-    for(const m of src.matchAll(/'([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)'/g)) literals.add(m[1]);
+    for(const m of src.matchAll(/['"`]([A-Za-z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+)+)['"`]/g)) literals.add(m[1]);
     for(const m of src.matchAll(/data-i18n(?:-html|-aria|-title)?="([\w.]+)"/g)) literals.add(m[1]);
   }
   return literals;
