@@ -77,7 +77,7 @@ button:focus-visible{outline:3px solid var(--energy);outline-offset:3px}
 #lobby-notice .toast.visible{opacity:1;transform:translateY(0)}
 #save-status{z-index:150;font-size:12px;background:var(--border)}
 .lobby-page[hidden]{display:none!important}
-#lobby-characters,#lobby-gacha{padding:20px 16px 18px;background:radial-gradient(ellipse at 70% 0,var(--surface-2),var(--surface) 75%);min-height:100%}
+#lobby-characters,#lobby-upgrade{padding:20px 16px 18px;background:radial-gradient(ellipse at 70% 0,var(--surface-2),var(--surface) 75%);min-height:100%}
 .character-page-head{margin-bottom:18px;align-items:flex-end}
 .character-page-head h2{font-size:25px;margin:3px 0 0;color:var(--text-primary);letter-spacing:-.05em}.character-page-head p{font-size:12px}
 .character-count{color:var(--text-primary);border:1px solid var(--border);background:var(--surface-2);border-radius:8px;font-size:11px;padding:6px 8px}

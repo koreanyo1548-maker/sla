@@ -197,8 +197,10 @@ I18N.register("en", "English", {
   "skill.detail.statDef": "DEF",
   // 체력
   "skill.detail.statHp": "HP",
-  // 슬롯 레벨 기준
-  "skill.detail.slotStat": "At slot level",
+  // 다음 레벨 +{value}
+  "skill.detail.nextStat": "Next level +{value}",
+  // 현재 최대
+  "skill.detail.maxStat": "At max",
   // 레벨은 {n}번 스킬 슬롯의 공용 레벨을 따릅니다 · 강화에서 올립니다
   "skill.detail.sharedLevel": "Level follows shared skill slot {n} · raise it in Upgrade",
   // 장착하면 그 슬롯의 공용 레벨을 그대로 씁니다
@@ -305,6 +307,8 @@ I18N.register("en", "English", {
   "milestone.strip.progress": "{current} / {need}",
   // {n}단계
   "milestone.tier": "Tier {n}",
+  // {currency} 보상
+  "milestone.group": "{currency} rewards",
   // {description} · {current} / {need}
   "milestone.card.progress": "{description} · {current} / {need}",
   // {currency} +{amount}
@@ -347,50 +351,54 @@ I18N.register("en", "English", {
   "milestone.best_wave.desc": "Best wave reached",
   // 화력 정비
   "milestone.module_levels.name": "Ordnance Upkeep",
-  // 미사일 4종 레벨 합계
-  "milestone.module_levels.desc": "Combined missile track level",
+  // 미사일 레벨 올린 횟수
+  "milestone.module_levels.desc": "Missile track level-ups",
   // 전술 연마
   "milestone.skill_levels.name": "Drill Practice",
-  // 스킬 슬롯 레벨 합계
-  "milestone.skill_levels.desc": "Combined skill slot level",
+  // 스킬 슬롯 레벨 올린 횟수
+  "milestone.skill_levels.desc": "Skill slot level-ups",
   // 별의 결정
   "milestone.stars.name": "Crystalized Stars",
-  // 보유 수호자 성급 합계
-  "milestone.stars.desc": "Combined stars of owned guardians",
+  // 수호자 성급 돌파
+  "milestone.stars.desc": "Guardian star breakthroughs",
   // 불씨의 동료
   "milestone.guardians.name": "Comrades of the Ember",
-  // 수호자 해금
-  "milestone.guardians.desc": "Guardians unlocked",
+  // 새 수호자 해금
+  "milestone.guardians.desc": "New guardians unlocked",
   // 전술 수집
   "milestone.owned_skills.name": "Tactics Collected",
-  // 전투 스킬 해금
-  "milestone.owned_skills.desc": "Combat skills unlocked",
+  // 새 전투 스킬 해금
+  "milestone.owned_skills.desc": "New combat skills unlocked",
 
   /* ── upgrade (공용 레벨업 6종) ── */
   // UPGRADE FORGE
   "upgrade.eyebrow": "UPGRADE FORGE",
   // 공용 강화
   "upgrade.title": "Shared Upgrade",
-  // 누적 레벨 {total}
-  "upgrade.count": "{total} total levels",
-  // 미사일과 스킬 슬롯은 레벨을 함께 씁니다
-  "upgrade.stage.caption": "Missiles and skill slots share their levels",
-  // 슬롯을 올리면 새 전력이 깨어납니다
-  "upgrade.stage.strong": "Raise a slot to wake new power",
-  // {n}번 스킬 슬롯 · {name}
-  "upgrade.track.skillSlot": "Skill slot {n} · {name}",
-  // 레벨 올리기
-  "upgrade.levelUp": "Level up",
+  // 수호자 {owned} / {total}
+  "upgrade.count": "Guardians {owned} / {total}",
+  // 레벨은 수호자가 아니라 슬롯이 가집니다. 누구를 편성해도 그 슬롯의 레벨을 그대로 쓰고, 슬롯을 올리면 새 전력이 열립니다.
+  "upgrade.intro": "Levels belong to the slot, not the guardian. Whoever you deploy uses that slot's level, and raising a slot unlocks new power.",
+  // 편성 공격력 {from} → {to}
+  "upgrade.gain.atk": "Deployed attack {from} → {to}",
+  // 장착 {stat} +{from} → +{to}
+  "upgrade.gain.skillStat": "Equipped {stat} +{from} → +{to}",
+  // 골드 {n} 부족
+  "upgrade.short": "{n} gold short",
+  // 슬롯 {n} · {name}
+  "upgrade.track.skillSlot": "Slot {n} · {name}",
+  // 올리기
+  "upgrade.levelUp": "Raise",
   // 골드 {amount}
   "upgrade.cost": "{amount} gold",
   // 레벨 상한
   "upgrade.levelMax": "Max level",
-  // Lv.{level} 도달 시 {rarity} 수호자 해금
-  "upgrade.unlock.module": "Unlocks a {rarity} guardian at Lv.{level}",
+  // Lv.{level} · {rarity} 수호자 해금
+  "upgrade.unlock.module": "Lv.{level} · unlocks a {rarity} guardian",
   // 이 미사일의 수호자를 모두 모았습니다
   "upgrade.unlock.moduleDone": "Every guardian of this missile is collected",
-  // 두 슬롯 합계 {need}에서 스킬 1종 무작위 해금 · 현재 {current}
-  "upgrade.unlock.skill": "One random skill at a combined {need} · currently {current}",
+  // 슬롯 합계 {need}에서 스킬 1종 무작위 · 현재 {current}
+  "upgrade.unlock.skill": "Random skill at combined {need} · now {current}",
   // 전투 스킬을 모두 모았습니다
   "upgrade.unlock.skillDone": "Every combat skill is collected",
   // 해금 현황

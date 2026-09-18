@@ -90,12 +90,31 @@ const UpgradeLobbyUI={
   trackIcon(state,track){
     if(track.kind==='module')return GameArt.module(track.moduleId,'module-mini');
     const key=state.skillInventory.equipped[track.slot];
-    return `<span class="pull-icon" style="--icon-color:${SKILL_DEFS[key]?.color||PALETTE.skill}">${SKILL_DEFS[key]?.icon||'◆'}</span>`;
+    return `<span class="uc-skill-icon" style="--icon-color:${SKILL_DEFS[key]?.color||PALETTE.skill}">${SKILL_DEFS[key]?.icon||'◆'}</span>`;
   },
   trackName(state,track){
     if(track.kind==='module')return t(MISSILE_DEFS[track.moduleId].labelKey);
     const key=state.skillInventory.equipped[track.slot];
     return t('upgrade.track.skillSlot',{n:track.slot+1,name:key?t(CONFIG.skills[key].nameKey):''});
+  },
+  // 이 레벨업으로 실제로 오르는 값. 미사일은 편성 수호자의 공격력, 스킬은 장착 스킬의 공격 보너스다.
+  // 비용만 보이고 무엇이 오르는지 안 보이면 여섯 트랙 중 어디에 골드를 쓸지 고를 근거가 없다.
+  gainLine(state,track,level){
+    if(track.kind==='module'){
+      const id=state.characterInventory.formation[track.moduleId],owned=state.characterInventory.characters[id];
+      if(!id||!owned)return '';
+      const stat=lv=>CharacterGrowthSystem.stats(id,{...owned,level:lv}).atk;
+      return t('upgrade.gain.atk',{from:I18N.num(stat(level)),to:I18N.num(stat(level+1))});
+    }
+    const key=state.skillInventory.equipped[track.slot];
+    if(!key)return '';
+    // 스킬마다 오르는 능력치가 다르다(용광 방벽은 공격이 0이라 "+0 → +0"이 나온다).
+    // 이번 레벨에서 가장 많이 오르는 항목 하나를 골라 낸다.
+    const from=SkillGrowthSystem.stats(key,{level}),to=SkillGrowthSystem.stats(key,{level:level+1});
+    const best=[['atk','skill.detail.statAtk'],['def','skill.detail.statDef'],['hp','skill.detail.statHp']]
+      .map(([id,labelKey])=>({id,labelKey,gain:to[id]-from[id]})).sort((a,b)=>b.gain-a.gain)[0];
+    if(!best||best.gain<=0)return '';
+    return t('upgrade.gain.skillStat',{stat:t(best.labelKey),from:I18N.num(from[best.id]),to:I18N.num(to[best.id])});
   },
   // 카드 아래 한 줄. 미사일은 다음에 열리는 수호자를, 스킬은 다음 무작위 해금까지의 합계를 알린다.
   unlockLine(state,track){
@@ -112,24 +131,31 @@ const UpgradeLobbyUI={
   card(campaign,track){
     const state=campaign.state,level=LevelTrackSystem.level(state,track.trackId),max=CharacterGrowthRules.maxLevel;
     const allowed=LevelTrackSystem.allowed(level),cost=LevelTrackSystem.cost(level),payable=LevelTrackSystem.payable(state,level);
-    const locked=campaign.broken||!!state.active;
+    const locked=campaign.broken||!!state.active,short=Math.max(0,cost-WalletSystem.balance(state,'gold'));
     const color=track.kind==='module'?MISSILE_DEFS[track.moduleId].color:PALETTE.skill;
-    return `<article class="upgrade-card" style="--track-color:${color}"><div class="upgrade-head">${this.trackIcon(state,track)}<div><b>${this.trackName(state,track)}</b><small>${t('skill.detail.levelOfMax',{level,max})}</small></div></div>`
+    // 비용 자리는 상태에 따라 세 가지다 — 올릴 수 있으면 가격, 골드가 모자라면 부족분, 끝났으면 상한.
+    const detail=!allowed?t('upgrade.levelMax'):short>0?t('upgrade.short',{n:I18N.num(short)}):t('upgrade.cost',{amount:I18N.num(cost)});
+    return `<article class="track-card${allowed&&!payable?' poor':''}" style="--track-color:${color}">`
+      +`<span class="uc-icon">${this.trackIcon(state,track)}</span>`
+      +`<div class="uc-body"><div class="uc-title"><b>${this.trackName(state,track)}</b><span class="uc-level">${t('common.level',{n:level})}<em>/ ${max}</em></span></div>`
       +`<div class="level-track"><span style="width:${level/max*100}%"></span></div>`
-      +`<small class="upgrade-unlock">${this.unlockLine(state,track)}</small>`
-      +`<button class="primary" data-track-up="${track.trackId}" ${locked||!allowed||!payable?'disabled':''}>${t('upgrade.levelUp')}<small>${allowed?t('upgrade.cost',{amount:I18N.num(cost)}):t('upgrade.levelMax')}</small></button></article>`;
+      +`${allowed?`<small class="uc-gain">${this.gainLine(state,track,level)}</small>`:''}`
+      +`<small class="uc-unlock">${this.unlockLine(state,track)}</small></div>`
+      +`<button class="primary" data-track-up="${track.trackId}" ${locked||!allowed||!payable?'disabled':''}>${t('upgrade.levelUp')}<small>${detail}</small></button></article>`;
   },
   levelUp(campaign,trackId){
     const unlocked=LevelTrackSystem.levelUp(campaign,trackId);
     if(!unlocked){campaign.render();return;}
     // burst가 레벨업 소리까지 낸다 — 여기서 따로 울리면 두 번 겹친다.
-    GameFeedback.burst($(`[data-track-up="${trackId}"]`)?.closest('.upgrade-card'));
+    GameFeedback.burst($(`[data-track-up="${trackId}"]`)?.closest('.track-card'));
     if(unlocked.length)RevealUI.show(unlocked,campaign);
   },
   render(campaign){
     const state=campaign.state;
     const ready=LEVEL_TRACKS.some(track=>{const level=LevelTrackSystem.level(state,track.trackId);return LevelTrackSystem.allowed(level)&&LevelTrackSystem.payable(state,level);});
-    $('#upgrade-count').textContent=t('upgrade.count',{total:LevelTrackSystem.moduleLevelTotal(state)+LevelTrackSystem.skillLevelTotal(state)});
+    // 머리 칩은 누적 레벨 같은 허수가 아니라 이 창이 여는 것, 즉 수호자 수집률을 낸다.
+    const roster=CharacterRepository.list();
+    $('#upgrade-count').textContent=t('upgrade.count',{owned:roster.filter(c=>state.characterInventory.characters[c.characterId]?.owned).length,total:roster.length});
     $('#upgrade-list').innerHTML=LEVEL_TRACKS.map(track=>this.card(campaign,track)).join('');
     $$('[data-track-up]').forEach(button=>button.onclick=()=>this.levelUp(campaign,button.dataset.trackUp));
     $('#upgrade-nav-dot').hidden=!ready;
