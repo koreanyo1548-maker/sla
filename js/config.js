@@ -315,15 +315,21 @@ const DEFAULT_CONFIG = {
   // [2026-09-09] 히트박스·명중 판정 px 값. 단위는 위 field와 같은 논리 좌표계다.
   // 문서 '전장 논리 해상도' 항목이 폭발 반경·광선 폭과 나란히 "히트박스"도 소스 설정에서
   // 조정한다고 적어 뒀는데 이 값들만 코드 리터럴로 네 곳에 흩어져 있었다. 여기로 모은다.
-  // enemyRadius/bossRadius는 판정과 렌더가 같은 값을 써야 원과 맞는 판정이 되므로
-  // enemyHitRadius() 하나를 통해 양쪽이 함께 읽는다.
+  // enemyRadius/bossRadiusMid/bossRadiusFinal은 판정과 렌더가 같은 값을 써야 원과 맞는
+  // 판정이 되므로 enemyHitRadius() 하나를 통해 양쪽이 함께 읽는다.
   hitbox: {
     enemyRadius: 9,
-    // [2026-09-17] 확정(인철): 16 → 40. 보스 스프라이트는 반지름 39~46px인데 판정이 16px이라
-    // 스프라이트 위를 지나는 탄이 판정에 걸리지 않았다. 특히 산탄 옆탄이 중간보스 기준
-    // 중심까지 21.0px vs 판정 20px으로 1px 차이로 빗나가, 보스 상대로 중앙탄만 들어갔다.
-    // 이 값은 레이저 폭·폭발 반경·직선탄 명중 판정에도 함께 쓰이므로 보스전 전반이 후해진다.
-    bossRadius: 40,
+    // [2026-09-17] 확정(인철): 16 → 40(당시 보스 공용 단일값). 보스 스프라이트는 반지름
+    // 39~46px인데 판정이 16px이라 스프라이트 위를 지나는 탄이 판정에 걸리지 않았다.
+    // 특히 산탄 옆탄이 중간보스 기준 중심까지 21.0px vs 판정 20px으로 1px 차이로 빗나가,
+    // 보스 상대로 중앙탄만 들어갔다. 이 값은 레이저 폭·폭발 반경·직선탄 명중 판정에도
+    // 함께 쓰이므로 보스전 전반이 후해진다.
+    // [2026-09-18] 확정(인철): 중간보스·최종보스 스프라이트를 각각 1.2배·1.3배로 키우며
+    // 공용 단일값(40)의 한계(기획서.md 참고)를 실제로 나눴다. 새 스프라이트 반지름
+    // (39×1.2=46.8, 46×1.3=59.8)에 맞춰 반올림했다 — boss.midSizeMul/finalSizeMul과
+    // 짝을 맞춰 바뀌어야 하는 값이다.
+    bossRadiusMid: 47,
+    bossRadiusFinal: 60,
     laserEdgePad: 4,          // 직선탄이 적 반경 바깥을 스칠 때 허용하는 여유
     homingHitDist: 10,        // 목표 지정 탄환이 목표에 이만큼 붙으면 명중 처리
     projectileRangeMul: 1.2,  // 직선탄 최대 비행거리 = 전장 대각선 × 이 값
@@ -356,7 +362,8 @@ const DEFAULT_CONFIG = {
     endWave: NORMAL_COUNT_CURVE.endWave,
     startCount: NORMAL_COUNT_CURVE.startCount,
     endCount: NORMAL_COUNT_CURVE.endCount,
-    stageOneHpMul: 0.90,
+    // [2026-09-18] 확정(인철): 스테이지1 체력 할인 0.90 → 0.70으로 낮춰 초반을 더 아프게 했다.
+    stageOneHpMul: 0.70,
     // [2026-09-17] 확정(인철): 스테이지당 적 HP 증가율 0.35 → 0.20 → 0.26.
     // 0.35는 화력 상한(6성 Lv.60) 대비 스테이지 44에서 벽을 만들어 등반이 멈췄고,
     // 등반이 멈추면 별불(새 스테이지 돌파 전용)도 같이 끊겨 성장 순환 자체가 닫혔다.
@@ -525,7 +532,9 @@ const DEFAULT_CONFIG = {
     // 아프기 시작하는 지점을 스테이지 20에서 5로 당긴다(계산 확인).
     // 초보 편성 기준 스테이지 5 W29에서 5대면 핵 HP 1,200이 소진된다 — 도달 전에 처치하라는
     // 압박을 만드는 것이 의도다. HP 계수(stage.hpScale)는 건드리지 않는다.
-    base: { hp: 1100, atk: 70, atkSpeed: 1, travelTimeSec: 10 },
+    // [2026-09-18] 확정(인철): 초반이 너무 쉬워 기본 HP 1100 → 1500. 스테이지별 성장 계수
+    // (stage.hpScalePerStage)는 후반까지 같이 가팔라지므로 건드리지 않고 초기값만 올렸다.
+    base: { hp: 1500, atk: 70, atkSpeed: 1, travelTimeSec: 10 },
     defenseGrowth:{freeStages:3,perStage:10},
     // [2026-09-04] HP 계수와 ATK 계수를 분리했다. 확정(인철): "적의 HP 성장 계수를 늘리면
     // 스킬 원샷·보스 미접근·피격 부족 세 문제가 같이 풀린다".
@@ -538,9 +547,11 @@ const DEFAULT_CONFIG = {
     // 근접 7초·원거리 8초로 당겨 후발 배치까지 도달시키고, 그 대신 체력을 내려 처치 난이도를 보정한다.
     // 속도 상승분이 체력 하락분보다 커서 필요 DPS는 근접 +14.4%, 원거리 +9.4%로 순증한다(의도된 상향).
     // 탱커는 10초 유지 — 더 늦추면 WAVE 12초 안에 도달 자체가 불가능해진다(WAVE별 길이 변주 이후 재검토).
+    // [2026-09-18] 확정(인철): 근접 0.8 → 1.0, 원거리 0.7 → 0.8로 올려 초반 체감 난이도를 맞췄다.
+    // 탱커는 2.0 유지.
     types: {
-      melee:  { hpMul: 0.8, atkMul: 1.0, defMul:1.0, travelTimeSec: 7 },
-      ranged: { hpMul: 0.7, atkMul: 1.0, defMul:0.8, travelTimeSec:8, rangePct: 0.35, projectileSpeed: 480 },
+      melee:  { hpMul: 1.0, atkMul: 1.0, defMul:1.0, travelTimeSec: 7 },
+      ranged: { hpMul: 0.8, atkMul: 1.0, defMul:0.8, travelTimeSec:8, rangePct: 0.35, projectileSpeed: 480 },
       tank:   { hpMul: 2.0, atkMul: 1.3, defMul:1.5, travelTimeSec: 10 },
     },
   },
@@ -587,6 +598,11 @@ const DEFAULT_CONFIG = {
     finalHpExtraMul: 1.0,
     midAtkMul: 1.25,
     finalAtkMul: 1.5,
+    // [2026-09-18] 확정(인철): 중간보스·최종보스 스프라이트 크기를 각각 1.2배·1.3배로 키운다.
+    // enemyVisualSize()가 이 배율을 기본 스프라이트 크기(78·92)에 곱하고, 판정 반경도
+    // 같은 비율로 함께 키워야 하므로 hitbox.bossRadiusMid/bossRadiusFinal도 같이 바꿨다.
+    midSizeMul: 1.2,
+    finalSizeMul: 1.3,
     // §16 "보스 타입은 근접/원거리/탱커 중 에디터에서 선택" — 랜덤이 아니라 고정 선택값.
     midType: 'melee',
     finalType: 'tank',
