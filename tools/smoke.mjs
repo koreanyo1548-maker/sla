@@ -5,17 +5,14 @@
    Playwright는 이 스크립트만 쓴다.
 
    실행:
-     node tools/smoke.mjs                 dev.html, 세로·가로 두 뷰포트
-     node tools/smoke.mjs --entry index    출시 진입점으로
-     node tools/smoke.mjs --entry both     dev.html 과 index.html 둘 다
-     node tools/smoke.mjs --headed         브라우저를 띄워서 본다
+     node tools/smoke.mjs                 index.html, 세로·가로 두 뷰포트
+     node tools/smoke.mjs --headed        브라우저를 띄워서 본다
 
    Playwright가 없으면 `npx playwright install chromium` 한 번.
    CLAUDE 환경에서는 /opt/pw-browsers 에 이미 있다.
 
-   진입점 생성물(dev.html)이 index.html보다 낡았는지도
-   먼저 확인한다 — index.html 만 고치고 build-dev.mjs 를 안 돌린 상태로
-   플레이테스트하는 사고를 막는다.
+   [2026-09-18] 개발 진입점(dev.html)을 없애면서 --entry 선택지와 생성물 최신 여부
+   검사를 걷어냈다. 진입점은 index.html 하나뿐이다.
 */
 import { spawnSync } from 'node:child_process';
 import http from 'node:http';
@@ -38,14 +35,8 @@ async function loadChromium() {
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const args = process.argv.slice(2);
-const flag = (name, fallback) => {
-  const i = args.indexOf(`--${name}`);
-  return i >= 0 && args[i + 1] && !args[i + 1].startsWith('--') ? args[i + 1] : fallback;
-};
 const HEADED = args.includes('--headed');
-const ENTRY = flag('entry', 'dev');
-const ENTRIES = ENTRY === 'both' ? ['dev.html', 'index.html']
-              : ENTRY === 'index' ? ['index.html'] : ['dev.html'];
+const ENTRIES = ['index.html'];
 
 const VIEWPORTS = [
   { name: '세로', width: 430, height: 900 },
@@ -196,14 +187,6 @@ async function playthrough(browser, entry, viewport) {
 }
 
 /* ------------------------------------------------------------------- 실행 */
-console.log('생성물 최신 여부');
-const check = spawnSync(process.execPath, [path.join(ROOT, 'tools/build-dev.mjs'), '--check'], { encoding: 'utf8' });
-process.stdout.write(check.stdout.split('\n').filter(Boolean).map(l => '  ' + l).join('\n') + '\n');
-if (check.status !== 0) {
-  console.error('\nFAIL  생성물이 낡았다 — node tools/build-dev.mjs 를 돌려라.');
-  process.exit(1);
-}
-
 const server = await serve();
 const BASE = `http://127.0.0.1:${server.address().port}`;
 const chromium = await loadChromium();

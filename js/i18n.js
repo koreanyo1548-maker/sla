@@ -31,7 +31,6 @@ const I18N = {
   order: [],                     // 등록 순서 = 언어 선택 목록 순서
   current: null,
   formatters: Object.create(null),
-  warned: new Set(),
   listeners: [],
 
   /* --- 등록 --------------------------------------------------------- */
@@ -91,7 +90,7 @@ const I18N = {
       const candidate = this.tables[code]?.[key];
       if(candidate !== undefined && candidate !== ''){ value = candidate; break; }
     }
-    if(value===undefined){ this.warnMissing(key); return key; }
+    if(value===undefined) return key;
     return params ? this.fill(value, params) : value;
   },
   fill(text, params){
@@ -101,13 +100,6 @@ const I18N = {
       return typeof value==='number' && Number.isFinite(value) ? this.num(value) : String(value);
     });
   },
-  // 빠진 키는 개발 진입점에서만, 키마다 한 번씩 경고한다.
-  warnMissing(key){
-    if(!SLAGMA_DEV || this.warned.has(key)) return;
-    this.warned.add(key);
-    console.warn(`[i18n] 빠진 키: ${key} (${this.current})`);
-  },
-
   /* --- 숫자 --------------------------------------------------------- */
   // 언어별 자릿수 구분. 전투 중 매 프레임 불릴 수 있어 포맷터를 캐시한다.
   num(value, {min=0, max=3}={}){

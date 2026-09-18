@@ -18,7 +18,6 @@
 */
 import fs from 'node:fs';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const DIR = path.join(ROOT, 'i18n');
@@ -94,12 +93,6 @@ function syncHtml(codes){
   if(next === html) return false;
   fs.writeFileSync(abs, next);
   return true;
-}
-
-// dev.html 은 index.html 의 생성물이라 함께 다시 만든다.
-function buildDev(){
-  try{ execFileSync(process.execPath, [path.join(ROOT,'tools','build-dev.mjs')], {stdio:'inherit'}); }
-  catch(_){ console.error('dev.html 생성에 실패했다. node tools/build-dev.mjs 를 직접 돌려라.'); }
 }
 
 /* ---------- CSV ---------- */
@@ -227,7 +220,6 @@ else if(command === 'new'){
   const source = loadSource();
   writeLanguage(code, label, {}, source);
   syncHtml(orderedCodes());
-  buildDev();
   console.log(`i18n/${code}.js 를 만들고 index.html 에 등록했다. 키 ${Object.keys(source.table).length}개가 비어 있다.`);
   console.log(`다음: node tools/i18n.mjs export ${code}  →  i18n/csv/${code}.csv 를 채운다  →  node tools/i18n.mjs import ${code}`);
 }
@@ -241,7 +233,7 @@ else if(command === 'sync'){
     const after = Object.keys(readLanguage(code).table).length;
     console.log(`${code}: 키 ${before} → ${after}`);
   }
-  if(syncHtml(orderedCodes())){ console.log('index.html 의 언어 목록을 갱신했다.'); buildDev(); }
+  if(syncHtml(orderedCodes())) console.log('index.html 의 언어 목록을 갱신했다.');
 }
 
 else if(command === 'export'){

@@ -8,7 +8,7 @@
 node tools/i18n.mjs new ja 日本語
 ```
 
-`i18n/ja.js`가 생기고 `index.html`·`dev.html`에 자동으로 등록된다. 값은 전부 비어 있다.
+`i18n/ja.js`가 생기고 `index.html`에 자동으로 등록된다. 값은 전부 비어 있다.
 
 ## 2. CSV로 빼서 번역하기
 
