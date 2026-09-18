@@ -1,0 +1,563 @@
+/* ===== base.css ===== */
+
+  /* ---------------------------------------------------------------
+     Slagma is molten metal + slag: the palette leans into an
+     industrial-forge dark HUD — charcoal ground, ember-orange for
+     power, cold steel-blue for the player/projectiles, toxic green
+     and arcane violet to keep the four piece types tellable apart
+     at a glance during fast real-time play.
+     This is a single-theme (dark) commitment by design: a combat
+     HUD reads as a HUD, not a document — see artifact-design notes.
+     --------------------------------------------------------------- */
+  /* =====================================================================
+     [디자인 토큰] 2026-09-17 — 차콜·흑철 다크 판타지 테마
+     ---------------------------------------------------------------------
+     확정(인철): 기존 짙은 녹색 중심 UI를 걷어내고 "흑철 / 마력 / 용광로 / 병기"
+     느낌으로 통일한다. 색은 여기에만 정의하고 아래 규칙은 var()로만 참조한다.
+
+     역할을 섞어 쓰지 않는다.
+       primary(골드) : 전투 준비·소환·확인 같은 핵심 CTA와 "선택됨" 상태에만
+       energy(시안)  : 에너지·충전·시스템 정보
+       danger/success: 실패·경고 / 획득·긍정 상태
+       chain/explosion/scatter/laser : 미사일 4종 식별 전용(아이콘·게이지·이펙트)
+
+     비활성은 기존처럼 녹색을 어둡게 쓰지 않고 전용 토큰 3종으로 표현한다.
+     전체 opacity 대신 배경·테두리·글자 토큰을 각각 적용해 초상화·아이콘이
+     함께 흐려지지 않게 한다.
+
+     보드 피스 색은 스프라이트 이미지로 식별하므로 색 토큰을 두지 않는다
+     (겸용하던 COLOR_CSS_VAR은 소비처가 없어 제거했다).
+     ===================================================================== */
+  :root{
+    --bg:#171C20; --surface:#222C30; --surface-2:#2A363B; --border:#3D4A4F;
+    --text-primary:#F2E9D8; --text-secondary:#B7B7AC; --text-disabled:#747A78;
+    --surface-disabled:#2B3133; --border-disabled:#41494C;
+    --primary:#DDB86A; --primary-text:#171C20;
+    --energy:#5EDBF4; --danger:#F2645A; --success:#5CCB8A;
+    --chain:#5EDBF4; --explosion:#F77A3D; --scatter:#48C986; --laser:#A876E8;
+
+    /* 기존 이름을 참조하는 규칙이 새 토큰을 그대로 받도록 남긴 별칭.
+       새로 쓰는 코드는 위 토큰을 직접 참조한다. */
+    --panel:var(--surface); --panel2:var(--surface-2);
+    --text:var(--text-primary); --dim:var(--text-secondary);
+    --accent:var(--primary);
+    --ember:var(--explosion); --toxic:var(--scatter); --arcane:var(--laser);
+    --hp:var(--danger); --skill:var(--chain);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+    font-family:"Gothic A1","Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;}
+  .num, .hud .wave-label, #pick-count, .tier, .hp-label, #energy-display, #result-title{
+    font-family:"Orbitron","Gothic A1",sans-serif;
+    font-variant-numeric:tabular-nums;
+  }
+  button, input{ font-family:inherit; }
+  button:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  #app{max-width:460px;margin:0 auto;height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;
+    background:var(--panel);position:relative;}
+  .screen{display:none;flex-direction:column;flex:1;min-height:0;padding:16px;overflow-y:auto;}
+  .screen.active{display:flex;}
+
+  /* ---------- Start screen ---------- */
+  #screen-start{position:relative;overflow-x:hidden;overflow-y:auto;
+    padding-bottom:max(16px,env(safe-area-inset-bottom));overscroll-behavior:contain;}
+  #screen-start::before{
+    content:"";position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+    width:420px;height:420px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle,rgba(255,122,61,.16),transparent 70%);
+  }
+  #screen-start h1{font-family:"Orbitron",sans-serif;font-weight:800;font-size:24px;
+    letter-spacing:.04em;margin:8px 0 2px;text-wrap:balance;position:relative;
+    padding-right:46px; /* 상단 우측 ❓/⚙ 버튼과 겹치지 않도록 여백 확보 */
+    background:linear-gradient(120deg,var(--ember),var(--text-primary) 55%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent;}
+  #screen-start .sub{color:var(--dim);font-size:13px;margin-bottom:16px;position:relative;}
+  .skill-pick-list{display:flex;flex-direction:column;gap:10px;position:relative;}
+  .skill-pick-card{border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;
+    background:var(--panel2);transition:border-color .15s,background-color .15s,transform .15s;
+    touch-action:manipulation;position:relative;}
+  .skill-pick-card.selected{border-color:var(--skill-accent,var(--arcane));background:var(--bg);transform:translateY(-1px);}
+  .skill-pick-card h3{margin:0 0 6px;font-size:15px;font-weight:700;color:var(--skill-accent,var(--arcane));
+    display:flex;align-items:center;gap:7px;}
+  .skill-pick-card p{margin:0;font-size:11.5px;color:var(--dim);line-height:1.45;}
+  .skill-pick-icon{width:27px;height:27px;border-radius:8px;display:inline-flex;align-items:center;
+    justify-content:center;background:color-mix(in srgb,var(--skill-accent,var(--arcane)) 22%,var(--bg));font-size:15px;}
+  .skill-pick-meta{display:flex;gap:5px;margin-top:8px;}
+  .skill-pick-meta span{border:1px solid var(--border);background:var(--bg);border-radius:9px;padding:2px 7px;
+    font:700 10px "Orbitron","Gothic A1",sans-serif;color:var(--text);}
+  .skill-pick-card .pick-check{position:absolute;right:10px;top:10px;color:var(--skill-accent,var(--arcane));
+    opacity:0;transform:scale(.6);transition:.15s;font-weight:800;}
+  .skill-pick-card.selected .pick-check{opacity:1;transform:scale(1);}
+  #start-btn{margin-top:16px;padding:14px;font-family:"Orbitron",sans-serif;font-size:14px;
+    font-weight:700;letter-spacing:.03em;border:none;border-radius:10px;
+    background:linear-gradient(120deg,var(--ember),var(--explosion));color:var(--primary-text);cursor:pointer;
+    position:sticky;bottom:0;z-index:2;flex:0 0 auto;touch-action:manipulation;
+    box-shadow:0 -8px 18px rgba(18,21,26,.88);}
+  #start-btn:disabled{background:var(--surface-disabled);border-color:var(--border-disabled);color:var(--text-disabled);cursor:not-allowed;}
+  #pick-count{color:var(--ember);font-weight:700;}
+
+  /* ---------- Game screen ---------- */
+  #screen-game{padding:0;overflow:hidden;}
+  #screen-game.active{display:grid;grid-template-rows:auto minmax(150px,1fr) auto auto;height:100%;}
+  #hud{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--panel2);
+    border-bottom:1px solid var(--border);font-size:12px;}
+  #hud .player-status{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;}
+  #hud .run-metrics{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px;
+    color:var(--dim);font-size:9px;font-weight:700;line-height:1;white-space:nowrap;}
+  #hud .run-metric{display:inline-flex;align-items:center;gap:4px;min-width:0;}
+  #hud .run-metric strong{font:800 10px "Orbitron","Gothic A1",sans-serif;color:var(--text);
+    font-variant-numeric:tabular-nums;letter-spacing:.02em;}
+  #hud #run-score{color:var(--energy);}
+  #hud .hp-wrap{flex:none;width:100%;height:16px;background:var(--bg);border-radius:8px;overflow:hidden;position:relative;}
+  #hud .hp-wrap.fx-hp-hit{animation:hpHit .3s ease-out;}
+  #hud .hp-bar{height:100%;background:var(--hp);width:100%;transition:width .2s;}
+  #hud .hp-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:10px;color:var(--text-primary);text-shadow:0 1px 2px var(--bg);}
+  #hud .wave-label{white-space:nowrap;font-weight:600;}
+
+  /* [2026-09-07] 캔버스 표시 크기는 JS(Game.layoutField)가 픽셀로 지정한다. 왜곡 상한을
+     넘는 화면에서는 캔버스가 컨테이너보다 작아지므로 flex로 가운데 정렬해 여백을 양쪽에 나눈다. */
+  #combat-wrap{position:relative;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 0%,var(--surface),var(--bg));}
+  #combat-wrap::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(circle at 50% 75%,rgba(255,77,77,.35),transparent 58%);}
+  #combat-wrap.fx-shake{animation:combatShake .18s linear;}
+  /* [2026-09-15] 세로 모바일에서 과한 흔들림은 멀미가 나므로, 광역 스킬용은 진폭 2px로 따로 둔다. */
+  #combat-wrap.fx-shake-soft{animation:combatShakeSoft .14s linear;}
+  @keyframes combatShakeSoft{0%,100%{transform:translate(0,0)}25%{transform:translate(-2px,1px)}50%{transform:translate(2px,-1px)}75%{transform:translate(-1px,-1px)}}
+  #combat-wrap.fx-player-hit::after{animation:playerHitFlash .28s ease-out;}
+  #combat-canvas{display:block;}
+  /* 보스 진입과 승패 확정 순간만 사용하는 전투 시네마틱 레이어. 일반 HUD/보드는 그대로 두고
+     전장 위에 짧게 겹쳐 플레이 흐름을 끊지 않으며, 승패 연출 중에는 입력을 차단한다. */
+  #cinematic-layer{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;
+    padding:18px;overflow:hidden;pointer-events:none;color:var(--text-primary);text-align:center;}
+  #cinematic-layer[hidden]{display:none!important;}
+  #cinematic-layer::before{content:"";position:absolute;inset:0;background:rgba(4,6,9,.1);opacity:0;}
+  #cinematic-layer::after{content:"";position:absolute;left:-10%;right:-10%;top:50%;height:118px;
+    transform:translateY(-50%) skewY(-2deg);background:linear-gradient(90deg,transparent,rgba(92,10,16,.88) 20%,rgba(25,6,9,.96) 50%,rgba(92,10,16,.88) 80%,transparent);
+    border-top:1px solid rgba(255,91,91,.75);border-bottom:1px solid rgba(255,91,91,.75);opacity:0;}
+  #cinematic-layer.active::before{animation:cinematicScrim var(--cinematic-duration,.9s) ease-out both;}
+  #cinematic-layer.active::after{animation:cinematicBand var(--cinematic-duration,.9s) ease-out both;}
+  #cinematic-card{position:relative;z-index:1;width:min(390px,92vw);padding:18px 16px;text-transform:uppercase;
+    filter:drop-shadow(0 4px 14px var(--bg));opacity:0;}
+  #cinematic-layer.active #cinematic-card{animation:cinematicCard var(--cinematic-duration,.9s) cubic-bezier(.2,.8,.2,1) both;}
+  #cinematic-kicker{display:block;color:var(--danger);font:800 10px "Orbitron",sans-serif;letter-spacing:.34em;}
+  #cinematic-title{display:block;margin:7px 0 5px;color:var(--text-primary);font:900 clamp(28px,8vw,46px) "Orbitron","Gothic A1",sans-serif;
+    letter-spacing:.08em;text-shadow:0 0 18px rgba(255,73,73,.75);}
+  #cinematic-sub{display:block;color:var(--text-primary);font-size:12px;font-weight:700;letter-spacing:.04em;}
+  #cinematic-layer.final-boss::after{background:linear-gradient(90deg,transparent,rgba(105,53,0,.9) 20%,rgba(34,18,3,.97) 50%,rgba(105,53,0,.9) 80%,transparent);border-color:rgba(255,207,77,.85);}
+  #cinematic-layer.final-boss #cinematic-kicker,#cinematic-layer.final-boss #cinematic-title{color:var(--text-primary);text-shadow:0 0 20px rgba(255,207,77,.78);}
+  #cinematic-layer.final-boss #cinematic-sub{color:var(--text-primary);}
+  #cinematic-layer.end-sequence{pointer-events:auto;}
+  #cinematic-layer.end-sequence::before{background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.08),rgba(2,3,5,.82) 72%);}
+  #cinematic-layer.end-clear::after{background:linear-gradient(90deg,transparent,rgba(18,91,59,.88) 20%,rgba(6,32,23,.97) 50%,rgba(18,91,59,.88) 80%,transparent);border-color:rgba(57,224,122,.85);}
+  #cinematic-layer.end-clear #cinematic-kicker,#cinematic-layer.end-clear #cinematic-title{color:var(--success);text-shadow:0 0 22px rgba(57,224,122,.8);}
+  #cinematic-layer.end-clear #cinematic-sub{color:var(--text-primary);}
+  #cinematic-layer.end-defeat #cinematic-title{color:var(--danger);}
+  #screen-game.cinematic-ending #combat-canvas{animation:cinematicCameraPush var(--cinematic-duration,.65s) ease-out both;}
+  #screen-game.cinematic-ending #board-wrap,#screen-game.cinematic-ending #skill-row,#screen-game.cinematic-ending #quit-run{pointer-events:none;}
+  /* [UX 2026-09-02] 생성기가 보드 바로 위에 있어서, 길게 눌러 연속 생성하는 동안
+     엄지손가락이 보드 위 칸들을 가리는 문제가 있었다 — 보드 아래(엄지가 자연스럽게
+     닿는 화면 하단)로 옮겼다. */
+  /* [2026-09-05] 스킬 버튼 — 보드 조작 영역에서 전투 화면 오른쪽으로 이동했었다.
+     2026-09-16 UI 정리로 주문서 게이지 줄(오른쪽 위) 안으로 다시 옮겼다 — 실제 배치는
+     파일 끝의 "[UI 정리 2026-09-16]" 섹션에서 #skill-row/.skill-btn을 재정의한다. */
+  #skill-row{position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:6;
+    display:flex;flex-direction:column;gap:8px;width:min(92px,22vw);margin:0;pointer-events:auto;}
+  .skill-btn{flex:none;width:100%;min-height:58px;position:relative;overflow:hidden;padding:8px 5px;border-radius:11px;
+    border:2px solid var(--skill-accent,var(--arcane));background:rgba(36,26,51,.88);color:var(--text-primary);font-weight:700;font-size:11px;
+    cursor:pointer;user-select:none;touch-action:manipulation;transition:opacity .15s,filter .15s,border-color .15s;}
+  .skill-btn:disabled{cursor:not-allowed;}
+  .skill-btn[data-state="cooldown"]{opacity:.58;filter:saturate(.55);}
+  .skill-btn[data-state="energy"]{opacity:.72;border-color:var(--energy);}
+  .skill-btn[data-state="target"]{opacity:.48;border-color:var(--border);filter:grayscale(.35);}
+  .skill-btn[data-state="ready"]{box-shadow:0 0 9px color-mix(in srgb,var(--skill-accent,var(--arcane)) 55%,transparent);}
+  .skill-btn .sk-cd{position:absolute;left:0;top:0;bottom:0;width:0%;
+    background:rgba(176,125,255,.30);pointer-events:none;transition:width .1s linear;}
+  .skill-btn .sk-label{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:3px;white-space:normal;line-height:1.15;text-shadow:0 1px 2px var(--bg);}
+  .skill-btn .sk-icon{font-size:17px;line-height:1;}
+  .skill-btn .sk-cost{font-family:"Orbitron",sans-serif;font-size:10px;color:var(--energy);
+    font-variant-numeric:tabular-nums;}
+  .skill-btn.fx-use{animation:orderComplete .5s ease-out;}
+  .skill-btn.fx-ready{animation:skillReady .7s ease-out;}
+  /* 스테이지 1 최초 입장용 상황형 튜토리얼. 안내 대상은 계속 조작할 수 있다. */
+  #tutorial-layer{position:fixed;inset:0;z-index:80;pointer-events:none;}
+  #tutorial-card{position:fixed;z-index:82;width:min(310px,calc(100vw - 24px));padding:14px 15px 11px;
+    border:2px solid var(--energy);border-radius:13px;background:rgba(18,20,25,.97);color:var(--text);
+    box-shadow:0 8px 30px rgba(0,0,0,.62),0 0 18px rgba(255,207,77,.28);pointer-events:auto;}
+  #tutorial-card .tutorial-step{margin-bottom:4px;color:var(--energy);font:700 10px "Orbitron",sans-serif;}
+  #tutorial-card strong{display:block;font-size:15px;color:var(--text-primary);line-height:1.3;}
+  #tutorial-card p{margin:7px 0 10px;font-size:12px;line-height:1.55;color:var(--text-primary);white-space:pre-line;}
+  #tutorial-skip{display:block;margin-left:auto;padding:5px 9px;border:1px solid var(--border);border-radius:8px;
+    background:var(--bg);color:var(--dim);font-size:10px;}
+  .tutorial-focus{outline:3px solid var(--energy)!important;
+    outline-offset:3px;filter:brightness(1.13);animation:tutorialFocus 1s ease-in-out infinite alternate;}
+  @keyframes tutorialFocus{from{box-shadow:0 0 5px rgba(255,207,77,.45)}to{box-shadow:0 0 18px rgba(255,207,77,.95)}}
+  #generator-row{display:flex;align-items:center;gap:10px;margin-top:6px;position:relative;}
+  #generator-btn{flex:1;padding:12px;border-radius:10px;border:2px solid var(--energy);
+    background:var(--surface);color:var(--energy);font-weight:700;font-size:14px;cursor:pointer;user-select:none;
+    position:relative;overflow:hidden;}
+  /* [2026-09-04] 생성기 버튼 안에 처치 점수 진행도를 채워 넣는다 — 다음 에너지 지급까지
+     얼마나 남았는지가 보드를 보는 내내 눈에 들어오게 하기 위함(인철 요청). */
+  #generator-btn .gen-fill{position:absolute;left:0;top:0;bottom:0;width:0%;
+    background:linear-gradient(90deg,rgba(255,207,77,.30),rgba(255,184,77,.16));
+    transition:width .2s;pointer-events:none;}
+  #generator-btn .gen-label{position:relative;z-index:1;}
+  #generator-btn .gen-score{font-family:"Orbitron",sans-serif;font-size:11px;opacity:.85;
+    font-variant-numeric:tabular-nums;margin-left:4px;}
+  #generator-btn:disabled{background:var(--surface-disabled);border-color:var(--border-disabled);color:var(--text-disabled);cursor:not-allowed;}
+  #generator-btn:active{transform:scale(.98);}
+  #generator-btn.fx-generate{animation:generatorKick .24s ease-out;}
+  #generator-btn.fx-energy-grant{animation:energyGrant .7s ease-out;}
+  /* [2026-09-05] 보유 에너지는 주문서 상태 줄 위에 별도 한 줄로 크게 표시한다. */
+  #energy-status-row{display:flex;align-items:center;justify-content:center;gap:8px;min-height:30px;
+    margin:0 1px 4px;border:1px solid color-mix(in srgb,var(--energy) 58%,var(--border));border-radius:9px;
+    background:linear-gradient(90deg,var(--bg),var(--surface),var(--bg));color:var(--energy);}
+  .energy-status-label{font-size:12px;font-weight:700;}
+  #energy-display{display:inline-flex;align-items:center;justify-content:center;
+    font:800 18px "Orbitron","Gothic A1",sans-serif;color:var(--energy);white-space:nowrap;
+    min-width:32px;text-align:center;font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(255,207,77,.35);}
+  #energy-display.fx-gain{animation:energyCountGain .65s ease-out;}
+  #energy-status-row.fx-gain{animation:energyRowGain .65s ease-out;}
+  .energy-gain-pop{position:absolute;right:4px;top:-23px;z-index:8;color:var(--energy);
+    font:800 16px "Orbitron","Gothic A1",sans-serif;text-shadow:0 0 10px rgba(255,207,77,.8),0 2px 3px var(--bg);
+    pointer-events:none;animation:energyPop .85s ease-out forwards;}
+
+  /* [2026-09-05] 주문서 관련 상태를 카드 바로 위의 얇은 한 줄에 모은다. */
+  #order-status-row{display:flex;align-items:center;gap:6px;min-height:18px;margin:0 1px 4px;
+    color:var(--dim);font-size:10px;line-height:1;}
+  .order-status-title{flex:none;color:var(--text);font-weight:700;white-space:nowrap;}
+  /* 에너지 소모와 머지 성공으로 차는 주문서 생성 게이지. */
+  .order-gauge-wrap{display:flex;align-items:center;gap:5px;width:92px;min-width:82px;margin:0;}
+  #order-status-row .order-gauge-wrap{flex:1;width:auto;min-width:0;}
+  .order-gauge-track{flex:1;height:7px;background:var(--bg);border:1px solid var(--border);
+    border-radius:5px;overflow:hidden;}
+  #order-status-row .order-gauge-track{height:6px;}
+  .order-gauge-fill{height:100%;background:linear-gradient(90deg,var(--energy),var(--explosion));
+    width:0%;transition:width .2s;}
+  .order-gauge-wrap.fx-charge{animation:gaugeCharge .32s ease-out;}
+  .order-gauge-wrap.fx-full .order-gauge-track{animation:gaugeFull .7s ease-out;}
+  .order-gauge-label{font-family:"Orbitron",sans-serif;font-size:10px;color:var(--energy);
+    white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .order-stock{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border:1px solid var(--border);
+    border-radius:10px;background:var(--bg);color:var(--text);font:700 10px "Orbitron",sans-serif;
+    white-space:nowrap;font-variant-numeric:tabular-nums;}
+  #order-status-row .order-stock{flex:none;padding:1px 5px;background:transparent;}
+  /* [UX 2026-09-02] 24칸이 전부 비슷한 색 사각형으로 보여 어떤 피스끼리 합쳐지는지
+     한눈에 안 들어온다는 지적 — 티어 숫자를 가장 먼저 눈에 띄는 정보로 키우고,
+     안쪽 하이라이트/그림자로 칸마다 입체감을 줘서 칸끼리 뭉쳐 보이지 않게 했다. */
+  /* [2026-09-02 도파민 옵션] 골든 피스(생성기에서 소확률로 상위 티어가 바로 나옴) —
+     inset box-shadow로 링을 그려 .cell의 overflow:hidden에 잘리지 않게 했다. */
+  .piece.fx-spawn{animation:pieceSpawn .28s cubic-bezier(.2,1.6,.4,1);}
+  .piece.fx-merge{animation:pieceMerge .34s cubic-bezier(.2,1.6,.4,1);}
+  .piece.fx-critical{animation:pieceCritical .5s cubic-bezier(.2,1.5,.4,1);}
+  .piece.fx-invalid{animation:invalidNudge .28s ease-out;}
+
+  /* ---------- Order sheets (주문서) ---------- */
+  /* 주문서 3장을 한 줄에 비교하며 강화/사용/폐기를 바로 선택한다. */
+  .order-card.fx-complete{animation:orderComplete .6s ease-out;}
+  .order-card.fx-invalid{animation:invalidNudge .28s ease-out;border-color:var(--hp);}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  #action-log{font-size:11px;color:var(--dim);padding:4px 10px 8px;min-height:14px;}
+  #action-log.fx-log{animation:logPulse .28s ease-out;}
+
+  /* ---------- Result screen ---------- */
+  #screen-result{align-items:center;justify-content:center;text-align:center;gap:14px;
+    background:radial-gradient(circle at 50% 30%,rgba(79,195,255,.10),transparent 48%);}
+  #result-title{font-size:30px;font-weight:800;animation:resultReveal .65s cubic-bezier(.2,1.5,.4,1);}
+  #result-title.clear{color:var(--toxic);}
+  #result-title.defeat{color:var(--hp);}
+  #retry-btn{padding:14px 28px;border:none;border-radius:10px;background:var(--accent);
+    color:var(--primary-text);font-weight:700;font-size:15px;cursor:pointer;}
+  #result-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;width:min(310px,100%);}
+  .result-stat{padding:9px 8px;border:1px solid var(--border);border-radius:9px;background:rgba(25,29,36,.9);}
+  .result-stat strong{display:block;font:800 17px "Orbitron","Gothic A1",sans-serif;color:var(--energy);}
+  .result-stat span{display:block;margin-top:2px;color:var(--dim);font-size:10px;}
+
+  /* ---------- Floating damage numbers ---------- */
+  .float-num{position:absolute;font-weight:800;font-size:13px;pointer-events:none;
+    text-shadow:0 1px 3px var(--bg);animation:floatUp .7s ease-out forwards;}
+  .float-num.heal{color:var(--toxic);}
+  .float-num.dmg-player{color:var(--danger);}
+  .float-num.dmg-enemy{color:var(--text-primary);}
+  .float-num.enhance{color:var(--energy);font-size:15px;}
+  .damage-stack{position:absolute;z-index:7;display:flex;flex-direction:column;align-items:center;gap:1px;
+    pointer-events:none;animation:damageStackUp .72s ease-out forwards;}
+  .damage-value{font:800 12px "Orbitron","Gothic A1",sans-serif;line-height:1;
+    text-shadow:0 1px 3px var(--bg),0 0 5px currentColor;white-space:nowrap;}
+  .damage-value.critical{font-size:14px;color:var(--primary)!important;transform:scale(1.06);}
+  .damage-value em{font:800 9px "Gothic A1",sans-serif;color:var(--energy);font-style:normal;margin-left:3px;}
+  @keyframes floatUp{from{transform:translateY(0);opacity:1;}to{transform:translateY(-30px);opacity:0;}}
+  @keyframes damageStackUp{from{transform:translate(-50%,-50%);opacity:1;}to{transform:translate(-50%,-50%) translateY(-30px);opacity:0;}}
+  @keyframes combatShake{0%,100%{transform:translate(0)}25%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}75%{transform:translate(-2px,-1px)}}
+  @keyframes playerHitFlash{0%{opacity:1}100%{opacity:0}}
+  @keyframes hpHit{0%{filter:brightness(2);transform:scaleX(1.03)}100%{filter:none;transform:scaleX(1)}}
+  @keyframes generatorKick{0%{transform:scale(.96);box-shadow:0 0 0 rgba(255,207,77,0)}55%{transform:scale(1.025);box-shadow:0 0 18px rgba(255,207,77,.42)}100%{transform:scale(1)}}
+  @keyframes energyGrant{0%{filter:brightness(1);box-shadow:0 0 0 rgba(255,207,77,0)}35%{filter:brightness(1.8);box-shadow:0 0 24px rgba(255,207,77,.9)}100%{filter:brightness(1);box-shadow:0 0 0 rgba(255,207,77,0)}}
+  @keyframes energyCountGain{0%{transform:scale(1);color:var(--energy)}40%{transform:scale(1.28);color:var(--text-primary)}100%{transform:scale(1);color:var(--energy)}}
+  @keyframes energyRowGain{0%{box-shadow:0 0 0 rgba(255,207,77,0)}40%{box-shadow:0 0 16px rgba(255,207,77,.65);border-color:var(--text-primary)}100%{box-shadow:0 0 0 rgba(255,207,77,0)}}
+  @keyframes energyPop{0%{transform:translateY(8px) scale(.7);opacity:0}25%{transform:translateY(0) scale(1.15);opacity:1}100%{transform:translateY(-22px) scale(1);opacity:0}}
+  @keyframes skillReady{0%{transform:scale(.96);filter:brightness(1)}45%{transform:scale(1.035);filter:brightness(1.8)}100%{transform:scale(1);filter:none}}
+  @keyframes matchHint{from{transform:translateY(1px);opacity:.55}to{transform:translateY(-2px);opacity:1}}
+  @keyframes readyGlow{0%,100%{box-shadow:0 0 9px rgba(255,207,77,.32)}50%{box-shadow:0 0 18px rgba(255,207,77,.68)}}
+  @keyframes resultReveal{0%{transform:scale(.65);opacity:0}100%{transform:scale(1);opacity:1}}
+  @keyframes gaugeCharge{0%{transform:scaleX(.98)}55%{transform:scaleX(1.025);filter:brightness(1.7)}100%{transform:scaleX(1);filter:none}}
+  @keyframes gaugeFull{0%{box-shadow:0 0 0 rgba(255,207,77,0)}40%{box-shadow:0 0 20px rgba(255,207,77,.9)}100%{box-shadow:0 0 0 rgba(255,207,77,0)}}
+  @keyframes pieceSpawn{0%{transform:scale(.2) rotate(-10deg);opacity:0}70%{transform:scale(1.12) rotate(2deg)}100%{transform:scale(1);opacity:1}}
+  @keyframes pieceMerge{0%{transform:scale(.75)}55%{transform:scale(1.22);filter:brightness(1.8)}100%{transform:scale(1);filter:none}}
+  @keyframes pieceCritical{0%{transform:scale(.65) rotate(-8deg)}45%{transform:scale(1.3) rotate(5deg);filter:brightness(2.2)}100%{transform:scale(1);filter:none}}
+  @keyframes orderComplete{0%{transform:scale(.9);box-shadow:0 0 0 rgba(255,207,77,0)}45%{transform:scale(1.045);box-shadow:0 0 24px rgba(255,207,77,.75)}100%{transform:scale(1);box-shadow:none}}
+  @keyframes invalidNudge{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+  @keyframes logPulse{0%{transform:translateY(3px);opacity:.35}100%{transform:translateY(0);opacity:1}}
+  @keyframes cinematicScrim{0%{opacity:0}14%,76%{opacity:1}100%{opacity:0}}
+  @keyframes cinematicBand{0%{opacity:0;transform:translateY(-50%) scaleX(.25) skewY(-2deg)}18%,76%{opacity:1;transform:translateY(-50%) scaleX(1) skewY(-2deg)}100%{opacity:0;transform:translateY(-50%) scaleX(1.08) skewY(-2deg)}}
+  @keyframes cinematicCard{0%{opacity:0;transform:scale(1.35);letter-spacing:.2em}18%,76%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.98)}}
+  @keyframes cinematicCameraPush{from{transform:scale(1);filter:none}to{transform:scale(1.035);filter:saturate(.72) contrast(1.08)}}
+
+  @media (prefers-reduced-motion:reduce){
+    #combat-wrap.fx-shake,#combat-wrap.fx-shake-soft,#combat-wrap.fx-player-hit::after,#hud .hp-wrap.fx-hp-hit,#generator-btn.fx-generate,#generator-btn.fx-energy-grant,#energy-display.fx-gain,#energy-status-row.fx-gain,.energy-gain-pop,.skill-btn.fx-ready,.order-gauge-wrap.fx-charge,.order-gauge-wrap.fx-full .order-gauge-track,.piece.fx-spawn,.piece.fx-merge,.piece.fx-critical,.piece.fx-invalid,.order-card.fx-complete,.order-card.fx-invalid,#action-log.fx-log,#result-title,#cinematic-layer.active::before,#cinematic-layer.active::after,#cinematic-layer.active #cinematic-card,#screen-game.cinematic-ending #combat-canvas{animation-duration:.01ms!important;}
+  }
+
+  /* ---------- Player-facing tool menu (❓ 게임 설명서) ---------- */
+  /* [UX 2026-09-02] 이전엔 하단 우측 고정이라 머지 보드 마지막 칸(3행 8열) 바로 위에
+     겹쳐서 그 칸의 피스를 드래그/클릭할 수 없었다(치명적 버그). 보드가 닿지 않는
+     상단 우측 코너로 옮겨 모든 화면(시작/게임/결과)에서 항상 접근 가능하면서
+     보드를 가리지 않게 했다. */
+  #tools-toggle,#manual-toggle{position:fixed;right:10px;width:38px;height:38px;border-radius:50%;
+    background:rgba(25,29,36,.9);border:1px solid var(--border);color:var(--text);font-size:15px;
+    cursor:pointer;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+  #tools-toggle{display:none;top:44px;}
+  #manual-toggle{top:8px;}
+  /* [2026-09-02] 게임 설명서 — 기획서(기획서.md, 개발/기획 결정 로그)와는 별개로, 플레이어가
+     "어떻게 하면 되는지"만 보는 순수 플레이 가이드. 인철 요청: "기획서 말고 별도로
+     내부 메뉴로 설명서를 만들어봐. 게임 설명서" (2026-09-02). 밸런스 에디터(⚙)는
+     2026-09-16 구조 정비로 인게임에서 빠지고 별도 balance-editor.html로 분리됐다. */
+  #manual-panel{position:fixed;inset:0;background:rgba(4,6,9,.92);z-index:200;display:none;
+    overflow-y:auto;padding:16px;}
+  #manual-panel.open{display:block;}
+  #manual-panel h2{margin:0 0 4px;font-size:18px;font-family:"Orbitron",sans-serif;}
+  #manual-panel .note{color:var(--dim);font-size:12px;margin-bottom:14px;}
+  .doc-rules{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--ember);
+    border-radius:8px;padding:12px 14px;margin-bottom:14px;max-width:560px;}
+  .doc-rules h3{margin:0 0 8px;font-size:12px;color:var(--ember);letter-spacing:.02em;}
+  .doc-rules ul{margin:0;padding-left:18px;font-size:12px;line-height:1.7;color:var(--text-primary);}
+  .doc-section{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+    padding:14px;margin-bottom:12px;max-width:560px;}
+  .doc-section h3{margin:0 0 10px;font-size:13px;color:var(--accent);}
+  .doc-section ul{margin:0;padding-left:18px;font-size:12px;line-height:1.7;color:var(--text);}
+  .doc-section ul.warn li{color:var(--explosion);}
+  .editor-buttons{display:flex;gap:10px;margin:14px 0 30px;flex-wrap:wrap;}
+  .editor-buttons button{padding:10px 16px;border-radius:8px;border:none;font-weight:600;
+    font-size:13px;cursor:pointer;}
+  #reset-data-btn{margin-top:8px;background:var(--surface);color:var(--text-primary);border:1px solid var(--border);}
+
+  /* 브라우저 주소창을 제외한 실제 가용 높이에 맞춰 전투 영역만 유동 축소한다. */
+  @media (max-width:600px){
+    #tools-toggle{display:block;}
+    .tool-button{opacity:0;pointer-events:none;transform:translateY(-8px) scale(.9);transition:.16s ease;}
+    #app.tools-open .tool-button{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
+    #app.tools-open #manual-toggle{top:88px;}
+    #hud{padding:6px 8px;gap:7px;}
+    #hud .wave-label{font-size:11px;}
+    #hud .run-metrics{font-size:8.5px;gap:6px;}
+    #hud .run-metric strong{font-size:9px;}
+    #skill-row{right:5px;width:min(84px,22vw);gap:6px;}
+  }
+  @media (max-height:760px){
+    #hud{padding-top:4px;padding-bottom:4px;}
+    #energy-status-row{min-height:25px;margin-bottom:3px;gap:6px;}
+    .energy-status-label{font-size:10px;}
+    #energy-display{font-size:16px;}
+    #order-status-row{min-height:15px;margin-bottom:3px;font-size:9px;}
+    #skill-row{gap:5px;width:min(78px,21vw);}
+    .skill-btn{min-height:50px;padding:6px 4px;font-size:10px;border-width:1.5px;}
+    .skill-btn .sk-icon{font-size:15px;}
+    .skill-btn .sk-cost{font-size:9px;}
+    #generator-row{margin-top:4px;gap:6px;}
+    #generator-btn{padding:8px;font-size:12px;}
+    #action-log{font-size:10px;padding:2px 8px 4px;min-height:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  }
+  @media (max-height:620px){
+    #screen-game.active{grid-template-rows:auto minmax(120px,1fr) auto auto;}
+    .skill-btn{min-height:44px;padding:4px 3px;}
+    #generator-btn{padding:6px;}
+    #screen-start{padding-top:8px;}
+    #screen-start h1{font-size:20px;margin-top:2px;}
+    #screen-start .sub{margin-bottom:8px;}
+    .skill-pick-list{gap:6px;}
+    .skill-pick-card{padding:8px 10px;}
+    .skill-pick-card h3{font-size:13px;margin-bottom:2px;}
+    .skill-pick-card p{font-size:10.5px;line-height:1.35;}
+    #start-btn{margin-top:8px;padding:11px;}
+  }
+
+  #screen-lobby{padding:22px 18px max(20px,env(safe-area-inset-bottom));gap:18px;background:radial-gradient(ellipse at 50% 0%,var(--surface),transparent 55%),var(--panel);}
+  .lobby-brand{font:800 26px "Orbitron",sans-serif;color:var(--ember);margin:0;letter-spacing:3px;}
+  .eyebrow{color:var(--dim);font-size:10px;letter-spacing:2px;margin:4px 0 0;}
+  .wallet{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .wallet>div{border:1px solid var(--border);border-radius:12px;background:var(--bg);padding:12px;}
+  .wallet small,.meta-note{font-size:11px;color:var(--dim);line-height:1.6;}
+  .wallet strong{display:block;font-size:22px;margin:5px 0;color:var(--energy);font-variant-numeric:tabular-nums;}
+  .wallet>div:first-child strong{color:var(--skill);}
+  .stamina-charge{width:100%;margin-top:8px;padding:8px 6px;border:1px solid var(--skill);border-radius:7px;background:var(--surface);color:var(--skill);font-size:11px;font-weight:800;cursor:pointer;}
+  .stamina-charge:disabled{border-color:var(--border-disabled);background:var(--surface-disabled);color:var(--text-disabled);cursor:not-allowed;}
+  #stamina-charge-count{display:block;margin-top:5px;color:var(--dim);}
+  .lobby-tabs{display:flex;gap:6px;background:var(--bg);padding:5px;border-radius:12px;}
+  .lobby-tabs button{flex:1;border:0;border-radius:8px;padding:11px;color:var(--dim);background:transparent;cursor:pointer;font-weight:700;}
+  .lobby-tabs button[aria-selected="true"]{background:var(--surface);color:var(--text);}
+  .primary,.secondary{width:100%;padding:14px;border:0;border-radius:10px;cursor:pointer;font-size:14px;font-weight:800;}
+  .primary{background:linear-gradient(115deg,var(--ember),var(--explosion));color:var(--primary-text);}
+  .primary:disabled{background:var(--surface-disabled);border-color:var(--border-disabled);color:var(--text-disabled);cursor:not-allowed;}
+  .secondary{background:var(--surface);color:var(--text);}
+  .lobby-footer{margin-top:16px;position:sticky;bottom:0;background:var(--panel);padding-top:10px;}
+  .growth-hero{text-align:center;padding:18px;border:1px solid var(--border);border-radius:14px;background:radial-gradient(ellipse at center,var(--surface),var(--bg));margin-bottom:12px;}
+  .growth-hero .hero-mark{font-size:42px;color:var(--accent);text-shadow:0 0 25px color-mix(in srgb, var(--energy) 53%, transparent);}
+  .growth-hero p{font-size:12px;color:var(--dim);margin:8px 0;}
+  .upgrade-card{display:flex;gap:10px;align-items:center;border:1px solid var(--border);border-radius:12px;background:var(--panel2);padding:14px;margin-bottom:10px;}
+  .upgrade-card>div{flex:1;min-width:0;}
+  .upgrade-card b{font-size:14px;}.upgrade-card small{display:block;color:var(--dim);font-size:11px;margin-top:7px;}
+  .upgrade-card button{width:100px;font-size:12px;padding:12px 5px;}
+  .passive-hero{padding:14px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(145deg,var(--surface),var(--bg));margin-bottom:12px;}
+  .passive-hero h3{margin:0 0 5px;font-size:15px;color:var(--arcane);}
+  .passive-hero p{margin:0;color:var(--dim);font-size:11px;line-height:1.6;}
+  .passive-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px;}
+  .passive-slot{min-height:76px;padding:10px;border:1px dashed var(--border);border-radius:10px;background:var(--bg);text-align:left;color:var(--text);cursor:pointer;}
+  .passive-slot.filled{border-style:solid;border-color:var(--arcane);background:linear-gradient(145deg,var(--surface),var(--bg));}
+  .passive-slot strong{display:block;font-size:11px;color:var(--arcane);margin-bottom:5px;}
+  .passive-slot span{display:block;font-size:11px;line-height:1.45;}
+  .passive-slot small{display:block;color:var(--dim);font-size:9.5px;margin-top:4px;}
+  .passive-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .passive-actions button{padding:11px 8px;}
+  .passive-section-title{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:13px 0 7px;}
+  .passive-section-title b{font-size:13px;}
+  .passive-section-title small{color:var(--dim);font-size:10px;}
+  .passive-owned-list,.passive-codex-list{display:grid;gap:7px;}
+  .passive-card{border:1px solid var(--border);border-radius:10px;background:var(--panel2);padding:10px;}
+  .passive-card.equipped{border-color:var(--arcane);box-shadow:inset 3px 0 var(--arcane);}
+  .passive-card.locked{background:var(--surface-disabled);border-color:var(--border-disabled);color:var(--text-disabled);}
+  .passive-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .passive-card-head b{font-size:11.5px;line-height:1.4;}
+  .passive-category{flex:none;padding:2px 6px;border:1px solid var(--border);border-radius:8px;color:var(--dim);font-size:9px;}
+  .passive-desc{margin-top:5px;color:var(--text-primary);font-size:10.5px;line-height:1.5;}
+  .passive-card-actions{display:flex;gap:5px;margin-top:8px;}
+  .character-modal-passive.passive-locked{opacity:.52;filter:saturate(.55);}
+  .character-modal-passive.passive-locked b::after{content:'';}
+  .passive-card-actions button{flex:1;padding:7px 4px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--text);font-size:10px;font-weight:700;cursor:pointer;}
+  .passive-card-actions button.active{border-color:var(--arcane);color:var(--text-primary);background:var(--surface);}
+  #passive-draw-result{min-height:18px;margin:7px 0 0;color:var(--energy);font-size:11px;line-height:1.5;}
+  #passive-codex-wrap[hidden]{display:none!important;}
+  #lobby-notice,#save-status{font-size:12px;line-height:1.6;color:var(--energy);}
+  #save-status:empty,#lobby-notice:empty{display:none;}
+  #save-status{background:var(--surface);padding:8px;flex:none;z-index:15;}
+  #stage-brief{padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin:12px 0;font-size:12px;line-height:1.8;}
+  #back-lobby{width:auto;align-self:flex-start;margin:10px 0;padding:9px 12px;font-size:12px;}
+  #result-reward{width:100%;max-width:340px;padding:18px;background:var(--surface);border:1px solid var(--border);border-radius:14px;}
+  #result-reward strong{display:block;color:var(--energy);font-size:28px;margin:8px 0;}
+  #result-reward p{font-size:12px;color:var(--dim);margin:5px 0;line-height:1.6;}
+  #screen-result{justify-content:flex-start;padding-top:38px;padding-bottom:28px;}
+  #quit-run{font-size:10px;color:var(--dim);border:1px solid var(--border);background:var(--panel2);padding:5px 10px;border-radius:5px;cursor:pointer;}
+  #action-log{display:flex;justify-content:space-between;align-items:center;}
+  .skill-pick-card{color:var(--text);text-align:left;width:100%;}
+  #screen-game #hud{padding-right:42px;gap:5px;}#hud .wave-label{font-size:10px;}
+  [hidden]{display:none!important;}
+
+
+  #screen-game #hud{padding-right:42px;}#hud .run-metrics{gap:3px;font-size:8px;}#hud .run-metric strong{font-size:9px;}
+
+.character-detail{padding:16px;background:var(--bg);border:1px solid var(--border);border-radius:14px;margin-bottom:14px}
+.character-detail h2{margin:10px 0}.character-detail h2 span{font-size:14px;color:var(--text-primary)}
+.character-detail p,.character-detail small{font-size:12px;color:var(--text-primary);line-height:1.7}
+.character-passive{padding:12px;background:var(--surface);border-radius:8px}
+.character-stats,.character-actions{display:flex;gap:8px;margin:12px 0}
+.character-stats>div{flex:1;text-align:center}.character-stats b,.character-stats small,.character-actions small{display:block}
+.character-actions>button{flex:1}.character-detail>button{width:100%}
+.character-roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.character-roster button{text-align:left;padding:12px;background:var(--surface);color:var(--text-primary);border:1px solid var(--border);border-radius:10px;min-width:0}
+.character-roster button.chosen{border-color:var(--energy);background:var(--surface-2)}.character-roster small{display:block;margin-top:5px;color:var(--text-primary)}
+.character-roster button:focus-visible{outline:2px solid var(--text-primary)}
+.formation-panel{padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:12px;margin-bottom:12px}
+.formation-panel>strong{display:block;margin-bottom:8px;color:var(--text-primary);font-size:12px}
+.formation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.formation-slot{padding:9px;border:1px solid var(--border);border-radius:9px;background:var(--surface);min-width:0}
+.formation-slot small,.formation-slot b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.formation-slot small{color:var(--text-secondary);font-size:9.5px}.formation-slot b{margin-top:3px;font-size:11px;color:var(--text-primary)}
+.formation-slot.active{border-color:var(--energy);box-shadow:inset 3px 0 var(--energy)}
+.formation-total{display:flex;justify-content:space-between;gap:8px;margin-top:9px;color:var(--text-primary);font-size:10px}
+.status-legend{color:var(--text-secondary);font-size:10px;line-height:1.55;margin-top:8px}
+
+/* 2026-09-14 로비 셸: 메인 로비/캐릭터 페이지 + 하단 고정 내비게이션 */
+#screen-lobby{padding:0;gap:0;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,var(--surface),transparent 55%),var(--panel)}
+#lobby-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px 18px 24px}
+#lobby-scroll>header{margin-bottom:16px}
+#lobby-scroll>.wallet{margin-bottom:14px}
+.lobby-page[hidden]{display:none!important}
+.lobby-home-hero{padding:16px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(145deg,var(--surface),var(--bg));box-shadow:0 10px 28px color-mix(in srgb, var(--bg) 33%, transparent)}
+.lobby-home-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.lobby-home-title small{color:var(--dim);font-size:10px}.lobby-home-title b{font-size:14px;color:var(--text-primary)}
+.lobby-party-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:12px 0}
+.lobby-party-member{min-width:0;padding:7px 4px;border:1px solid var(--border);border-radius:9px;background:var(--bg);text-align:center}
+.lobby-party-member span,.lobby-party-member b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lobby-party-member span{font-size:14px}.lobby-party-member b{margin-top:3px;font-size:9.5px;color:var(--text-primary)}
+#prepare-btn{min-height:58px;font-size:16px;box-shadow:0 8px 22px color-mix(in srgb, var(--danger) 13%, transparent)}
+#reset-data-btn{margin-top:10px}
+#lobby-nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 12px max(8px,env(safe-area-inset-bottom));background:var(--bg);border-top:1px solid var(--border);z-index:20}
+#lobby-nav button{min-height:52px;border:0;border-radius:11px;background:transparent;color:var(--text-secondary);font-size:11px;font-weight:800;cursor:pointer}
+#lobby-nav button span{display:block;margin-bottom:3px;font-size:18px;line-height:1}
+#lobby-nav button[aria-current="page"]{color:var(--text-primary);background:var(--surface);box-shadow:inset 0 2px var(--accent)}
+.character-page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:2px 0 12px}
+.character-page-head h2{margin:0;font:800 20px "Orbitron","Gothic A1",sans-serif;color:var(--text-primary)}
+.character-page-head p{margin:4px 0 0;color:var(--dim);font-size:10px}.character-count{font:700 10px "Orbitron",sans-serif;color:var(--energy)}
+  /* ---------- 영입(뽑기)·희귀도 ---------- */
+  .gacha-hero{padding:16px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--surface),var(--bg));text-align:center}
+  .gacha-hero small{display:block;color:var(--dim);font-size:10px}
+  .gacha-hero b{display:block;margin:4px 0 12px;font:800 30px "Orbitron",sans-serif;color:var(--energy)}
+  .gacha-hero .meta-note{margin:10px 0 0}
+  .gacha-result{margin-top:12px;padding:14px;border:1px solid var(--rarity-color,var(--border));border-radius:14px;
+    background:color-mix(in srgb,var(--rarity-color,var(--surface-2)) 14%,var(--bg));text-align:center}
+  .gacha-result .rarity-chip{display:inline-block;margin-bottom:6px}
+  .gacha-result b{display:block;font-size:19px;color:var(--rarity-color,var(--text-primary))}
+  .gacha-result p{margin:6px 0 0;color:var(--text-primary);font-size:11px}
+  .gacha-odds{display:flex;flex-direction:column;gap:5px}
+  .gacha-odds div{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--text-primary)}
+  .rarity-chip{padding:2px 7px;border:1px solid var(--rarity-color,var(--border));border-radius:7px;
+    color:var(--rarity-color,var(--text-primary));font:800 9px "Orbitron",sans-serif;letter-spacing:.04em}
+  #growth-list button[data-character-id].locked{background:var(--surface-disabled);border-color:var(--border-disabled);color:var(--text-disabled)}
+  #growth-list button[data-character-id].locked .character-portrait{color:var(--text-disabled);border-color:var(--border)}
+  .shard-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;font-size:10.5px;color:var(--text-primary)}
+  .shard-line b{font:700 12px "Orbitron",sans-serif;color:var(--energy)}
+.formation-panel{margin-bottom:14px}.formation-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.formation-slot{position:relative;padding:7px 3px 8px;text-align:center;cursor:pointer;color:var(--text);width:100%}
+.formation-slot .formation-portrait{display:flex;align-items:center;justify-content:center;width:34px;height:34px;margin:5px auto;border-radius:50%;background:color-mix(in srgb,var(--slot-color) 22%,var(--bg));border:1px solid var(--slot-color);font-weight:900;color:var(--slot-color)}
+.formation-slot b{font-size:9.5px}.formation-slot em{display:block;margin-top:2px;color:var(--text-secondary);font-size:8.5px;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.formation-slot.active{border-color:var(--slot-color);background:color-mix(in srgb,var(--slot-color) 12%,var(--surface));box-shadow:inset 0 2px var(--slot-color)}
+.formation-total{padding-top:9px;border-top:1px solid var(--border)}
+.character-filters{display:flex;gap:6px;overflow-x:auto;padding:1px 1px 8px;scrollbar-width:none}.character-filters::-webkit-scrollbar{display:none}
+.character-filter{flex:0 0 auto;padding:7px 10px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text-secondary);font-size:10px;font-weight:800;cursor:pointer}
+.character-filter.active{border-color:var(--filter-color,var(--accent));color:var(--text-primary);background:color-mix(in srgb,var(--filter-color,var(--accent)) 18%,var(--bg))}
+.character-roster{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.character-roster button{position:relative;padding:8px 6px 9px;text-align:center;min-height:126px;overflow:hidden;cursor:pointer;background:linear-gradient(155deg,var(--surface),var(--bg))}
+.character-roster button::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--character-color);opacity:.55}
+.character-roster button.chosen{border-color:var(--character-color);background:color-mix(in srgb,var(--character-color) 11%,var(--surface));box-shadow:inset 0 0 0 1px var(--character-color)}
+.character-roster .character-portrait{display:flex;align-items:center;justify-content:center;width:54px;height:54px;margin:4px auto 7px;border-radius:15px;background:color-mix(in srgb,var(--character-color) 20%,var(--bg));border:1px solid color-mix(in srgb,var(--character-color) 68%,var(--border));font-size:22px;font-weight:900;color:var(--character-color);box-shadow:0 5px 14px color-mix(in srgb, var(--bg) 33%, transparent)}
+.character-roster b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.character-roster small{font-size:8.8px;margin-top:3px}
+.character-roster .deployed-badge{position:absolute;right:4px;top:6px;padding:2px 4px;border-radius:6px;background:var(--character-color);color:var(--primary-text);font-size:7.5px;font-weight:900}
+#character-modal{position:absolute;inset:0;z-index:70;display:flex;align-items:flex-end;justify-content:center;padding-top:30px}
+#character-modal[hidden]{display:none!important}
+.character-modal-backdrop{position:absolute;inset:0;background:color-mix(in srgb, var(--bg) 78%, transparent);backdrop-filter:blur(3px)}
+.character-dialog{position:relative;width:100%;max-height:88%;overflow-y:auto;border:1px solid var(--border);border-bottom:0;border-radius:20px 20px 0 0;background:linear-gradient(160deg,var(--surface),var(--bg) 42%);padding:16px 16px max(18px,env(safe-area-inset-bottom));box-shadow:0 -18px 42px color-mix(in srgb, var(--bg) 67%, transparent);animation:characterPopupIn .2s ease-out}
+.character-modal-close{position:absolute;right:12px;top:12px;width:34px;height:34px;border:1px solid var(--border);border-radius:50%;background:var(--bg);color:var(--text-primary);font-size:18px;cursor:pointer}
+.character-modal-head{display:flex;align-items:center;gap:12px;padding-right:38px}.character-modal-portrait{flex:none;display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:20px;background:color-mix(in srgb,var(--character-color) 22%,var(--bg));border:2px solid var(--character-color);font-size:29px;font-weight:900;color:var(--character-color)}
+.character-modal-head h2{margin:0 0 5px;font-size:21px}.character-modal-head h2 span{color:var(--text-primary);font-size:12px}.character-tags{display:flex;flex-wrap:wrap;gap:4px}.character-tags span{padding:3px 6px;border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:9px}
+.character-modal-section{margin-top:13px;padding:11px;border:1px solid var(--border);border-radius:11px;background:var(--bg)}.character-modal-section>strong{display:block;margin-bottom:7px;color:var(--text-primary);font-size:11px}
+.character-modal-passive{color:var(--text-primary);font-size:10.5px;line-height:1.65}.character-modal-passive b{color:var(--character-color);font-size:12px}
+.character-stats,.character-actions{margin-bottom:0}.character-stats>div{padding:8px 3px;border-radius:8px;background:var(--bg)}.character-stats b{font-size:14px}.character-stats small{font-size:8.5px;color:var(--text-secondary)}
+.character-actions button{min-height:58px;padding:9px 5px}.character-actions button small{margin-top:3px;font-size:8.5px}
+.character-deploy-button{margin-top:9px}
+@keyframes characterPopupIn{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media (max-width:360px){.character-roster{gap:6px}.character-roster button{min-height:116px}.character-roster .character-portrait{width:48px;height:48px}.formation-slot .formation-portrait{width:30px;height:30px}.formation-slot b{font-size:8.5px}}
+

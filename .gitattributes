@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# [2026-09-18 세션 1] 표시 자산은 바이너리다 — LF 정규화·diff 대상에서 뺀다.
+*.webp binary
