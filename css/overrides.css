@@ -362,3 +362,39 @@ h2.reveal-kicker{margin-top:0}
    visualViewport resize마다 --app-100dvh를 실측 px로 채운다 — 값이 없을 때만
    100dvh로 되돌아간다. */
 #app{height:var(--app-100dvh,100dvh)}
+
+/* --- [2026-09-18 세션 4] 폰 가로 회전 안내 ---
+   레이아웃은 세로 하나뿐이다(개발계획서 세션 4에서 가로 레이아웃 취소). 폰을 눕히면
+   뷰포트 높이가 430px 안팎이 되어, 900px 높이를 전제로 만든 세로 레이아웃이 그 안에
+   우그러든다 — 실측 캔버스 162×150(세로 430×900에서는 430×554). 그 구간만 덮는다.
+
+   판정 세 조건이 모두 필요하다:
+     max-height:500px       세로 레이아웃이 실제로 깨지기 시작하는 높이. 1280×720 같은
+                            노트북 창은 720px이라 걸리지 않는다.
+     orientation:landscape  세로로 긴 작은 창은 제외한다.
+     pointer:coarse         터치 기기만. 이게 없으면 짧은 데스크톱 창에도 안내가 떠서
+                            "창을 키우면 되는데 왜 돌리라고 하나"가 된다.
+
+   JS는 관여하지 않는다 — 게임 루프도 멈추지 않으므로 세로로 되돌리면 전투가 그대로 이어진다.
+   z-index 300은 #app 안의 최상단(#manual-panel 200)보다 위지만, #app이 isolation:isolate로
+   자체 스택 문맥을 만들므로 실제로 겨루는 상대는 #app 자신이다. */
+#rotate-notice{display:none}
+@media (max-height:500px) and (orientation:landscape) and (pointer:coarse){
+  #rotate-notice{display:flex;position:fixed;inset:0;z-index:300;
+    align-items:center;justify-content:center;padding:20px;
+    background:var(--bg);}
+  #rotate-notice .rotate-card{display:flex;flex-direction:column;align-items:center;gap:10px;
+    max-width:320px;text-align:center;padding:22px 24px;
+    background:linear-gradient(var(--surface-2),var(--surface));
+    border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:0 8px 40px var(--bg);}
+  #rotate-notice .rotate-icon{font-size:34px;line-height:1;
+    animation:rotateHint 1.8s ease-in-out infinite;}
+  #rotate-notice strong{font-size:16px;color:var(--text-primary);}
+  #rotate-notice p{margin:0;font-size:12.5px;color:var(--text-secondary);}
+}
+/* 회전을 흉내 내는 아이콘 움직임. prefers-reduced-motion에서는 멈춘다. */
+@keyframes rotateHint{0%,45%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}
+@media (prefers-reduced-motion:reduce){
+  #rotate-notice .rotate-icon{animation:none}
+}

@@ -50,6 +50,12 @@ const ENTRIES = ENTRY === 'both' ? ['dev.html', 'index.html']
 const VIEWPORTS = [
   { name: '세로', width: 430, height: 900 },
   { name: '가로', width: 1280, height: 720 },
+  // [2026-09-18 세션 4] 폰 가로. 이 조합에서는 회전 안내가 떠 있는 것이 정상이므로
+  // 플레이스루 대신 안내가 보이는지만 본다(rotateOnly).
+  // touch가 있어야 pointer:coarse가 맞는다 — 기본 컨텍스트는 pointer:fine이라 안내가
+  // 뜨지 않는다. isMobile은 쓰지 않는다: meta viewport가 적용돼 크기가 900×430이
+  // 아니라 980×469로 바뀐다(실측).
+  { name: '폰 가로', width: 900, height: 430, touch: true, rotateOnly: true },
 ];
 
 /* ---------------------------------------------------------------- 정적 서버
@@ -73,7 +79,10 @@ function serve() {
 /* ------------------------------------------------------------------- 한 바퀴 */
 async function playthrough(browser, entry, viewport) {
   const label = `${entry} · ${viewport.name} ${viewport.width}×${viewport.height}`;
-  const page = await browser.newPage({ viewport: { width: viewport.width, height: viewport.height } });
+  const page = await browser.newPage({
+    viewport: { width: viewport.width, height: viewport.height },
+    hasTouch: !!viewport.touch,
+  });
   const problems = [];
   const events = [];
   const notes = [];   // 실패는 아니지만 기록해 둘 것
@@ -100,6 +109,15 @@ async function playthrough(browser, entry, viewport) {
     if (await el.isVisible().catch(() => false)) { await el.click(); return true; }
     return false;
   };
+  // 정상 종료·중단·회전 안내 세 경로가 같은 꼬리(이벤트·note·problem 출력, 페이지 닫기)를 쓴다.
+  const report = async headline => {
+    console.log(headline);
+    if (events.length) console.log(`        분석 이벤트 ${events.length}건: ${events.slice(0, 6).join(' / ')}${events.length > 6 ? ' …' : ''}`);
+    for (const n of notes) console.log(`        note: ${n}`);
+    for (const p of problems) console.log(`        ${p}`);
+    await page.close();
+    return problems.length;
+  };
 
   try {
     await step('로드', async () => {
@@ -109,6 +127,16 @@ async function playthrough(browser, entry, viewport) {
 
     await step('자산 9장 로드', () => page.waitForFunction(
       () => Object.keys(ASSET_URLS).every(k => (GameArt.images[k]?.naturalWidth || 0) > 0), { timeout: 20000 }));
+
+    // [2026-09-18 세션 4] 폰 가로는 회전 안내가 화면을 덮는 것이 정상 동작이다.
+    // 플레이스루를 돌리지 않고 안내가 실제로 보이는지만 확인한다.
+    if (viewport.rotateOnly) {
+      await step('회전 안내 표시', async () => {
+        const notice = page.locator('#rotate-notice');
+        if (!await notice.isVisible()) throw new Error('#rotate-notice 가 보이지 않는다');
+      });
+      return report(`  ${problems.length ? 'FAIL' : 'PASS'}  ${label}   회전 안내 표시됨`);
+    }
 
     await step('튜토리얼 건너뛰기', async () => { await clickIfVisible('#tutorial-skip'); await page.waitForTimeout(300); });
 
@@ -161,16 +189,10 @@ async function playthrough(browser, entry, viewport) {
     const save = await page.evaluate(() => { try { return !!localStorage.getItem('slagma.campaign.v4'); } catch { return false; } });
     if (!save) problems.push('저장 데이터(slagma.campaign.v4)가 쓰이지 않았다');
 
-    console.log(`  ${problems.length ? 'FAIL' : 'PASS'}  ${label}   ${wave} · 화면 ${await screen()}`);
+    return report(`  ${problems.length ? 'FAIL' : 'PASS'}  ${label}   ${wave} · 화면 ${await screen()}`);
   } catch {
-    console.log(`  FAIL  ${label}   (진행 중단)`);
+    return report(`  FAIL  ${label}   (진행 중단)`);
   }
-
-  if (events.length) console.log(`        분석 이벤트 ${events.length}건: ${events.slice(0, 6).join(' / ')}${events.length > 6 ? ' …' : ''}`);
-  for (const n of notes) console.log(`        note: ${n}`);
-  for (const p of problems) console.log(`        ${p}`);
-  await page.close();
-  return problems.length;
 }
 
 /* ------------------------------------------------------------------- 실행 */

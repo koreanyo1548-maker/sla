@@ -65,7 +65,7 @@
 
 /* --- 보스 HP바 (A-5) ---
    스프라이트 위 58px 바는 그대로 두고, 전장 상단에 하나 더 둔다. 보스가 없으면
-   요소 자체가 숨는다. 가로 레이아웃(세션 4)에서는 위치만 CSS로 분기하면 된다. */
+   요소 자체가 숨는다. */
 #boss-hp{position:absolute;left:12px;right:12px;top:8px;height:7px;pointer-events:none;
   background:color-mix(in srgb, var(--bg) 78%, transparent);border:1px solid var(--border);
   border-radius:4px;overflow:hidden;opacity:0;transition:opacity .2s ease;}

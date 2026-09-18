@@ -445,7 +445,7 @@ class OrderSheetSystem {
   }
   /* 카드 중심에서 해당 미사일 영웅 위치로 글로우가 날아간다.
      출발점이 캔버스 좌표계 밖(보드 영역)이라 DOM 플로트 계층을 쓴다. 도착점은
-     combatLayerPoint로 캔버스 표시 배율을 반영하므로 가로 레이아웃에서도 맞는다. */
+     combatLayerPoint로 캔버스 표시 배율을 반영하므로 어떤 화면 비율에서도 맞는다. */
   sendSparksToHero(card,moduleKey){
     const g=this.game, layer=$('#fx-layer');
     if(!layer||!g.floatLayer) return;
@@ -453,7 +453,7 @@ class OrderSheetSystem {
     const from={x:cardRect.left-layerRect.left+cardRect.width/2,y:cardRect.top-layerRect.top+cardRect.height/2};
     const hero=g.heroField.slotPosition(moduleKey);
     // 도착점은 캔버스 표시 배율을 반영해야 하므로 combatLayerPoint(#combat-wrap 기준)로
-    // 구한 뒤 #fx-layer 좌표로 옮긴다. 가로 레이아웃(세션 4)에서도 그대로 맞는다.
+    // 구한 뒤 #fx-layer 좌표로 옮긴다. 화면 비율이 달라져도 그대로 맞는다.
     const wrapRect=g.floatLayer.getBoundingClientRect();
     const inWrap=combatLayerPoint(g.floatLayer,hero.x,hero.y-40);
     const to={x:inWrap.x+(wrapRect.left-layerRect.left),y:inWrap.y+(wrapRect.top-layerRect.top)};
