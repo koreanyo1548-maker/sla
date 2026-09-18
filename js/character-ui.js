@@ -153,7 +153,9 @@ const MilestoneSystem={
     const next=cloneConfig(campaign.state),st=this.status(next,row);if(!st.ready)return false;
     next.milestoneClaims??={};next.milestoneClaims[id]=st.tier+st.count;
     if(!WalletSystem.earn(next,row.currencyId,st.total))return false;
-    if(!campaign.commit(next))return false;campaign.render();MilestoneUI.render(campaign);GameFeedback.toast(`${CurrencyTable[row.currencyId].name} +${st.total.toLocaleString('ko-KR')} 획득`);return true;
+    if(!campaign.commit(next))return false;
+    Analytics.track('milestone_claim',{id,tier:st.tier+st.count});
+    campaign.render();MilestoneUI.render(campaign);GameFeedback.toast(`${CurrencyTable[row.currencyId].name} +${st.total.toLocaleString('ko-KR')} 획득`);return true;
   },
   claimableCount(state){return MILESTONE_TABLE.filter(row=>this.claimable(state,row)).length;},
 };

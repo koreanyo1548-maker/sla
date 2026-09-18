@@ -564,6 +564,7 @@ class SkillSystem {
     if(!Number.isFinite(entry?.effect)) return false;
     const detail=SkillSystem.EFFECTS[SKILL_DEFS[skillKey].effect](this,skillKey,entry,cfg);
     if(detail===false) return false;
+    Analytics.track('skill_used',{skill:skillKey,wave:this.game.currentWaveCfg?.wave||0});
     logAction(`${cfg.name} ${entry.star}성 → ${detail}`);
     return true;
   }

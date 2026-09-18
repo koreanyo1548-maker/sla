@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>슬래그마 · 밸런스 에디터</title>
 <style>
-  /* [2026-09-17] 게임(index.html)과 같은 기본 디자인 토큰을 쓴다 — 프레임·패널·텍스트 계열만.
+  /* [2026-09-17] 게임과 같은 기본 디자인 토큰을 쓴다 — 프레임·패널·텍스트 계열만.
      --ember/--bad 같은 개발용 상태 표시는 역할이 달라 토큰을 따로 두되 값만 새 팔레트에 맞춘다. */
   :root{
     --bg:#171C20; --surface:#222C30; --surface-2:#2A363B; --border:#3D4A4F;
@@ -81,19 +81,23 @@
 
 <script>
 /* =====================================================================
-   이 파일은 index.html의 게임 코드를 건드리지 않는 별도 개발용 도구다.
-   같은 폴더의 index.html을 iframe으로 실행해 그 안의 DEFAULT_CONFIG 등을
-   직접 읽고 고치므로, 게임의 설정 스키마가 바뀌어도 이 파일을 따로
-   손볼 필요가 없다 — index.html이 유일한 소스다.
+   이 파일은 게임 코드를 건드리지 않는 별도 개발용 도구다.
+   같은 폴더의 dev.html(개발 진입점)을 iframe으로 실행해 그 안의
+   DEFAULT_CONFIG 등을 직접 읽고 고치므로, 게임의 설정 스키마가 바뀌어도
+   이 파일을 따로 손볼 필요가 없다 — 게임 코드가 유일한 소스다.
 
-   반드시 index.html과 같은 폴더에서 로컬 서버로 열어야 한다(예:
+   [2026-09-18 세션 2] 대상이 index.html에서 dev.html로 바뀌었다. index.html은
+   출시 진입점이 되어 개발 기능이 빠졌고, dev.html이 같은 파일들을 로드하면서
+   개발 기능을 켠다. dev.html은 tools/build-dev.mjs가 index.html에서 생성한다.
+
+   반드시 dev.html과 같은 폴더에서 로컬 서버로 열어야 한다(예:
    `python3 -m http.server`, `npx serve`). file://로 직접 열면
    브라우저가 iframe 간 접근을 차단해 아래에서 안내 메시지를 띄운다.
+   (게임 자체는 file:// 더블클릭으로 열린다 — 서버가 필요한 건 이 도구뿐이다.)
 
-   "적용"은 index.html의 밸런스 에디터가 원래 하던 것과 동일하게 —
-   현재 켜져 있는 게임(iframe)의 CONFIG를 즉시 바꿔 바로 플레이테스트할
-   수 있게 할 뿐, index.html 파일 자체를 고치지는 않는다. 값을 코드에
-   영구 반영하려면 이 화면에서 확인한 값을 index.html의 DEFAULT_CONFIG에
+   "적용"은 현재 켜져 있는 게임(iframe)의 CONFIG를 즉시 바꿔 바로
+   플레이테스트할 수 있게 할 뿐, 파일을 고치지는 않는다. 값을 코드에 영구
+   반영하려면 이 화면에서 확인한 값을 js/config.js의 DEFAULT_CONFIG에
    직접 옮겨 적어야 한다.
    ===================================================================== */
 const $=s=>document.querySelector(s);
@@ -110,7 +114,7 @@ function showError(html){
 }
 function hideError(){ $('#error-banner').classList.remove('show'); }
 
-// index.html의 CONFIG·DEFAULT_CONFIG 등은 최상위 스크립트의 const/let이라
+// 게임의 CONFIG·DEFAULT_CONFIG 등은 최상위 스크립트의 const/let이라
 // window의 속성이 아니다(같은 문서의 다른 <script>에서는 이름으로 바로 보이지만
 // iframe.contentWindow.DEFAULT_CONFIG처럼 밖에서 속성으로 읽으면 undefined다).
 // 그래서 iframe 문서 안에 다리 역할의 <script>를 하나 심어, 그 스크립트가
@@ -140,13 +144,13 @@ function loadGame(){
       doc.body.appendChild(script);
       bridge=w.__slagmaBridge;
       if(!bridge || !bridge.DEFAULT_CONFIG || !bridge.cloneConfig || !bridge.replaceObjectContents){
-        throw new Error('index.html에서 필요한 값(DEFAULT_CONFIG 등)을 찾지 못했습니다.');
+        throw new Error('dev.html에서 필요한 값(DEFAULT_CONFIG 등)을 찾지 못했습니다.');
       }
     }catch(e){
       showError(`
-        <b>index.html에 접근할 수 없습니다.</b><br>
+        <b>dev.html에 접근할 수 없습니다.</b><br>
         이 파일을 <code>file://</code>로 직접 열면 브라우저가 iframe 간 접근을 막습니다.
-        index.html과 같은 폴더에서 아래처럼 로컬 서버로 열어주세요.<br><br>
+        dev.html과 같은 폴더에서 아래처럼 로컬 서버로 열어주세요.<br><br>
         <code>python3 -m http.server</code> 실행 후
         <code>http://localhost:8000/balance-editor.html</code> 접속<br><br>
         (오류: ${e.message})`);
@@ -157,16 +161,16 @@ function loadGame(){
     $('#status').textContent='연결됨 — 적용 시 오른쪽 게임에 바로 반영됩니다';
     Editor.build();
   };
-  frame.src='index.html?t='+Date.now();
+  frame.src='dev.html?t='+Date.now();
 }
 
 const Editor = {
   build(){
     const panel=$('#editor-panel');
     panel.innerHTML=`
-      <div class="note">"적용"은 index.html 파일을 고치지 않습니다 — 오른쪽에 떠 있는 게임(iframe)의 CONFIG만
+      <div class="note">"적용"은 파일을 고치지 않습니다 — 오른쪽에 떠 있는 게임(iframe)의 CONFIG만
       즉시 바꿔 바로 플레이테스트하게 해줍니다. 값을 코드에 영구히 반영하려면 여기서 확인한 값을
-      index.html의 DEFAULT_CONFIG에 직접 옮겨 적으세요.</div>
+      js/config.js의 DEFAULT_CONFIG에 직접 옮겨 적으세요.</div>
       ${this.flags('개발 옵션',[['featureFlags.criticalMerge','크리티컬 머지'],['featureFlags.goldenPiece','골든 피스']])}
       ${this.section('플레이어',[['player.atkSpeed','기본 공격속도'],['player.damageReductionBase','기본 피해 감소율'],['player.projectileSpeed','투사체 속도',true]])}
       ${this.combatFactorSections()}

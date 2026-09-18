@@ -176,6 +176,7 @@ class Game {
   }
   awaitResult(outcome){
     this.running=false;this.generator.stopHold();this.timeScale=1;
+    syncToolButtons();          // 연출 중 종료를 막는다 — 클리어가 패배로 정산될 수 있다.
     const layer=$('#cinematic-layer');layer.classList.add('awaiting-result');layer.tabIndex=0;layer.setAttribute('role','button');layer.setAttribute('aria-label','터치해서 결과 보기');
     $('#cinematic-sub').textContent='터치해서 결과 보기';
     layer.onclick=()=>this.finishRun(outcome);
@@ -202,6 +203,12 @@ class Game {
       : `스테이지 ${this.stageId} · WAVE ${this.currentWaveCfg?.wave||'?'}에서 종료`;
     if(!this.outcomeSettled) this.outcomeSettled=this.host.settle(this.runId,clear,this.milestoneMetrics());
     this.renderResultStats();
+    // 결과 화면 진입 = 게임플레이 구간 종료. 실제 전송·SDK 연결은 세션 7.
+    const durationSec=Math.max(0,Math.round(this.elapsedTime));
+    const wave=this.currentWaveCfg?.wave||0;
+    if(clear) Analytics.progression('complete',this.stageId,{wave,durationSec});
+    else Analytics.progression('fail',this.stageId,{wave,durationSec,reason:this.endReason==='quit'?'quit':'defeat'});
+    Platform.gameplayStop();
   }
   milestoneMetrics(){return {bosses:this.stats.bossesKilled,orders:this.stats.ordersCompleted,merges:this.stats.merges,skillsUsed:this.stats.skillsUsed};}
   addEnergy(n){ this.energy += n; this.updateEnergyUi(); }
@@ -337,6 +344,7 @@ class Game {
     this.hitStopUntil = 0;
     this.hitStopCooldownUntil = 0;
     this.running = true;
+    syncToolButtons();          // 위쪽 GameState.set('playing') 시점에는 아직 running이 false다.
     this.tutorial.start();
     // 첫 rAF 타임스탬프를 기준으로 삼는다. performance.now()와 섞으면 첫 dt가 음수가 될 수 있다.
     this.lastTime = null;
@@ -399,6 +407,8 @@ class Game {
     this.beginEndSequence('clear');
   }
   onDefeat(immediate=false){
+    // immediate는 사용자가 누른 중도 종료 경로다(RunHost.defeat). 패배 연출을 건너뛴다.
+    this.endReason = immediate ? 'quit' : 'defeat';
     if(immediate) this.finishRun('defeat');
     else this.beginEndSequence('defeat');
   }

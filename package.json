@@ -1,0 +1,12 @@
+{
+  "name": "slagma-web-prototype",
+  "private": true,
+  "description": "개발 도구 전용 매니페스트. 게임(index.html)은 이 파일도 node_modules도 필요하지 않다 — 브라우저에서 파일을 열면 그대로 돌아간다. tools/ 스크립트만 여기를 본다.",
+  "scripts": {
+    "smoke": "node tools/smoke.mjs",
+    "build-dev": "node tools/build-dev.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}
