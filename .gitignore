@@ -1,3 +1,6 @@
 # [2026-09-18 세션 2] package.json은 tools/ 스크립트 전용이다. 게임은 node_modules를
 # 필요로 하지 않으므로 설치본은 저장소에 두지 않는다.
 node_modules/
+
+# [2026-09-19 세션 7] 출시 빌드 산출물. tools/build.mjs 가 언제든 다시 만든다.
+dist/
