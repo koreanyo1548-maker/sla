@@ -589,3 +589,17 @@ h2.reveal-kicker{margin-top:0}
       한국어는 어절 단위를 지키고(keep-all), 칸보다 긴 단어만 끊는다. */
 #lobby-nav button{min-width:0;word-break:keep-all}
 #lobby-nav button b{display:block;min-width:0;line-height:1.15;overflow-wrap:anywhere}
+
+/* [2026-09-19] 해금 조건 배너 — 미보유 수호자 상세.
+   공용 레벨 몇에서 열리는지가 이 창의 핵심 정보인데, 능력치·패시브 아래
+   .meta-note(11px·--dim)로 붙어 있어 스크롤해야 보였다. 초상화 바로 아래로
+   올리고(character-ui.js) 잠금 아이콘과 함께 본문 글씨보다 크게 낸다. */
+.unlock-banner{display:flex;align-items:center;gap:10px;margin:0 0 10px;padding:12px 14px;
+  border:1px solid color-mix(in srgb, var(--accent) 45%, transparent);border-radius:12px;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  font-size:15px;font-weight:700;line-height:1.45;color:var(--text-primary)}
+.unlock-banner .ub-lock{flex:none;font-size:21px;line-height:1}
+@media(max-width:365px){
+  .unlock-banner{gap:8px;padding:10px 12px;font-size:14px}
+  .unlock-banner .ub-lock{font-size:19px}
+}
