@@ -202,7 +202,7 @@ I18N.register("ko", "한국어", {
   "upgrade.gain.atk": "편성 공격력 {from} → {to}",
   "upgrade.gain.skillStat": "장착 {stat} +{from} → +{to}",
   "upgrade.short": "골드 {n} 부족",
-  "upgrade.track.skillSlot": "슬롯 {n} · {name}",
+  "upgrade.track.slot": "슬롯 {n}",
   "upgrade.levelUp": "올리기",
   "upgrade.cost": "골드 {amount}",
   "upgrade.levelMax": "레벨 상한",

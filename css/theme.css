@@ -2,7 +2,7 @@
 /* SLAGMA — brass forge / teal stone / molten amber. */
 /* [2026-09-17] 색은 파일 맨 위 토큰 블록에서만 정의한다. 이 레이어는 모양 값만 남긴다. */
 :root{--radius:16px}
-html,body{font-family:"Gothic A1","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;font-size:14px;background:var(--bg);overscroll-behavior:none}
+html,body{font-family:"Noto Sans KR",system-ui,sans-serif;font-size:14px;background:var(--bg);overscroll-behavior:none}
 body::before{content:"";position:fixed;inset:0;background:linear-gradient(color-mix(in srgb, var(--bg) 85%, transparent),color-mix(in srgb, var(--bg) 91%, transparent)),var(--forge-lobby) center/cover;pointer-events:none}
 button{color:inherit;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .13s,filter .15s,background .2s;cursor:pointer}
 button:not(:disabled):active{transform:translateY(2px) scale(.98)}
