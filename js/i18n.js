@@ -19,11 +19,12 @@
    ===================================================================== */
 const I18N = {
   // 등록된 언어가 없거나 저장값·브라우저 언어가 모두 빗나갔을 때 여는 언어.
-  // [세션 6] 영어 테이블이 생기면 'en'으로 바꾼다.
-  DEFAULT_LANGUAGE: 'ko',
+  // [2026-09-19 세션 7] 출시 대상이 해외 포털이라 'en'으로 바꿨다. 한국어
+  // 브라우저는 아래 resolve()의 navigator.language 단계에서 여전히 ko로 열린다.
+  DEFAULT_LANGUAGE: 'en',
   // 키가 빠진 언어는 이 언어의 값으로 메운다. 그것도 없으면 키 자체를 돌려준다.
   FALLBACK_LANGUAGE: 'en',
-  // 진행 데이터(slagma.campaign.v4)와 별도 키다 — 데이터 초기화에 영향받지 않는다.
+  // 진행 데이터(slagma.campaign.v4)와 별도 키다.
   STORAGE_KEY: 'slagma.lang',
 
   tables: Object.create(null),   // code → { key: string }

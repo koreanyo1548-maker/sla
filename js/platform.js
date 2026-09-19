@@ -10,9 +10,10 @@
      Platform      플랫폼 init / loadingStart / loadingStop /
                         gameplayStart / gameplayStop / languageHint
 
-   지금은 인터페이스만 정하고 가장 단순한 구현체를 꽂는다. 세션 7에서
-   ByteBrew(Analytics)와 CrazyGames(Platform) 구현체로 갈아끼운다. 그때
-   고치는 파일은 이 파일과 진입점(index.html)뿐이어야 한다.
+   [2026-09-19 세션 7-1] Analytics에 ByteBrew 구현체가 들어왔다(아래
+   createByteBrewAnalytics). Platform은 아직 무동작이며 세션 7-2에서
+   CrazyGames 구현체로 갈아끼운다. 그때 고치는 파일도 이 파일과
+   진입점(index.html)뿐이어야 한다.
 
    [2026-09-18] 개발 진입점(dev.html)을 없애면서 window.SLAGMA_DEV 분기도 걷어냈다.
    기본 구현체는 무조건 무동작(Noop)이며, 다른 구현체는 진입점이 installPlatform()으로
@@ -54,6 +55,66 @@ const AnalyticsConsole = {
 };
 
 const AnalyticsNoop = { track(){}, progression(){}, setUser(){} };
+
+/* ByteBrew 구현체. 진입점이 키를 넘겨 부르고 결과를 installPlatform에 꽂는다.
+   SDK가 없거나(파일 누락·차단기) 초기화가 막히면 null을 돌려주므로, 그때는
+   installPlatform이 무시해 기본 무동작 구현체가 그대로 남는다.
+
+   [웹 SDK에 없는 것] progression 이벤트도 사용자 속성도 없다. 커스텀 이벤트
+   하나가 전부다(bytebrew-web-sdk 1.0.1에서 확인). 그래서 어댑터 안에서 접는다:
+     progression(status,stage,params) → progression_<status> 커스텀 이벤트
+                                        (stage를 파라미터로 실어 보낸다)
+     setUser(key,value)               → 보낼 곳이 없다. 아무것도 하지 않는다.
+   게임 코드가 보는 인터페이스는 그대로다.
+
+   [큐가 필요한 이유] initializeByteBrew()는 세션 키를 받아오는 네트워크 왕복이라
+   즉시 끝나지 않고, 그 전에 부른 이벤트를 SDK가 조용히 버린다(1.0.1에서 확인).
+   첫 이벤트인 session_start가 바로 여기 걸리므로 준비될 때까지 쌓았다가 흘린다.
+   준비가 끝내 안 되면(오프라인·차단) 큐를 버리고 감시를 끈다 — 메모리가 무한히
+   늘지 않게 상한도 둔다. */
+const BYTEBREW_QUEUE_MAX = 64;      // 이보다 많이 쌓이면 새 이벤트를 버린다
+const BYTEBREW_POLL_MS   = 250;     // 초기화 완료 감시 간격
+const BYTEBREW_WAIT_MS   = 20000;   // 이 시간까지 초기화가 안 되면 포기한다
+
+function createByteBrewAnalytics(appId, appKey, appVersion){
+  const sdk = window.ByteBrewSDK?.ByteBrew;
+  if(!sdk || !appId || !appKey) return null;
+  try{ sdk.initializeByteBrew(appId, appKey, appVersion); }
+  catch(_){ return null; }
+
+  let ready = false, gaveUp = false;
+  const queue = [];
+  const emit = (name, params) => {
+    try{
+      if(params && Object.keys(params).length) sdk.newCustomEvent(name, params);
+      else sdk.newCustomEvent(name);
+    }catch(_){}
+  };
+  const send = (name, params) => {
+    if(ready) emit(name, params);
+    else if(!gaveUp && queue.length < BYTEBREW_QUEUE_MAX) queue.push([name, params]);
+  };
+  const deadline = Date.now() + BYTEBREW_WAIT_MS;
+  const timer = setInterval(()=>{
+    let initialized = false;
+    try{ initialized = sdk.isByteBrewInitialized(); }catch(_){}
+    if(initialized){
+      ready = true;
+      clearInterval(timer);
+      while(queue.length) emit(...queue.shift());
+    }else if(Date.now() > deadline){
+      gaveUp = true;
+      clearInterval(timer);
+      queue.length = 0;
+    }
+  }, BYTEBREW_POLL_MS);
+
+  return {
+    track(name, params){ send(name, params); },
+    progression(status, stage, params){ send('progression_' + status, {stage, ...(params||{})}); },
+    setUser(){},
+  };
+}
 
 /* --- 플랫폼 -----------------------------------------------------------
    세션 7에서 CrazyGames 구현체로 바꾼다. languageHint는 SDK가 주는 사용자

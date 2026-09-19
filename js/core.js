@@ -135,9 +135,10 @@ function spawnDamageStack(container,x,y,entries){
    [GameState] §2 전체 게임 플로우 상태 관리
    ===================================================================== */
 const GameState = {
-  // 상태 → 표시할 화면. lobby·start(출전 준비)·playing·clear·defeat 다섯 상태를 쓴다.
-  SCREENS: { lobby:'#screen-lobby', start:'#screen-start', playing:'#screen-game', clear:'#screen-result', defeat:'#screen-result' },
-  current: 'start',
+  // 상태 → 표시할 화면. lobby·playing·clear·defeat 네 상태를 쓴다.
+  // [2026-09-19 세션 7] 출전 준비 화면(start)을 없애 로비에서 바로 전투로 간다.
+  SCREENS: { lobby:'#screen-lobby', playing:'#screen-game', clear:'#screen-result', defeat:'#screen-result' },
+  current: 'lobby',
   set(state){
     this.current = state;$('#app').dataset.state=state;
     $$('.screen').forEach(s=>s.classList.remove('active'));

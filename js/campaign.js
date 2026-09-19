@@ -138,21 +138,12 @@ const CampaignStore = {
    옮기면 된다.
    ===================================================================== */
 const CampaignEconomy = {
-  chargeAmount:5,
   // 행동력이 가득 찬 상태는 남는 회복 시간을 적립하지 않는다.
   recover(s,now=Date.now()){
     if(s.stamina>=CAMPAIGN_CONFIG.staminaMax){s.stamina=CAMPAIGN_CONFIG.staminaMax;s.recoveredAt=now;return;}
     if(s.recoveredAt>now)s.recoveredAt=now;
     const ticks=Math.floor((now-s.recoveredAt)/CAMPAIGN_CONFIG.recoveryMs);
     if(ticks>0){s.stamina=Math.min(CAMPAIGN_CONFIG.staminaMax,s.stamina+ticks);s.recoveredAt=s.stamina===CAMPAIGN_CONFIG.staminaMax?now:s.recoveredAt+ticks*CAMPAIGN_CONFIG.recoveryMs;}
-  },
-  // 충전 버튼 — 실제로 오른 양을 돌려준다(0이면 이미 가득).
-  charge(s,now=Date.now()){
-    const before=s.stamina;
-    s.stamina=Math.min(CAMPAIGN_CONFIG.staminaMax,s.stamina+this.chargeAmount);
-    if(s.stamina>before)s.staminaChargeClicks++;
-    if(s.stamina>=CAMPAIGN_CONFIG.staminaMax)s.recoveredAt=now;
-    return s.stamina-before;
   },
   secondsToNextTick(s,now=Date.now()){
     return Math.max(1,Math.ceil((CAMPAIGN_CONFIG.recoveryMs-(now-s.recoveredAt))/1000));
@@ -223,9 +214,7 @@ const Campaign = {
     SkillLobbyUI.init(this);
     MilestoneUI.init(this);
     UpgradeLobbyUI.init(this);
-    $('#prepare-btn').onclick=()=>this.prepare();
-    $('#stamina-charge-btn').onclick=()=>this.chargeStamina();
-    $('#back-lobby').onclick=()=>this.showLobby();
+    $('#prepare-btn').onclick=()=>this.enter();
     $('#quit-run').onclick=()=>{
       $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙';
       if(!RunHost.running)return;
@@ -252,39 +241,16 @@ const Campaign = {
     this.render();
     CampaignView.scrollLobbyTop();
   },
-  resetData(){
-    if(GameState.current!=='lobby'||this.state?.active) return false;
-    if(!confirm(t('notice.reset.confirm'))) return false;
-    replaceObjectContents(DEFAULT_CONFIG,FACTORY_DEFAULT_CONFIG);
-    CONFIG=cloneConfig(DEFAULT_CONFIG);
-    RunConfig.clear();CharacterLobbyUI.filter='all';CharacterLobbyUI.close();SkillLobbyUI.close();
-    if(!this.commit(this.fresh())) return false;
-    this.selectedStage=1;
-    this.render();
-    CampaignView.notice(t('notice.reset.done'));
-    return true;
-  },
   showLobby(){
     RunHost.halt();
     this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();RevealUI.close();GameState.set('lobby');this.render();
     if(this.pendingUnlockFx){ this.pendingUnlockFx=false; restartCssAnimation($('.journey-scene'),'fx-unlock'); GameAudio.play('stage_unlock'); }
-  },
-  chargeStamina(){
-    if(GameState.current!=='lobby'||!this.read()||this.state.active)return false;
-    const s=this.recovered();
-    const gained=CampaignEconomy.charge(s);
-    if(gained<=0){this.renderWallet();return false;}
-    if(!this.commit(s))return false;
-    this.renderWallet();
-    CampaignView.notice(t('notice.stamina.charged',{gained,total:s.staminaChargeClicks}));
-    return true;
   },
   renderWallet(){
     CampaignView.wallet({
       recovered:this.recovered(),
       gold:this.state.gold,
       starfire:WalletSystem.balance(this.state,'starfire'),
-      chargeClicks:this.state.staminaChargeClicks,
       locked:this.broken||!!this.state.active,
       selectedStage:this.selectedStage,
     });
@@ -300,19 +266,13 @@ const Campaign = {
     UpgradeLobbyUI.render(this);
     CampaignView.lobbyPage(['characters','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
   },
-  prepare(){
-    if(!this.read()||this.state.active||this.selectedStage!==this.state.unlocked)return;
-    const s=this.recovered();
-    if(s.stamina<CAMPAIGN_CONFIG.entryCost){this.render();return;}
-    CONFIG=cloneConfig(DEFAULT_CONFIG);buildStartScreen(this.state);
-    CampaignView.brief(this.stage(),PartyCombatAdapter.snapshot(this.state));
-    CharacterLobbyUI.close();
-    GameState.set('start');
-  },
+  // [2026-09-19 세션 7] 출전 준비 화면을 없애면서 prepare()가 하던 검사를 여기로
+  // 합쳤다. 로비의 출전 버튼이 부르는 유일한 입장 경로다.
   enter(){
-    if(GameState.current!=='start'||!this.read()||this.state.active||this.selectedStage!==this.state.unlocked||!SkillInventorySystem.validate(this.state.skillInventory))return false;
+    if(GameState.current!=='lobby'||!this.read()||this.state.active||this.selectedStage!==this.state.unlocked||!SkillInventorySystem.validate(this.state.skillInventory))return false;
     const s=this.recovered();
-    if(s.stamina<CAMPAIGN_CONFIG.entryCost){this.showLobby();return false;}
+    // 행동력이 모자라면 로비에 머문다 — 버튼 문구가 남은 양을 다시 보여 준다.
+    if(s.stamina<CAMPAIGN_CONFIG.entryCost){this.render();return false;}
     const st=this.stage();
     s.stamina-=CAMPAIGN_CONFIG.entryCost;
     s.active={id:globalThis.crypto?.randomUUID?.()||`${Date.now()}-${Math.random()}`,stageId:st.id,completed:0};
@@ -324,6 +284,7 @@ const Campaign = {
     RunConfig.skillSnapshot=skillSnapshot;
     RunConfig.partySnapshot=partySnapshot;
     RunConfig.battle=this.battleContext(st,partySnapshot);
+    CharacterLobbyUI.close();
     Analytics.progression('start',st.id);
     Platform.gameplayStart();
     RunHost.start({runId:s.active.id,stageId:st.id,completedWaves:0},this.runHost());
@@ -392,15 +353,14 @@ const Campaign = {
    버튼도 하나 늘고, 이 코드는 손대지 않는다. 각 언어는 자기 이름을 자기
    언어로 표시한다(한국어 · English).
 
-   두 항목은 화면에 따라 잠긴다:
-     언어      전투 화면에서 막는다. 전투 화면은 Screens.rerender()가 다시
-               그리는 대상이 아니라 바꿔도 이전 언어가 남는다.
-     데이터 초기화  Campaign.resetData()가 로비에서만 도는 규칙을 그대로 따른다.
+   언어는 전투 화면에서 막는다. 전투 화면은 Screens.rerender()가 다시 그리는
+   대상이 아니라 바꿔도 이전 언어가 남는다.
+
+   [2026-09-19 세션 7] 여기 있던 데이터 초기화 항목을 출시 빌드에서 걷어냈다.
    ===================================================================== */
 const OptionsUI = {
   lastFocus:null,
   languageAvailable(){ return GameState.current!=='playing'; },
-  resetAvailable(){ return GameState.current==='lobby' && !RunHost.running; },
   init(){
     const toggle=$('#options-toggle'); if(!toggle) return;
     toggle.onclick=()=>{ $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙'; this.open(); };
@@ -413,8 +373,6 @@ const OptionsUI = {
       ManualPanel.build();
       $('#manual-panel').classList.add('open');
     };
-    // resetData()가 확인 창을 띄우고, 취소하거나 조건이 안 맞으면 false를 돌려준다.
-    $('#options-reset').onclick=()=>{ if(Campaign.resetData()) this.close(); };
     $('#options-panel').onclick=event=>{ if(event.target===$('#options-panel')) this.close(); };
     document.addEventListener('keydown',event=>{
       const panel=$('#options-panel');
@@ -438,7 +396,7 @@ const OptionsUI = {
   },
   render(){
     const list=$('#lang-list'); if(!list) return;
-    const languageBlocked=!this.languageAvailable(), resetBlocked=!this.resetAvailable();
+    const languageBlocked=!this.languageAvailable();
     list.innerHTML=I18N.languages().map(({code,label})=>
       `<button data-lang="${code}" aria-current="${code===I18N.current}"${languageBlocked?' disabled':''}>${label}</button>`).join('');
     $$('[data-lang]',list).forEach(button=>button.onclick=()=>{
@@ -447,8 +405,6 @@ const OptionsUI = {
       this.close();
     });
     $('#options-language-note').hidden=!languageBlocked;
-    $('#options-reset').disabled=resetBlocked;
-    $('#options-reset-note').hidden=!resetBlocked;
   },
   open(){
     this.lastFocus=document.activeElement;
@@ -476,10 +432,6 @@ const Screens = {
     switch(GameState.current){
       case 'lobby':
         Campaign.render();
-        break;
-      case 'start':
-        buildStartScreen(Campaign.state);
-        CampaignView.brief(Campaign.stage(),PartyCombatAdapter.snapshot(Campaign.state));
         break;
       case 'clear': case 'defeat':
         RunHost.current?.renderResultScreen();

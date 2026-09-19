@@ -1,7 +1,8 @@
 /* ===== tools.js ===== */
 /* =====================================================================
    [replaceObjectContents] 설정 객체를 다른 설정 값으로 치환한다.
-   Campaign.resetData()의 데이터 초기화 경로에서 쓴다.
+   [2026-09-19 세션 7] 유일한 호출부였던 Campaign.resetData()를 걷어내면서 지금은
+   부르는 곳이 없다. 아래 밸런스 에디터를 다시 붙일 자리라 남겨 둔다.
    [2026-09-18] 확정(인철): balance-editor.html을 지우고 순수 빌드 상태로 되돌렸다.
    밸런스 에디터는 나중에 별도 빌드 에디터로 다시 만든다 — 그때 붙일 자리가
    이 함수와 config.js의 CONFIG/FACTORY_DEFAULT_CONFIG/cloneConfig다.

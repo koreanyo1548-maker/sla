@@ -491,15 +491,4 @@ class Game {
   }
 }
 
-/* =====================================================================
-   Start screen wiring (§18)
-   ===================================================================== */
-function buildStartScreen(state=Campaign.state){
-  const list=$('#skill-pick-list'),inv=state.skillInventory;
-  // 레벨은 장착 슬롯의 공용 트랙에서 온다(SkillGrowthSystem.view).
-  list.innerHTML=inv.equipped.map(key=>{const x=SkillGrowthSystem.view(state,key),def=CONFIG.skills[key],meta=SKILL_DEFS[key];return `<div class="skill-slot" style="--skill-accent:${meta.color}"><span class="skill-icon">${meta.icon}</span><b>${t(def.nameKey)}</b><small>${t('prepare.skillSlot',{level:x.level,effect:SkillLobbyUI.effectText(key,x),sec:SkillGrowthSystem.cooldown(key)})}</small></div>`;}).join('');
-  $('#start-btn').disabled=false;
-  $('#start-btn').textContent=t('prepare.start',{cost:CAMPAIGN_CONFIG.entryCost});
-  $('#start-btn').onclick=()=>Campaign.enter();
-}
 

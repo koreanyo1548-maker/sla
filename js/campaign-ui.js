@@ -15,7 +15,7 @@ const CampaignView={
     $$('[data-lobby-nav]').forEach(b=>{if(b.dataset.lobbyNav===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   },
   scrollLobbyTop(){$('#lobby-scroll').scrollTop=0;},
-  wallet({recovered,gold,starfire,chargeClicks,locked,selectedStage}){
+  wallet({recovered,gold,starfire,locked,selectedStage}){
     const max=CAMPAIGN_CONFIG.staminaMax,entry=CAMPAIGN_CONFIG.entryCost,sec=CampaignEconomy.secondsToNextTick(recovered);
     // [연출 세션 B] 재화가 바뀌는 지점은 전부 countUp을 지난다. 값이 그대로면
     // 아무 일도 하지 않으므로 1초마다 도는 이 렌더가 조용하다.
@@ -23,9 +23,6 @@ const CampaignView={
     GameFeedback.countUp($('#gold-value'),gold);
     GameFeedback.countUp($('#starfire-value'),starfire);
     $('#stamina-timer').textContent=recovered.stamina>=max?t('lobby.stamina.full'):t('lobby.stamina.timer',{time:`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`});
-    $('#stamina-charge-count').textContent=t('lobby.stamina.chargeCount',{n:chargeClicks||0});
-    $('#stamina-charge-btn').setAttribute('aria-label',t('lobby.stamina.chargeAria',{n:CampaignEconomy.chargeAmount}));
-    $('#stamina-charge-btn').disabled=locked||recovered.stamina>=max;
     $('#prepare-btn').disabled=locked||recovered.stamina<entry;
     $('#prepare-btn').innerHTML=recovered.stamina<entry
       ?t('lobby.prepare.waiting',{current:recovered.stamina,need:entry})
@@ -43,10 +40,6 @@ const CampaignView={
     $('#home-party-hp').textContent=I18N.num(party.stats.hp);
     $('#lobby-party-summary').innerHTML=party.members.map(m=>`<button class="lobby-party-member" data-home-hero="${m.characterId}" aria-label="${t('lobby.party.memberAria',{name:t(m.nameKey),level:m.level})}">${GameArt.portrait(m.characterId)}<span class="member-label">${GameArt.module(m.specialtyMissileId,'module-mini')}<b>${t(m.nameKey)}</b><em>${t('common.level',{n:m.level})}</em></span></button>`).join('');
     $$('[data-home-hero]').forEach(b=>b.onclick=()=>CharacterLobbyUI.open(Campaign,b.dataset.homeHero,b));
-  },
-  brief(st,party){
-    $('#stage-brief').innerHTML=`<div class="brief-scene"><span class="brief-kicker">${t('prepare.brief.kicker',{id:String(st.id).padStart(2,'0')})}</span><h2>${t(st.nameKey)}</h2><div><span>${t('prepare.brief.waves',{n:st.waves})}</span><span>${t('prepare.brief.clearGold',{gold:CampaignEconomy.stageTotalGold(st)})}</span></div></div><div class="brief-party">${party.members.map(m=>`<span>${GameArt.portrait(m.characterId)}<b>${t('common.level',{n:m.level})}</b></span>`).join('')}<div>${t('prepare.brief.coreHp')} <b>${I18N.num(party.stats.hp)}</b><br>${t('prepare.brief.teamDef')} <b>${party.stats.def}</b></div></div>`;
-    $('#start-btn').textContent=t('prepare.start',{cost:CAMPAIGN_CONFIG.entryCost});
   },
   rerenderReward(){
     const state=this.rewardState;

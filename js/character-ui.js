@@ -236,7 +236,6 @@ const SkillLobbyUI={
     if(this.bound)return;this.bound=true;
     $$('[data-skill-close]').forEach(el=>el.onclick=()=>this.close());
     $$('[data-open-skills]').forEach(el=>el.onclick=()=>campaign.navigate('skills'));
-    $('#prepare-change-skills').onclick=()=>{campaign.showLobby();campaign.navigate('skills');};
   },
   // [2026-09-16 v0916_7] 스킬 키별 switch 대신 처리 방식(effect)과 제어(control)로 문구를 만든다.
   effectText(key,x){
