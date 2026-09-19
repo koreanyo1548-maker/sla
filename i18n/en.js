@@ -385,8 +385,8 @@ I18N.register("en", "English", {
   "upgrade.gain.skillStat": "Equipped {stat} +{from} → +{to}",
   // 골드 {n} 부족
   "upgrade.short": "{n} gold short",
-  // 슬롯 {n} · {name}
-  "upgrade.track.skillSlot": "Slot {n} · {name}",
+  // 슬롯 {n}
+  "upgrade.track.slot": "Slot {n}",
   // 올리기
   "upgrade.levelUp": "Raise",
   // 골드 {amount}

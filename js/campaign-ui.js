@@ -95,7 +95,13 @@ const UpgradeLobbyUI={
   trackName(state,track){
     if(track.kind==='module')return t(MISSILE_DEFS[track.moduleId].labelKey);
     const key=state.skillInventory.equipped[track.slot];
-    return t('upgrade.track.skillSlot',{n:track.slot+1,name:key?t(CONFIG.skills[key].nameKey):''});
+    return key?t(CONFIG.skills[key].nameKey):t('skill.card.unequipped');
+  },
+  // 슬롯 번호는 카드 왼쪽 위에 따로 붙인다. 제목에 "슬롯 1 · "을 달고 있으면 그만큼
+  // 이름 자리가 좁아져 영문 스킬 이름이 줄임표로 잘렸다(제목은 한 줄 고정이다).
+  slotBadge(track){
+    if(track.kind==='module')return '';
+    return `<span class="uc-slot">${t('upgrade.track.slot',{n:track.slot+1})}</span>`;
   },
   // 이 레벨업으로 실제로 오르는 값. 미사일은 편성 수호자의 공격력, 스킬은 장착 스킬의 공격 보너스다.
   // 비용만 보이고 무엇이 오르는지 안 보이면 여섯 트랙 중 어디에 골드를 쓸지 고를 근거가 없다.
@@ -136,6 +142,7 @@ const UpgradeLobbyUI={
     // 비용 자리는 상태에 따라 세 가지다 — 올릴 수 있으면 가격, 골드가 모자라면 부족분, 끝났으면 상한.
     const detail=!allowed?t('upgrade.levelMax'):short>0?t('upgrade.short',{n:I18N.num(short)}):t('upgrade.cost',{amount:I18N.num(cost)});
     return `<article class="track-card${allowed&&!payable?' poor':''}" style="--track-color:${color}">`
+      +this.slotBadge(track)
       +`<span class="uc-icon">${this.trackIcon(state,track)}</span>`
       +`<div class="uc-body"><div class="uc-title"><b>${this.trackName(state,track)}</b><span class="uc-level">${t('common.level',{n:level})}<em>/ ${max}</em></span></div>`
       +`<div class="level-track"><span style="width:${level/max*100}%"></span></div>`

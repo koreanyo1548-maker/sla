@@ -506,7 +506,7 @@ h2.reveal-kicker{margin-top:0}
    ========================================================================= */
 .upgrade-intro{margin:12px 0 0;font-size:11px;line-height:1.6;color:var(--dim)}
 .upgrade-list{display:flex;flex-direction:column;gap:9px;margin-top:12px}
-.track-card{display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;
+.track-card{position:relative;display:grid;grid-template-columns:38px minmax(0,1fr) auto;align-items:center;gap:11px;
   padding:11px 12px;border:1px solid var(--border);border-radius:14px;
   background:linear-gradient(180deg,var(--surface),var(--bg));
   border-left:3px solid var(--track-color,var(--border))}
@@ -538,6 +538,7 @@ h2.reveal-kicker{margin-top:0}
 .track-card.poor>button small{color:var(--danger);opacity:1}
 @media(max-width:365px){
   .track-card{grid-template-columns:32px minmax(0,1fr) auto;gap:9px;padding:10px}
+  .uc-slot{top:6px;left:10px}
   .uc-icon,.uc-icon .module-mini{width:32px;height:32px}
   .track-card>button{width:70px}
   .uc-skill-icon{width:30px;height:30px;font-size:16px}
@@ -603,3 +604,14 @@ h2.reveal-kicker{margin-top:0}
   .unlock-banner{gap:8px;padding:10px 12px;font-size:14px}
   .unlock-banner .ub-lock{font-size:19px}
 }
+
+/* [2026-09-19] 슬롯 번호 뱃지 — 공용 레벨업 카드.
+   제목이 한 줄 고정(nowrap·말줄임)인데 "슬롯 1 · 분쇄창"처럼 번호를 같이 달고
+   있어 영문 스킬 이름이 잘렸다. 번호를 카드 왼쪽 위로 빼 이름 자리를 넓힌다.
+   아이콘은 세로 가운데라 뱃지와 겹치지 않는다(카드 88px · 아이콘 38px). */
+.uc-slot{position:absolute;top:7px;left:12px;z-index:1;
+  font-size:9px;font-weight:800;line-height:1;letter-spacing:.02em;
+  color:var(--text-secondary)}
+
+/* 스킬 상세는 본문 감싸는 칸이 없어 머리에 붙는다 — 배너만 위 여백을 갖는다. */
+.skill-dialog .unlock-banner{margin:14px 0 0}
