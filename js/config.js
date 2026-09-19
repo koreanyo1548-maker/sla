@@ -369,14 +369,23 @@ const DEFAULT_CONFIG = {
     startCount: NORMAL_COUNT_CURVE.startCount,
     endCount: NORMAL_COUNT_CURVE.endCount,
     // [2026-09-18] 확정(인철): 스테이지1 체력 할인 0.90 → 0.70으로 낮춰 초반을 더 아프게 했다.
-    stageOneHpMul: 0.70,
-    // [2026-09-17] 확정(인철): 스테이지당 적 HP 증가율 0.35 → 0.20 → 0.26.
+    // [2026-09-19] 확정(인철): 한 칸짜리 할인을 1~5스테이지 램프로 늘렸다. 체력이 등비가 되며 벽이
+    // 전투로 옮겨 왔으므로, 최소 5스테이지까지는 무난히 깨지게 앞머리를 눌러 둔다. 6스테이지부터 1.0이다.
+    introHpMul: [0.70,0.75,0.80,0.85,0.90],
+    // [2026-09-17] 확정(인철): 스테이지당 적 HP 증가율 0.35 → 0.20 → 0.26(등차).
     // 0.35는 화력 상한(6성 Lv.60) 대비 스테이지 44에서 벽을 만들어 등반이 멈췄고,
     // 등반이 멈추면 별불(새 스테이지 돌파 전용)도 같이 끊겨 성장 순환 자체가 닫혔다.
-    // 0.20은 실기기에서 너무 쉬웠다 — 다만 주된 원인은 이 값이 아니라 같이 들어간
-    // 능력치 곡선(meta.character.growthCurve)이 Lv.60 공격력을 6.6배로 올린 쪽이다.
-    // 능력치 곡선은 그대로 두고 이 값만 0.26으로 되올려 중간에서 맞춘다.
-    hpScalePerStage: 0.26,
+    // [2026-09-19] 확정(인철): 등차를 버리고 등비 공비 1.105로 간다.
+    //   - 등차의 진짜 문제는 값이 아니라 형태였다 — 플레이어 파워가 복합지수로 오르는데 적 체력이
+    //     선형이라, 스테이지 60에서 파워 319배 대 체력 16.3배로 전투가 한계선에서 빠졌다.
+    //   - 1.130은 파워 여유(파워배수÷체력배수)를 5스테이지 1.28 → 20스테이지 1.18 → 30스테이지 0.88로
+    //     조여 간다. 여유가 1.0 밑으로 떨어지는 지점이 27스테이지라 중반부터 공략 구간이 시작되고,
+    //     전설 해금(트랙 Lv.75, 모델상 45스테이지 부근)까지는 같은 스테이지 반복으로 밀어야 한다.
+    //     등비라 초반 영향이 작아 5스테이지 여유는 1.28로 남는다(등차 0.26 대비로도 13스테이지까지 쉽다).
+    //   - 1.115·1.120은 그 지점이 각각 50·31스테이지로 밀려 중반까지 벽이 서지 않았다.
+    hpScaleRatio: 1.130,
+    // 스테이지 보상 공비(waveGold·clearGold 공통). 자세한 근거는 characters.js의 campaignStage에 있다.
+    goldRatio: 1.085,
   },
   // 개발 옵션은 프로토타입에서 시스템 자체를 켜고 끄는 용도만 담당한다.
   // 런 중 획득하는 패시브 및 성장 효과와는 별개의 레이어다.
@@ -547,7 +556,7 @@ const DEFAULT_CONFIG = {
     // 초보 편성 기준 스테이지 5 W29에서 5대면 핵 HP 1,200이 소진된다 — 도달 전에 처치하라는
     // 압박을 만드는 것이 의도다. HP 계수(stage.hpScale)는 건드리지 않는다.
     // [2026-09-18] 확정(인철): 초반이 너무 쉬워 기본 HP 1100 → 1500. 스테이지별 성장 계수
-    // (stage.hpScalePerStage)는 후반까지 같이 가팔라지므로 건드리지 않고 초기값만 올렸다.
+    // (stage.hpScaleRatio)는 후반까지 같이 가팔라지므로 건드리지 않고 초기값만 올렸다.
     base: { hp: 1500, atk: 70, atkSpeed: 1, travelTimeSec: 10 },
     defenseGrowth:{freeStages:3,perStage:10},
     // [2026-09-04] HP 계수와 ATK 계수를 분리했다. 확정(인철): "적의 HP 성장 계수를 늘리면
@@ -627,7 +636,7 @@ const DEFAULT_CONFIG = {
   //   2) 성급   — 캐릭터·스킬마다 따로 올리며, 재화는 조각이 아니라 별불이다.
   //   3) 해금   — 수호자는 해당 미사일 트랙 레벨로, 스킬은 스킬 트랙 레벨 합계로 열린다.
   // statMul     — 노말을 1.00으로 두어 기존 전투 밸런스(기본 공격력 1,000)를 그대로 보존한다.
-  // starfireSteps — 1→2·2→3·3→4·4→5·5→6성에 드는 별불. 등급이 높을수록 비싸다(노말 합계 2,000 기준 ×1.3씩).
+  // starfireSteps — 1→2·2→3·3→4·4→5·5→6성에 드는 별불. 등급이 높을수록 비싸다(노말 합계 2,000 기준 ×1.8씩).
   //                 조각(shardSteps)과 달리 별불은 공용 재화라, 강한 등급일수록 더 든다.
   // [2026-09-16 v0916_7] 캐릭터와 스킬이 같은 성장 형식을 쓴다 — starStepPct(성급 상승률)·starfireSteps.
   // starStepPct[i] = i성에서 (i+1)성으로 올릴 때의 상승률이며 0번은 쓰지 않는다. 누적 배율은 GrowthRules.starMultiplier.
@@ -639,16 +648,20 @@ const DEFAULT_CONFIG = {
       starfireCurrencyId:'starfire',
       // 미사일 트랙이 이 레벨에 닿을 때마다 그 속성의 다음 수호자가 등급 오름차순으로 열린다.
       // 미사일마다 수호자가 정확히 6명(노말→매직→레어→에픽→전설→전설)이고 노말은 처음부터 주므로 5단계다.
-      moduleUnlockLevels:[10,20,30,40,50],
-      // 스킬은 두 슬롯 트랙의 레벨 합계가 아래 값을 넘을 때마다 미보유 스킬 중 하나를 무작위로 연다.
-      // 시작 합계는 2(각 Lv.1)이고 상한은 120이라, 20부터 10마다면 기본 지급 2종을 뺀 9종이 딱 맞는다.
-      skillUnlockStart:20, skillUnlockStep:10,
+      // [2026-09-19] 확정(인철): 등간격(10·20·30·40·50)을 가속 간격으로 바꾼다. 간격이 10·15·20·30·45로
+      // 벌어져 앞은 빠르게 열리고 뒤로 갈수록 목표가 멀어진다. 마지막 칸이 레벨 상한(120)과 같다.
+      moduleUnlockLevels:[10,25,45,75,120],
+      // 스킬은 두 슬롯 트랙의 레벨 합계가 아래 값에 닿을 때마다 미보유 스킬 중 하나를 무작위로 연다.
+      // 시작 합계는 2(각 Lv.1), 상한은 240(2트랙 × Lv.120)이다. 기본 지급 2종을 뺀 9칸이며
+      // 간격이 14·16·20·24·28·34·40·44로 벌어지는 가속 사다리다(수호자 해금과 같은 원리).
+      skillUnlockLevels:[20,34,50,70,94,122,156,196,240],
     },
     // [2026-09-16] 확정(인철): 스킬 레벨업은 캐릭터와 같은 골드 비용표(GrowthCostTable standard)를 쓴다.
     // [2026-09-18] 레벨은 슬롯 트랙이 가지므로 스킬별 비용 배율은 없다. 성급만 스킬별로 올린다.
     skill: {
-      // 스킬은 등급이 없고 미사일 4종 전부에 얹히므로, 캐릭터 레어 등급과 비슷한 총액(2,800)으로 둔다.
-      starfireSteps:[200,340,480,700,1080],
+      // 스킬은 등급이 없고 미사일 4종 전부에 얹히므로, 캐릭터 레어 등급과 같은 총액으로 둔다.
+      // [2026-09-19] 등급 배율이 ×1.3 → ×1.8로 벌어지며 레어 총액이 3,380 → 6,500이 되어 함께 올렸다.
+      starfireSteps:[390,650,910,1430,3120],
       // 액티브 효과 성급 상승률. 기존 누적 배율 1.00/1.15/1.30/1.45/1.60/1.80(Claude 가안)을 캐릭터와 같은
       // 단계 상승률로 환산한 값이라 누적 배율은 그대로다(openItems: 값 정리 여부).
       starStepPct:[0,0.15,0.130434783,0.115384615,0.103448276,0.125],
@@ -656,25 +669,33 @@ const DEFAULT_CONFIG = {
       // 없어 현재 참조자가 없으며, 계산 경로(SkillGrowthSystem.cooldown)와 함께 되돌릴 수 있도록 남겨 둔다.
       durationUptimeGap:0.15,
     },
-    // [2026-09-16] 반복형 마일스톤. n번째 단계(0부터)의 간격 = target + targetStep×n,
-    // 보상 = reward + rewardStep×n (rewardCap>0이면 상한).
-    // targetStep·rewardStep이 0이면 같은 간격을 반복하는 B형, 0보다 크면 목표가 커지는 A형이다.
+    // [2026-09-16] 반복형 마일스톤. n번째 단계(0부터)의 간격 = target × targetMul^n,
+    // 보상 = reward × rewardMul^n.
+    // targetMul이 1이면 같은 간격을 반복하는 B형, 1보다 크면 목표가 커지는 A형이다.
     // [2026-09-18] 확정(인철): 별불이 성급 전용 재화가 되면서 공급처가 스테이지 돌파 한 줄로는 모자라
-    // 12줄로 분화했다 — 앞 6줄이 별불, 뒤 6줄이 골드다. 골드 줄은 기존 수치를 그대로 유지한다.
-    // 별불 수요는 편성 4인 + 스킬 2종을 6성까지 올릴 때 약 19,000이고, 아래 공급은 60스테이지 기준 약 22,000이다.
+    // 12줄로 분화했다 — 앞 6줄이 별불, 뒤 6줄이 골드다.
+    // [2026-09-19] 확정(인철): 간격·보상을 등차(target+targetStep×n)에서 등비(target×targetMul^n)로
+    // 바꿨다. 등차는 초반 증가율만 크고 후반엔 0에 가까워져, 등반이 막힌 시점에 반복할 이유가 없었다.
+    // rewardMul > targetMul로 둬 후반 반복이 앞보다 이득이 되게 한다. rewardCap은 등비를 잘라 없앴다.
+    // 별불 수요는 편성 4인(전설) + 스킬 2종을 6성까지 올릴 때 97,000이고, 아래 공급은 60스테이지를
+    // 한 번씩 깼을 때 약 62,000이다 — 부족한 몫은 같은 스테이지 반복으로 채우는 구조다.
     milestones: {
-      stage_clear:  { target:1,  targetStep:0,  reward:250, rewardStep:0,  rewardCap:0 },
-      best_wave:    { target:5,  targetStep:0,  reward:60,  rewardStep:0,  rewardCap:0 },
-      module_levels:{ target:20, targetStep:0,  reward:120, rewardStep:0,  rewardCap:0 },
-      skill_levels: { target:10, targetStep:0,  reward:80,  rewardStep:0,  rewardCap:0 },
-      stars:        { target:4,  targetStep:0,  reward:200, rewardStep:0,  rewardCap:0 },
-      guardians:    { target:2,  targetStep:0,  reward:300, rewardStep:0,  rewardCap:0 },
-      waves:        { target:20, targetStep:0,  reward:50,  rewardStep:0,  rewardCap:0 },
-      bosses:       { target:5,  targetStep:0,  reward:50,  rewardStep:0,  rewardCap:0 },
-      skills_used:  { target:25, targetStep:0,  reward:40,  rewardStep:0,  rewardCap:0 },
-      orders:       { target:25, targetStep:10, reward:40,  rewardStep:10, rewardCap:200 },
-      merges:       { target:50, targetStep:25, reward:40,  rewardStep:10, rewardCap:200 },
-      owned_skills: { target:1,  targetStep:0,  reward:60,  rewardStep:0,  rewardCap:0 },
+      // 별불 6줄. stage_clear는 간격이 1스테이지 고정(targetMul 1.00)이고 보상만 등비로 오른다 —
+      // 이 한 줄이 별불 공급의 79%(49,120)라 공비를 1.035로 낮게 잡았다.
+      stage_clear:  { target:1,  targetMul:1.00, reward:250, rewardMul:1.035 },
+      best_wave:    { target:5,  targetMul:1.08, reward:60,  rewardMul:1.10 },
+      module_levels:{ target:20, targetMul:1.10, reward:120, rewardMul:1.12 },
+      skill_levels: { target:10, targetMul:1.10, reward:80,  rewardMul:1.12 },
+      stars:        { target:4,  targetMul:1.12, reward:200, rewardMul:1.14 },
+      guardians:    { target:2,  targetMul:1.15, reward:300, rewardMul:1.18 },
+      // 골드 6줄. 스테이지 보상이 주 공급원이므로 여기는 보조다 — 60스테이지 기준 23,264골드로
+      // 스테이지 보상(311,984)의 7.5%다.
+      waves:        { target:20, targetMul:1.10, reward:50,  rewardMul:1.13 },
+      bosses:       { target:5,  targetMul:1.10, reward:50,  rewardMul:1.13 },
+      skills_used:  { target:25, targetMul:1.10, reward:40,  rewardMul:1.13 },
+      orders:       { target:25, targetMul:1.12, reward:40,  rewardMul:1.15 },
+      merges:       { target:50, targetMul:1.12, reward:40,  rewardMul:1.15 },
+      owned_skills: { target:1,  targetMul:1.15, reward:60,  rewardMul:1.20 },
     },
     // [2026-09-15] 확정(인철): 성급 상승 때 능력치 배율을 준다(이전에는 레벨 상한만 열었다).
     // 승급 상승률을 15/10/10/10/20%로 고정해 레벨과 무관하게 같은 체감을 준다.
@@ -685,7 +706,10 @@ const DEFAULT_CONFIG = {
       // blend 만큼만 섞어(나머지는 기존 선형) 초반 체감은 유지하고 후반만 무겁게 한다.
       // [2026-09-18] 레벨이 공용 트랙이 되면서 "한 명 몰빵" 자체가 불가능해졌지만, 후반 레벨을
       // 무겁게 두는 목적(등반과 레벨의 보조를 맞춘다)은 그대로라 곡선은 손대지 않는다.
-      growthCurve:{ blend:0.35, expBase:1.030 },
+      // [2026-09-19] 확정(인철): blend 0.35 → 0.60, expBase 1.030 → 1.035. 0.35는 위 교정을 절반만
+      // 달성했다 — 상한 120에서 비용이 606배 오르는데 증가폭이 187배뿐이라 골드당 가치가 3.2배
+      // 무너졌다. 0.60/1.035면 증가폭 566배로 비용과 거의 나란해진다(Lv.120 누적 성장배수 13,221).
+      growthCurve:{ blend:0.60, expBase:1.035 },
       // [2026-09-18] 확정(인철): 미사일별 피해 격차를 캐릭터 공격력 계수로 옮겼다.
       // CONFIG.attackModules[key].baseDamageMul은 전부 1.00이 되어 피해에 관여하지 않는다.
       // 캐릭터는 specialtyMissileId가 고정이라 편성 슬롯과 1:1로 맞물린다.
@@ -694,12 +718,17 @@ const DEFAULT_CONFIG = {
       // 그대로 쓰지 않고 연쇄·레이저를 올린 구성으로 바꿨다.
       moduleAtkMul:{ chain:1.20, explosion:1.00, scatter:1.00, laser:1.20 },
     },
+    // [2026-09-19] 확정(인철): 등급 배율 ×1.3 → ×1.8, 단계 비중은 6/10/14/22/48%.
+    //   - 편성은 미사일당 1칸이고 성급은 캐릭터 개인 소유라, 상위 등급으로 갈아타면 하위 등급에 쓴
+    //     별불은 매몰된다. 하위를 거의 공짜로 둬야 갈아타기 전까지 오래 쓰는 임시 전력이 된다.
+    //   - 전설 합계가 노말의 10.5배(2,000 → 21,000)라 전설이 장기 목표로 남는다.
+    //   - 단계 비중을 후반에 몰아 5→6성이 총액의 48%다(성급 상승률도 5→6성이 20%로 가장 크다).
     rarity: {
-      normal:{ statMul:1.00, starfireSteps:[150,250,350,500,750] },
-      magic: { statMul:1.15, starfireSteps:[195,325,455,650,975] },
-      rare:  { statMul:1.32, starfireSteps:[250,420,590,850,1270] },
-      epic:  { statMul:1.52, starfireSteps:[330,550,770,1100,1650] },
-      legend:{ statMul:1.75, starfireSteps:[430,715,1000,1430,2145] },
+      normal:{ statMul:1.00, starfireSteps:[120,200,280,440,960] },        //  2,000
+      magic: { statMul:1.15, starfireSteps:[215,360,505,790,1730] },       //  3,600
+      rare:  { statMul:1.32, starfireSteps:[390,650,910,1430,3120] },      //  6,500
+      epic:  { statMul:1.52, starfireSteps:[700,1170,1640,2575,5615] },    // 11,700
+      legend:{ statMul:1.75, starfireSteps:[1260,2100,2940,4620,10080] },  // 21,000
     },
   },
 };

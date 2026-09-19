@@ -11,17 +11,31 @@ function stageEnemyDefense(stageId,enemyConfig=DEFAULT_CONFIG.enemy){
   const perStage=Math.max(0,Number(enemyConfig.defenseGrowth?.perStage)||0);
   return Math.max(0,id-freeStages)*perStage;
 }
+// [2026-09-19] 확정(인철): 적 체력과 보상을 둘 다 등비로 바꾼다.
+//   - 등차(hpScalePerStage 0.26)는 스테이지 60에서 체력 16.3배인데 플레이어 파워는 750배라, 전투가
+//     한계선이 아니었다 — 실제로 막는 것은 스태미나뿐이라 "공략"할 벽이 없었다.
+//   - 보상도 등차라 후반 한 칸의 증가율이 +1.6%뿐이어서(초반은 +95%) 반복할 이유가 없었다.
+//   - 등비는 성질상 초반이 완만하다 — 체력 공비 1.130은 스테이지 12까지 등차 0.26보다 오히려 쉽고
+//     (5스테이지에서 1.47 대 2.04) 13스테이지부터 역전한다. 초반 완충은 introHpMul이 따로 맡는다.
+// 초반 완충. 1~5스테이지에만 체력 할인을 주고 6스테이지부터 1.0이다 — 곡선은 등비 그대로 두고
+// 앞머리만 눌러 벽이 너무 빨리 드러나지 않게 한다(0.70 → 0.75 → 0.80 → 0.85 → 0.90 → 1.00).
+function introHpMul(stageId){
+  const ramp=CONFIG.stage.introHpMul||[];
+  return stageId<=ramp.length ? Number(ramp[stageId-1])||1 : 1;
+}
 function campaignStage(id){
   const stageId=Math.max(1,Math.floor(Number(id)||1));
-  const stageOneHpMul=stageId===1 ? DEFAULT_CONFIG.stage.stageOneHpMul : 1;
+  const introMul=introHpMul(stageId);
   return {
     id:stageId,
     nameKey:CAMPAIGN_CONFIG.stageNameKeys[stageId-1]||'stage.endless',
     waves:Math.min(stageId,3)*10,
-    hpScale:(1+(stageId-1)*CONFIG.stage.hpScalePerStage)*stageOneHpMul,
+    hpScale:Math.pow(CONFIG.stage.hpScaleRatio,stageId-1)*introMul,
     atkScale:1+(stageId-1)*.15,
-    waveGold:10+(stageId-1)*2,
-    clearGold:100+(stageId-1)*50,
+    // 공비 1.085 — 모든 칸이 +8.5%로 같다. 60스테이지 한 판이 25,000골드로 후반 1레벨(19,377골드)과
+    // 맞물려 "한 판 = 한 레벨"이 되고, 등반이 막히면 같은 스테이지 반복이 그대로 성장이 된다.
+    waveGold:Math.round(10*Math.pow(CONFIG.stage.goldRatio,stageId-1)),
+    clearGold:Math.round(100*Math.pow(CONFIG.stage.goldRatio,stageId-1)),
   };
 }
 /* Character party meta v3: definition tables → 4-slot formation → growth/wallet → combat.
@@ -45,11 +59,14 @@ function rarityConf(rarityId){ return CONFIG.meta.rarity[rarityId]||CONFIG.meta.
 // 기본 성장 폭. 캐릭터의 실제 값은 여기에 희귀도 배율을 곱한 것이다.
 const GrowthProfileTable={standard:{atk:100,def:1,hp:30}};
 // [2026-09-17] 레벨 L까지의 누적 성장 배수. blend=0이면 (L-1)이 되어 기존 선형과 완전히 같다.
-// 한 레벨 증가폭 = 프로필값 × ((1-blend) + blend × shape(x)/shape(1)), shape(x)=(100+10x+100×floor(x/10))×expBase^x.
-// 레벨은 1~60으로 고정이라 매번 합산하지 않고 최초 1회만 만들어 둔다(CONFIG 변경 시 재생성).
+// 한 레벨 증가폭 = 프로필값 × ((1-blend) + blend × shape(x)/shape(1)), shape(x)=(100+10x+100×floor(x/20))×expBase^x.
+// [2026-09-19] 확정(인철): 레벨 상한이 120으로 늘면서 계단 주기를 20으로 맞췄고, blend를 0.35 → 0.60으로
+// 올렸다. 비용(levelUpGold)이 Lv.119에서 606배 오르는데 증가폭은 187배만 올라 골드당 능력치가 후반에
+// 3.2배 무너졌기 때문이다. blend 0.60 · expBase 1.035면 증가폭이 566배가 되어 비용 곡선과 거의 평탄해진다.
+// 레벨은 1~120으로 고정이라 매번 합산하지 않고 최초 1회만 만들어 둔다(CONFIG 변경 시 재생성).
 const LevelGrowthFactor={
   cache:null, key:null,
-  shape(x,expBase){ return (100+10*x+100*Math.floor(x/10))*Math.pow(expBase,x); },
+  shape(x,expBase){ return (100+10*x+100*Math.floor(x/20))*Math.pow(expBase,x); },
   table(){
     const c=CONFIG.meta.character.growthCurve||{blend:0,expBase:1},
           blend=Number(c.blend)||0, expBase=Number(c.expBase)||1, key=`${blend}|${expBase}`;
@@ -64,7 +81,10 @@ const LevelGrowthFactor={
 // [2026-09-18] 확정(인철): 뽑기를 없앤다. 수호자는 해당 미사일의 공용 레벨이 임계에 닿을 때
 // 등급 오름차순으로 열리고, 노말 4명(미사일 1명씩)만 처음부터 지급한다 — 미사일 4슬롯을
 // 채우지 못하면 전투 자체가 불가능하기 때문이다.
-const CharacterGrowthRules={maxStars:6,levelsPerStar:10,freeRarityId:'normal'};
+// [2026-09-19] 확정(인철): 레벨 상한을 60 → 120으로 올린다. 해금 사다리를 등간격(10·20·30·40·50)에서
+// 가속 간격(10·25·45·75·120)으로 벌리려면 60레벨 안에 공간이 없었다. 앞부분은 빠르게 열려 성장 맛을 주고,
+// 뒷부분은 목표가 멀어져 같은 스테이지를 반복해 공략하는 구간이 된다.
+const CharacterGrowthRules={maxStars:6,levelsPerStar:20,freeRarityId:'normal'};
 // [2026-09-18] 확정(인철): 레벨과 성급의 소유자를 서로 다르게 둔다 — 레벨은 공용 트랙(LEVEL_TRACKS)이,
 // 성급은 캐릭터·스킬 개인이 갖는다. 그래서 둘은 완전히 독립이며 서로의 선행 조건이 아니다.
 // 예전에는 성급별 상한(1성=Lv.10, 2성=Lv.20 …)에 도달해야 다음 레벨업·승급이 열렸다(StarTable).
@@ -101,13 +121,16 @@ const SkillInventorySystem={
 // [2026-09-18] 확정(인철): 성급 상승은 조각이 아니라 별불로 한다(rarity.starfireSteps).
 // 그래서 이 표에는 레벨업 행만 남는다. 레벨은 공용 트랙 6종이 가지므로 등급 배율도 붙지 않고,
 // 여섯 트랙이 모두 이 표를 그대로 쓴다(LevelTrackSystem.costs).
-// [2026-09-17] 확정(인철): 레벨업 골드 = (28 + 3x + 38×floor(x/10)) × 1.046^x  (x = 올리기 전 레벨)
-// 선형(3x) + 성급 경계 계단(10레벨마다 +38) + 지수(1.046^x)를 겹친 3단 복합 곡선이다.
+// [2026-09-17] 확정(인철): 레벨업 골드 = (28 + 3x + 38×floor(x/20)) × 1.030^x  (x = 올리기 전 레벨)
+// 선형(3x) + 계단(20레벨마다 +38) + 지수(1.030^x)를 겹친 3단 복합 곡선이다.
 //   - 초반을 싸게 둬 새 트랙을 바로 굴려볼 수 있게 한다(Lv.1 = 32골드).
-//   - 계단 주기를 수호자 해금 주기(10레벨)와 맞춰 돌파 지점이 리듬으로 느껴지게 한다.
 //   - 후반 지수가 한 트랙 몰빵을 손해로 만들어, 규칙 없이도 4미사일 균등 육성이 유리해진다.
 // 기존 50+(x-1)×25(선형)는 초반이 비싸 4일차 등반이 11스테이지에서 멈췄다.
-function levelUpGold(x){ return Math.max(1,Math.round((28+3*x+38*Math.floor(x/10))*Math.pow(1.046,x))); }
+// [2026-09-19] 확정(인철): 레벨 상한 60 → 120에 맞춰 expBase 1.046 → 1.030, 계단 주기 10 → 20.
+//   - 1.046을 그대로 두면 트랙당 총액이 232만·최종 1레벨이 12만 골드로 터진다(1.030에서 50만·19,377).
+//   - 해금 주기가 가속 간격(10·25·45·75·120)이 되어 "계단 주기를 해금 주기와 맞춘다"는 근거는 사라졌다.
+//     계단은 이제 리듬용 20레벨 고정이다.
+function levelUpGold(x){ return Math.max(1,Math.round((28+3*x+38*Math.floor(x/20))*Math.pow(1.030,x))); }
 const GrowthCostTable=[
   ...Array.from({length:CharacterGrowthRules.maxLevel-1},(_,i)=>(
     {costGroupId:'standard',action:'levelUp',step:i+1,currencyId:'gold',amount:levelUpGold(i+1)})),
@@ -400,14 +423,13 @@ const UnlockSystem={
     const index=roster.findIndex(c=>!owned[c.characterId]?.owned);
     return index<0?0:this.moduleUnlockLevel(index);
   },
-  skillQuota(total){
-    const g=CONFIG.meta.growth,start=Number(g.skillUnlockStart)||0,step=Math.max(1,Number(g.skillUnlockStep)||1);
-    return total<start?0:Math.floor((total-start)/step)+1;
-  },
+  // [2026-09-19] 해금 임계가 등차(start+step×n)에서 가속 배열로 바뀌었다 — 넘긴 칸 수를 그대로 센다.
+  skillUnlockLevels(){return (CONFIG.meta.growth.skillUnlockLevels||[]).map(Number).filter(n=>n>0);},
+  skillQuota(total){return this.skillUnlockLevels().filter(n=>total>=n).length;},
   nextSkillTotal(state){
-    const g=CONFIG.meta.growth,start=Number(g.skillUnlockStart)||0,step=Math.max(1,Number(g.skillUnlockStep)||1);
+    const levels=this.skillUnlockLevels();
     const opened=SKILL_KEYS.filter(key=>state?.skillInventory?.skills?.[key]?.owned).length-DEFAULT_EQUIPPED_SKILLS.length;
-    return opened>=SKILL_KEYS.length-DEFAULT_EQUIPPED_SKILLS.length?0:start+Math.max(0,opened)*step;
+    return opened>=SKILL_KEYS.length-DEFAULT_EQUIPPED_SKILLS.length?0:(levels[Math.max(0,opened)]||0);
   },
   // next(저장 사본)에 레벨이 여는 것들을 채우고, 이번에 새로 열린 목록을 돌려준다.
   // 결과 항목은 공개 연출(RevealUI)이 그대로 쓰는 형식이다.

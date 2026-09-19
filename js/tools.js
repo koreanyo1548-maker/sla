@@ -69,7 +69,7 @@ function buildGameManual(){
       `스테이지는 ${stageWaves} WAVE로 길어지고 이후는 ${campaignStage(3).waves} WAVE다. 입장에 행동력 ${stamina.entryCost}를 쓰며 ${Math.round(stamina.recoveryMs/60000)}분마다 1씩 최대 ${stamina.staminaMax}까지 찬다.`,
       `수호자 4인과 스킬 ${CONFIG.skillPickCount}종을 미리 편성한다. <b>레벨은 수호자가 아니라 슬롯이 갖는다</b> — 미사일 ${MISSILE_KEYS.length}종과 스킬 슬롯 ${CONFIG.skillPickCount}칸, 모두 ${LEVEL_TRACKS.length}개의 공용 레벨을 골드로 올린다(상한 Lv.${maxLevel}). 누구를 꽂아도 그 슬롯의 레벨을 그대로 쓰므로 교체해도 다시 키울 필요가 없다.`,
       `성급은 수호자·스킬마다 따로 올리며 재료는 별불이다(상한 ${CharacterGrowthRules.maxStars}성). 레벨과 성급은 서로의 조건이 아니다.`,
-      `새 수호자는 그 미사일의 공용 레벨이 ${growth.moduleUnlockLevels.join('·')}에 닿을 때 등급이 낮은 쪽부터 하나씩 열린다. 스킬은 두 스킬 슬롯 레벨의 합계가 ${growth.skillUnlockStart}을 넘고 ${growth.skillUnlockStep}씩 오를 때마다 못 가진 것 중 하나가 무작위로 열린다.`,
+      `새 수호자는 그 미사일의 공용 레벨이 ${growth.moduleUnlockLevels.join('·')}에 닿을 때 등급이 낮은 쪽부터 하나씩 열린다. 스킬은 두 스킬 슬롯 레벨의 합계가 ${growth.skillUnlockLevels.join('·')}에 닿을 때마다 못 가진 것 중 하나가 무작위로 열린다.`,
       '통과한 WAVE만큼 골드를 받고 마일스톤이 추가 보상을 준다. 별불은 전부 마일스톤에서 나온다.',
     ]},
   ],

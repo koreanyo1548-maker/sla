@@ -199,8 +199,11 @@ const MilestoneSystem={
     return Number(state.lifetime?.[row.metric])||0;
   },
   claims(state,row){const n=Number(state.milestoneClaims?.[row.id]);return Number.isSafeInteger(n)&&n>0?n:0;},
-  interval(row,n){const c=this.conf(row);return Math.max(1,Math.round(c.target+c.targetStep*n));},
-  reward(row,n){const c=this.conf(row),v=c.reward+c.rewardStep*n;return Math.max(0,Math.round(c.rewardCap>0?Math.min(c.rewardCap,v):v));},
+  // [2026-09-19] 확정(인철): 등차(target+targetStep×n)에서 등비(target×targetMul^n)로 바꿨다.
+  // 등차는 단계가 올라갈수록 증가율이 0에 수렴해, 등반이 막힌 시점에 반복 보상이 제자리였다.
+  // rewardMul > targetMul이므로 후반 반복이 앞 단계보다 이득이다. rewardCap은 등비를 잘라 없앴다.
+  interval(row,n){const c=this.conf(row);return Math.max(1,Math.round(c.target*Math.pow(Number(c.targetMul)||1,n)));},
+  reward(row,n){const c=this.conf(row);return Math.max(0,Math.round(c.reward*Math.pow(Number(c.rewardMul)||1,n)));},
   // 현재 단계(수령한 단계 수 = tier)와, 지금 받을 수 있는 단계 수·보상 합계.
   status(state,row){
     const tier=this.claims(state,row),value=this.progress(state,row);
