@@ -58,6 +58,7 @@ class Game {
     this.orderSheetSystem = new OrderSheetSystem(this);
     this.orderGaugeSystem = new OrderGaugeSystem(this);
     this.generator = new Generator(this);
+    this.batchMergeSystem = new BatchMergeSystem(this);
     // 5) 집계·안내
     this.scoreSystem = new ScoreSystem(this);
     this.tutorial = new TutorialSystem(this);
@@ -273,6 +274,7 @@ class Game {
     if(btn)btn.title=t('battle.generator.tooltip',{points:CONFIG.scoring.pointsPerGrant,energy:CONFIG.scoring.energyPerGrant});
     if(btn){btn.disabled=!!this.ending||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?t('battle.generator.full'):t('battle.generator.label',{cost:CONFIG.generator.costPerPiece});}
     this.renderSkillBar();
+    this.batchMergeSystem.render();
   }
   // 로비에서 장착한 스킬 2개를 그린다. 에너지 비용은 없고 개별 쿨타임만 표시한다.
   buildSkillBar(){
@@ -390,6 +392,7 @@ class Game {
     this.statusEffectSystem.reset();
     this.combatEffectSystem.reset();
     this.generator.resetOpeningGuarantee();
+    this.batchMergeSystem.reset();
     this.enemySystem.enemies = [];
     this.waveSystem.finished = false;
     this.waveSystem.startWave(0);
@@ -434,12 +437,14 @@ class Game {
     dt=realDt*this.frameScale();
     this.statusEffectSystem.update(dt);
     this.skillSystem.update(dt);
+    this.batchMergeSystem.update(dt);
     this.enemySystem.update(dt);
     if(!this.running) return;
     dt=realDt*this.frameScale();
     this.combatSystem.update(dt);
     this.effects.update(dt);
     this.renderSkillBar();       // 쿨타임 게이지를 매 프레임 갱신
+    this.batchMergeSystem.render();
     this.render();
     requestAnimationFrame(this.loop.bind(this));
   }

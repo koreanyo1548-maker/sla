@@ -29,6 +29,7 @@ const RunHost = {
   relayout(){ this.current?.layoutField(); },
   holdStart(){ this.current?.generator.startHold(); },
   holdStop(){ this.current?.generator.stopHold(); },
+  batchMerge(){ return !!this.current?.batchMergeSystem.activate(); },
 };
 
 /* =====================================================================
@@ -547,6 +548,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
   window.addEventListener('resize', syncViewportHeight);
   if(window.visualViewport) window.visualViewport.addEventListener('resize', syncViewportHeight);
 
+  $('#batch-merge-btn').addEventListener('click', ()=>RunHost.batchMerge());
   $('#generator-btn').addEventListener('pointerdown', ()=>RunHost.holdStart());
   ['pointerup','pointerleave','pointercancel','lostpointercapture'].forEach(evt=>{
     $('#generator-btn').addEventListener(evt, ()=>RunHost.holdStop());

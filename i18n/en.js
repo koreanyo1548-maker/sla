@@ -487,6 +487,12 @@ I18N.register("en", "English", {
   "battle.generator.full": "No space",
   // 처치 점수가 {points}점 쌓일 때마다 에너지 {energy}을 지급합니다
   "battle.generator.tooltip": "Every {points} kill score grants {energy} energy",
+  // 일괄 합성
+  "battle.batchMerge.label": "Merge all",
+  // {sec}초
+  "battle.batchMerge.cooldown": "{sec}s",
+  // 보드에서 합칠 수 있는 보석을 한 번에 합칩니다 (쿨타임 {sec}초)
+  "battle.batchMerge.tooltip": "Merges every matching gem on the board at once ({sec}s cooldown)",
   // {name} Lv.{level} · {cost}
   "battle.skill.tooltip": "{name} Lv.{level} · {cost}",
   // 에너지 {n}
