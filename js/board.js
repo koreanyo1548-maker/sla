@@ -187,6 +187,32 @@ class MergeBoard {
     // §21: 피스는 이제 색깔 피스 하나뿐 — 같은 색상 + 같은 티어만 머지 가능.
     return a.color === b.color && a.tier === b.tier && a.tier < this.pieceMaxTier(a)-1;
   }
+  // 일괄 합성이 쓰는 탐색. 합칠 수 있는 두 칸을 낮은 티어부터 찾는다 — 낮은 쪽을
+  // 먼저 합쳐야 그 결과가 다시 짝을 이뤄 다음 호출에서 연쇄로 이어진다.
+  findMergePair(){
+    const seen = new Map();
+    const filled = this.cells.map((piece,index)=>({piece,index})).filter(x=>x.piece)
+      .sort((a,b)=>a.piece.tier-b.piece.tier);
+    for(const {piece,index} of filled){
+      if(piece.tier >= this.pieceMaxTier(piece)-1) continue; // 최대 티어는 더 올라갈 곳이 없다
+      const key = `${piece.color}:${piece.tier}`;
+      if(seen.has(key)) return [seen.get(key), index];
+      seen.set(key, index);
+    }
+    return null;
+  }
+  hasMergePair(){ return this.findMergePair()!==null; }
+  // 더 합칠 짝이 없을 때까지 handleDrop을 반복한다. 손으로 합치는 것과 같은 경로라
+  // 크리티컬 머지·주문서 게이지·통계가 그대로 따라온다. 한 번 합칠 때마다 피스가
+  // 하나씩 줄어들므로 반드시 끝난다. 렌더는 호출부가 마지막에 한 번만 한다.
+  mergeAll(){
+    let merged = 0;
+    for(let pair=this.findMergePair(); pair; pair=this.findMergePair()){
+      this.handleDrop(pair[0], pair[1]);
+      merged++;
+    }
+    return merged;
+  }
 }
 
 /* =====================================================================
@@ -275,6 +301,57 @@ class Generator {
   }
   stopHold(){
     if(this.holdTimer){ clearInterval(this.holdTimer); this.holdTimer=null; }
+  }
+}
+
+/* =====================================================================
+   [BatchMergeSystem] 일괄 합성 — 보드에 쌓인 피스를 버튼 하나로 전부 합친다
+   ---------------------------------------------------------------------
+   생성기 왼쪽 버튼이 창구다. 보드 정리를 대신 해 주는 만큼
+   CONFIG.batchMerge.cooldownSec 쿨타임을 두고, 그 쿨타임은 스킬과 마찬가지로
+   게임 dt로만 흐른다 — 일시정지·히트스톱·종료 연출 동안 멈춘다.
+   ===================================================================== */
+class BatchMergeSystem {
+  constructor(game){ this.game=game; this.reset(); }
+  reset(){ this.cooldown=0; }
+  cooldownLeft(){ return Math.max(0,this.cooldown); }
+  update(dt){ this.cooldown=Math.max(0,this.cooldown-dt); }
+  // 쓸 수 없는 사유를 코드로 돌려준다(null이면 쓸 수 있다). 버튼 상태 판정과
+  // 발동이 같은 조건을 본다 — 화면에 그대로 나가는 값은 아니다.
+  blockReason(){
+    const g=this.game;
+    if(!g.running||g.ending) return 'ended';
+    if(this.cooldownLeft()>0) return 'cooldown';
+    if(!g.mergeBoard.hasMergePair()) return 'noPair';
+    return null;
+  }
+  canUse(){ return this.blockReason()===null; }
+  activate(){
+    if(!this.canUse()) return false;
+    const g=this.game;
+    const merged=g.mergeBoard.mergeAll();
+    if(!merged) return false;
+    this.cooldown=CONFIG.batchMerge.cooldownSec;
+    g.mergeBoard.render();
+    g.orderSheetSystem.render();
+    g.updateEnergyUi();
+    g.tutorial?.onBoardChanged();
+    logAction(`일괄 합성 ${merged}회`);
+    return true;
+  }
+  render(){
+    const btn=$('#batch-merge-btn');
+    if(!btn) return;
+    const left=this.cooldownLeft();
+    const ready=this.canUse();
+    btn.disabled=!ready;
+    btn.dataset.state=ready?'ready':left>0?'cooldown':'target';
+    // 남은 쿨타임 비율이 그대로 가림막 높이다(스킬 버튼과 같은 방식).
+    const fill=btn.querySelector('.bm-cd');
+    if(fill) fill.style.height=(clamp(left/(CONFIG.batchMerge.cooldownSec||1),0,1)*100).toFixed(0)+'%';
+    const timer=btn.querySelector('.bm-timer');
+    if(timer) timer.textContent=left>0?t('battle.batchMerge.cooldown',{sec:Math.ceil(left)}):'';
+    btn.title=t('battle.batchMerge.tooltip',{sec:CONFIG.batchMerge.cooldownSec});
   }
 }
 
