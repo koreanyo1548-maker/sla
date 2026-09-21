@@ -78,12 +78,13 @@ const CampaignStore = {
   WRITE_ERROR:'notice.write.error',
   // [2026-09-18] 성장 개편으로 저장 형식이 v5가 됐다 — 캐릭터·스킬에서 레벨과 조각이 빠지고
   // 공용 레벨 6종(trackLevels)이 들어왔다. 뽑기 폐지로 gachaCount·lifetime.shardsGained도 없앴다.
-  fresh(){return {version:5,gold:0,balances:{starfire:CONFIG.meta.growth.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),trackLevels:LevelTrackSystem.fresh(),stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},best:{wave:0,score:0},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0},active:null,lastResult:null};},
+  fresh(){return {version:5,gold:0,balances:{starfire:CONFIG.meta.growth.startStarfire},characterInventory:CharacterInventorySystem.fresh(),skillInventory:SkillInventorySystem.fresh(),trackLevels:LevelTrackSystem.fresh(),stamina:CAMPAIGN_CONFIG.staminaMax,recoveredAt:Date.now(),staminaChargeClicks:0,tutorialCompleted:false,unlocked:1,cleared:[],milestoneClaims:{},codexClaims:{},best:{wave:0,score:0},lifetime:{waves:0,clears:0,bosses:0,orders:0,merges:0,skillsUsed:0},active:null,lastResult:null};},
   validate(s){
     const integer=(n,min,max=Number.MAX_SAFE_INTEGER)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
     if(s.version!==5||!integer(s.gold,0)||!integer(s.stamina,0,CAMPAIGN_CONFIG.staminaMax)||!integer(s.staminaChargeClicks,0)||typeof s.tutorialCompleted!=='boolean'||!integer(s.unlocked,1,9999)||!Number.isFinite(s.recoveredAt)||s.recoveredAt<0||
       !Array.isArray(s.cleared)||!s.cleared.every(n=>integer(n,1,9999))||
-      !s.milestoneClaims||typeof s.milestoneClaims!=='object'||Array.isArray(s.milestoneClaims)||!Object.values(s.milestoneClaims).every(n=>integer(n,0))||!s.lifetime||!Object.values(s.lifetime).every(n=>integer(n,0))||
+      !s.milestoneClaims||typeof s.milestoneClaims!=='object'||Array.isArray(s.milestoneClaims)||!Object.values(s.milestoneClaims).every(n=>integer(n,0))||
+      !s.codexClaims||typeof s.codexClaims!=='object'||Array.isArray(s.codexClaims)||!Object.values(s.codexClaims).every(n=>integer(n,0))||!s.lifetime||!Object.values(s.lifetime).every(n=>integer(n,0))||
       (s.active&&(!integer(s.active.stageId,1,9999)||!integer(s.active.completed,0,DEFAULT_STAGE_COUNT)||s.active.completed>campaignStage(s.active.stageId).waves||typeof s.active.id!=='string'))) return false;
     if(!LevelTrackSystem.validate(s.trackLevels)) return false;
     if(!CharacterInventorySystem.validate(s.characterInventory)||!SkillInventorySystem.validate(s.skillInventory)||!s.balances||!Object.values(s.balances).every(n=>integer(n,0))) return false;
@@ -101,6 +102,9 @@ const CampaignStore = {
     Object.keys(base.lifetime).forEach(k=>{if(!int0(s.lifetime[k]))s.lifetime[k]=0;});
     Object.keys(s.lifetime).forEach(k=>{if(!(k in base.lifetime))delete s.lifetime[k];});   // 조각 누적(shardsGained) 같은 폐지 항목을 걷어낸다
     if(!s.milestoneClaims||typeof s.milestoneClaims!=='object'||Array.isArray(s.milestoneClaims))s.milestoneClaims={};
+    // [2026-09-21] 도감 보상이 즉시 적용에서 수령 방식으로 바뀌며 생긴 항목이다. 이전 저장은
+    // 빈 객체로 채운다 — 이미 조건을 채운 단계가 전부 "받을 수 있는" 상태로 나타난다.
+    if(!s.codexClaims||typeof s.codexClaims!=='object'||Array.isArray(s.codexClaims))s.codexClaims={};
     // [2026-09-18 연출 세션 B] 결과 화면 NEW BEST 판정용 최고 기록. 이전 저장에는
     // 없으므로 0으로 채운다 — 첫 판이 곧 최고 기록이 된다.
     if(!s.best||typeof s.best!=='object'||Array.isArray(s.best))s.best={wave:0,score:0};
@@ -213,6 +217,7 @@ const Campaign = {
     CharacterLobbyUI.init(this);
     SkillLobbyUI.init(this);
     MilestoneUI.init(this);
+    CodexLobbyUI.init(this);
     UpgradeLobbyUI.init(this);
     $('#prepare-btn').onclick=()=>this.enter();
     $('#quit-run').onclick=()=>{
@@ -233,7 +238,7 @@ const Campaign = {
     });
   },
   navigate(name){
-    if(!['home','characters','codex','skills','upgrade'].includes(name))name='home';
+    if(!['home','characters','skills','upgrade'].includes(name))name='home';
     this.currentLobbyPage=name;
     $('#app').dataset.lobbyPage=name;
     if(name!=='characters')CharacterLobbyUI.close();
@@ -243,7 +248,7 @@ const Campaign = {
   },
   showLobby(){
     RunHost.halt();
-    this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();RevealUI.close();GameState.set('lobby');this.render();
+    this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();CodexLobbyUI.close();RevealUI.close();GameState.set('lobby');this.render();
     if(this.pendingUnlockFx){ this.pendingUnlockFx=false; restartCssAnimation($('.journey-scene'),'fx-unlock'); GameAudio.play('stage_unlock'); }
   },
   renderWallet(){
@@ -265,7 +270,7 @@ const Campaign = {
     SkillLobbyUI.render(this);
     MilestoneUI.render(this);
     UpgradeLobbyUI.render(this);
-    CampaignView.lobbyPage(['characters','codex','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
+    CampaignView.lobbyPage(['characters','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
   },
   // [2026-09-19 세션 7] 출전 준비 화면을 없애면서 prepare()가 하던 검사를 여기로
   // 합쳤다. 로비의 출전 버튼이 부르는 유일한 입장 경로다.

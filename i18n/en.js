@@ -57,8 +57,6 @@ I18N.register("en", "English", {
   "lobby.nav.home": "Journey",
   // 수호자
   "lobby.nav.characters": "Guardians",
-  // 도감
-  "lobby.nav.codex": "Codex",
   // 스킬
   "lobby.nav.skills": "Skills",
   // 강화
@@ -69,18 +67,34 @@ I18N.register("en", "English", {
   "codex.eyebrow": "ARCHIVES",
   // 도감
   "codex.title": "Codex",
-  // 보유 캐릭터의 성급이 오르면 분류와 관계의 기록이 성장합니다.
-  "codex.intro": "Raise owned guardians' star ranks to develop category and relationship records.",
   // {current} / {total} 단계
   "codex.count": "{current} / {total} tiers",
+  // 도감 닫기
+  "codex.closeAria": "Close codex",
+  // {name} ★{n} 더
+  "codex.strip.next": "{name} ★{n} more",
+  // 모두 달성
+  "codex.strip.done": "All complete",
+  // 도감 {text} · {sub}
+  "codex.strip.aria": "Codex {text} · {sub}",
+  // 다음 단계까지 ★{n}
+  "codex.needStars": "★{n} to next tier",
+  // {n}단계 받기
+  "codex.claim": "Claim {n}",
+  // 받기 {n}개
+  "codex.strip.ready": "{n} to claim",
+  // 받을 수 있는 도감 {n}개
+  "codex.overview.ready": "{n} codex entries ready to claim",
+  // {name} {n}단계 수령 — {reward}
+  "codex.toast.claimed": "{name} +{n} tiers — {reward}",
   // 기본 도감
   "codex.tab.base": "Base Codex",
   // 관계 도감
   "codex.tab.relation": "Relations",
   // 누적 도감 효과
-  "codex.summary.title": "Total Codex Effects",
+  "codex.overview.title": "Total Codex Effects",
   // 첫 도감 단계를 달성하면 영구 효과가 적용됩니다.
-  "codex.summary.empty": "Reach the first Codex tier to gain permanent effects.",
+  "codex.summary.empty": "Claim a Codex tier to gain its permanent effect.",
   // Lv.{level} / {max}
   "codex.level": "Lv.{level} / {max}",
   // 성급 {current} / {required}
@@ -464,7 +478,7 @@ I18N.register("en", "English", {
   // 새 전투 스킬 해금
   "milestone.owned_skills.desc": "New combat skills unlocked",
 
-  /* ── upgrade (공용 레벨업 6종) ── */
+  /* ── upgrade ── */
   // UPGRADE FORGE
   "upgrade.eyebrow": "UPGRADE FORGE",
   // 공용 강화
@@ -502,7 +516,7 @@ I18N.register("en", "English", {
   // 전투 스킬
   "upgrade.progress.skills": "Combat skills",
 
-  /* ── reveal (해금 공개 연출) ── */
+  /* ── reveal ── */
   // 새로운 전력 해금
   "reveal.title": "New Power Unlocked",
   // 카드 공개
