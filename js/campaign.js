@@ -42,7 +42,7 @@ const RunHost = {
    click 처리기 안에만 있었다. 그런데 ⚙는 css/base.css에서 display:none이고
    @media (max-width:600px) 안에서만 display:block이었다 — 폭이 600px을 넘으면
    처리기가 아예 돌지 않아 #quit-run의 hidden이 풀리지 않았고, 데스크톱에서는
-   런을 끝낼 방법이 없었다(세션 2 스모크가 잡았다). ⚙ 쪽은 css/base.css에서
+   런을 끝낼 방법이 없었다(세션 2 자동 검사가 잡았다). ⚙ 쪽은 css/base.css에서
    모든 폭에 내도록 고쳤고, 이 함수는 갱신 시점 문제를 맡는다.
 
    갱신을 ⚙에서 떼어내 상태가 바뀌는 지점마다 부른다:
@@ -233,7 +233,7 @@ const Campaign = {
     });
   },
   navigate(name){
-    if(!['home','characters','skills','upgrade'].includes(name))name='home';
+    if(!['home','characters','codex','skills','upgrade'].includes(name))name='home';
     this.currentLobbyPage=name;
     $('#app').dataset.lobbyPage=name;
     if(name!=='characters')CharacterLobbyUI.close();
@@ -261,10 +261,11 @@ const Campaign = {
     CampaignView.stageHeader(this.stage());
     CampaignView.partySummary(PartyCombatAdapter.snapshot(this.state));
     CharacterLobbyUI.render(this);
+    CodexLobbyUI.render(this);
     SkillLobbyUI.render(this);
     MilestoneUI.render(this);
     UpgradeLobbyUI.render(this);
-    CampaignView.lobbyPage(['characters','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
+    CampaignView.lobbyPage(['characters','codex','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
   },
   // [2026-09-19 세션 7] 출전 준비 화면을 없애면서 prepare()가 하던 검사를 여기로
   // 합쳤다. 로비의 출전 버튼이 부르는 유일한 입장 경로다.
@@ -280,9 +281,11 @@ const Campaign = {
     CONFIG=cloneConfig(DEFAULT_CONFIG);
     const partySnapshot=PartyCombatAdapter.snapshot(s);
     const skillSnapshot=SkillCombatAdapter.snapshot(s);
+    const codexSnapshot=CodexSystem.snapshot(s);
     RunConfig.selectedSkills=skillSnapshot.equipped.map(item=>item.key);
     RunConfig.skillSnapshot=skillSnapshot;
     RunConfig.partySnapshot=partySnapshot;
+    RunConfig.codexSnapshot=codexSnapshot;
     RunConfig.battle=this.battleContext(st,partySnapshot);
     CharacterLobbyUI.close();
     Analytics.progression('start',st.id);

@@ -57,10 +57,100 @@ I18N.register("en", "English", {
   "lobby.nav.home": "Journey",
   // 수호자
   "lobby.nav.characters": "Guardians",
+  // 도감
+  "lobby.nav.codex": "Codex",
   // 스킬
   "lobby.nav.skills": "Skills",
   // 강화
   "lobby.nav.upgrade": "Upgrade",
+
+  /* ── codex ── */
+  // ARCHIVES
+  "codex.eyebrow": "ARCHIVES",
+  // 도감
+  "codex.title": "Codex",
+  // 보유 캐릭터의 성급이 오르면 분류와 관계의 기록이 성장합니다.
+  "codex.intro": "Raise owned guardians' star ranks to develop category and relationship records.",
+  // {current} / {total} 단계
+  "codex.count": "{current} / {total} tiers",
+  // 기본 도감
+  "codex.tab.base": "Base Codex",
+  // 관계 도감
+  "codex.tab.relation": "Relations",
+  // 누적 도감 효과
+  "codex.summary.title": "Total Codex Effects",
+  // 첫 도감 단계를 달성하면 영구 효과가 적용됩니다.
+  "codex.summary.empty": "Reach the first Codex tier to gain permanent effects.",
+  // Lv.{level} / {max}
+  "codex.level": "Lv.{level} / {max}",
+  // 성급 {current} / {required}
+  "codex.score": "Stars {current} / {required}",
+  // 성급 {current} / {max} · MAX
+  "codex.scoreMax": "Stars {current} / {max} · MAX",
+  // 누적 {reward}
+  "codex.totalReward": "Total {reward}",
+  // 다음 {reward}
+  "codex.nextReward": "Next {reward}",
+  // RELATION
+  "codex.relation.label": "RELATION",
+  // 아직 맺어지지 않은 관계
+  "codex.relation.undiscovered": "Relationship not yet formed",
+  // 등급 도감
+  "codex.group.rarity": "Rarity Codex",
+  // 종족 도감
+  "codex.group.race": "Race Codex",
+  // 신분 도감
+  "codex.group.identity": "Calling Codex",
+  // 천년의 앙숙
+  "codex.relation.ancientRivals.name": "Ancient Rivals",
+  // 혈통과 마법을 중시하는 엘프 귀족과 실용·제련 기술을 숭상하는 드워프 기술자의 오래된 경쟁.
+  "codex.relation.ancientRivals.desc": "An old rivalry between elven nobles devoted to bloodline and magic and dwarven engineers who prize craft and utility.",
+  // 불편한 동맹
+  "codex.relation.ancientRivals.level1": "Uneasy Alliance",
+  // 백 년의 경쟁
+  "codex.relation.ancientRivals.level2": "A Century of Contest",
+  // 서로를 인정한 숙적
+  "codex.relation.ancientRivals.level3": "Worthy Rivals",
+  // 적과의 동행
+  "codex.relation.enemyCompanions.name": "Walking with the Enemy",
+  // 인간 기사는 마족 추방자를 믿지 않지만, 공동의 적 앞에서는 서로의 등을 지켜야 한다.
+  "codex.relation.enemyCompanions.desc": "Human knights distrust demon exiles, yet a common enemy forces them to guard each other's backs.",
+  // 일시적 휴전
+  "codex.relation.enemyCompanions.level1": "Temporary Ceasefire",
+  // 등 뒤를 맡긴 밤
+  "codex.relation.enemyCompanions.level2": "A Night Back-to-Back",
+  // 적과의 동행
+  "codex.relation.enemyCompanions.level3": "Walking with the Enemy",
+  // 금화의 동맹
+  "codex.relation.goldenAlliance.name": "Gilded Alliance",
+  // 인간 귀족의 금화로 시작된 수인 용병과의 계약이 전장을 거치며 신뢰로 바뀐다.
+  "codex.relation.goldenAlliance.desc": "A contract bought with human gold grows into trust between nobles and beastfolk mercenaries.",
+  // 단기 계약
+  "codex.relation.goldenAlliance.level1": "Short Contract",
+  // 검증된 신뢰
+  "codex.relation.goldenAlliance.level2": "Proven Trust",
+  // 금화보다 단단한 맹세
+  "codex.relation.goldenAlliance.level3": "A Bond Beyond Gold",
+  // 잿빛 성약
+  "codex.relation.ashOath.name": "Ashen Covenant",
+  // 마족의 질서를 지키는 기사와 그 질서에서 버림받은 추방자가 무너진 성약 앞에 다시 선다.
+  "codex.relation.ashOath.desc": "Knights who uphold demon law and exiles cast out by it meet again before a broken covenant.",
+  // 감시와 의심
+  "codex.relation.ashOath.level1": "Watch and Suspicion",
+  // 공동의 적
+  "codex.relation.ashOath.level2": "A Common Enemy",
+  // 잿빛 성약
+  "codex.relation.ashOath.level3": "Ashen Covenant",
+  // 뒤바뀐 유산
+  "codex.relation.invertedLegacy.name": "Inverted Legacy",
+  // 드워프 귀족과 엘프 기술자는 각자의 전통에서 벗어나 서로에게서 새로운 가능성을 발견한다.
+  "codex.relation.invertedLegacy.desc": "Dwarven nobles and elven engineers step beyond tradition and discover new possibilities in one another.",
+  // 낯선 호기심
+  "codex.relation.invertedLegacy.level1": "Unfamiliar Curiosity",
+  // 경계를 넘은 기술
+  "codex.relation.invertedLegacy.level2": "Craft Beyond Borders",
+  // 새로운 전통
+  "codex.relation.invertedLegacy.level3": "A New Tradition",
 
   /* ── character ── */
   // GUARDIANS
@@ -143,12 +233,16 @@ I18N.register("en", "English", {
   "passive.scopeAll": "All",
   // {scope} {stat} +{pct}%
   "passive.factor": "{scope} {stat} +{pct}%",
+  // {module} {stat} 옵션 {level}단계 선적용
+  "passive.moduleSpecial": "Start with {level} {module} {stat} upgrade",
+  // 편성한 4명의 종족이 모두 다르면 {effect}
+  "passive.condition.allUniqueRaces": "If all 4 guardians have different races: {effect}",
+  // {race} {count}명 편성 시 {effect}
+  "passive.condition.raceCount": "With {count} {race} guardians: {effect}",
   // 적중 시 {chance}% 확률로 {status} {duration}초
   "passive.statusOnHit": "{chance}% chance on hit to apply {status} for {duration}s",
   // {status} 상태의 적에게 피해 +{pct}%
   "passive.damageVsStatus": "+{pct}% damage to {status} enemies",
-  // {tag} {count}명 편성 시 {scope} {stat} +{pct}%
-  "passive.formation": "With {count} {tag} in the squad: {scope} {stat} +{pct}%",
   // 남은 연결 횟수당 첫 대상 피해 +{pct}%
   "passive.rule.unusedTargetBonus": "+{pct}% first-target damage per unused chain jump",
   // 중앙 탄환 피해 +{pct}%
@@ -759,6 +853,10 @@ I18N.register("en", "English", {
   "factor.critDamagePct.short": "Crit damage",
   // 치명타 피해량
   "factor.critDamagePct.long": "Critical damage",
+  // 방어력
+  "factor.defensePct.short": "Defense",
+  // 방어력 증가율
+  "factor.defensePct.long": "Defense bonus",
   // 방어 무시율
   "factor.defenseIgnore.short": "Def ignore",
   // 방어 무시율
@@ -857,86 +955,102 @@ I18N.register("en", "English", {
   "missile.laser.stat": "Beam width",
 
   /* ── passive ── */
-  // 전류 개방
-  "passive.adel.name": "Current Release",
-  // 과전 폭연
-  "passive.ricia.name": "Overcharge Burst",
-  // 정비 숙련
-  "passive.bron.name": "Maintenance Mastery",
-  // 야성 조준
-  "passive.tarq.name": "Feral Aim",
-  // 무법 결속
-  "passive.belka.name": "Outlaw Bond",
-  // 인간 전술
-  "passive.kyle.name": "Human Tactics",
-  // 용융 탄환
-  "passive.seria.name": "Molten Rounds",
-  // 용융 절단
-  "passive.dorman.name": "Molten Cut",
-  // 추적 전류
-  "passive.rokan.name": "Tracking Current",
-  // 무법자의 연대
-  "passive.rokanStar.name": "Outlaws' Solidarity",
-  // 열충격
-  "passive.azra.name": "Thermal Shock",
-  // 마족 공명
-  "passive.azraStar.name": "Demon Resonance",
-  // 표식 산개
-  "passive.yuna.name": "Marked Spread",
-  // 귀족 지휘
-  "passive.yunaStar.name": "Noble Command",
-  // 용융 관통
-  "passive.elion.name": "Molten Pierce",
-  // 엘프 정밀
-  "passive.elionStar.name": "Elven Precision",
-  // 용해 전류
-  "passive.grim.name": "Melting Current",
-  // 용병 연대
-  "passive.grimStar.name": "Mercenary Bond",
-  // 열파 증폭
-  "passive.teon.name": "Heatwave Amp",
-  // 정비 라인
-  "passive.teonStar.name": "Assembly Line",
-  // 감전 산탄
-  "passive.nia.name": "Shock Shot",
-  // 기사 서약
-  "passive.niaStar.name": "Knight's Oath",
-  // 전도 절단
-  "passive.miren.name": "Conductive Cut",
-  // 인류 연합
-  "passive.mirenStar.name": "Human Alliance",
-  // 고전압 증폭
-  "passive.astel.name": "High Voltage Amp",
-  // 엘프 결계
-  "passive.astelStar.name": "Elven Ward",
-  // 작열 각인
-  "passive.volkan.name": "Searing Brand",
-  // 드워프 제련
-  "passive.volkanStar.name": "Dwarven Forging",
-  // 관통 산개
-  "passive.kira.name": "Piercing Spread",
-  // 귀족 대열
-  "passive.kiraStar.name": "Noble Ranks",
+  // 연쇄 강화
+  "passive.adel.name": "Chain Reinforcement",
+  // 연쇄 확장
+  "passive.adelStar.name": "Chain Expansion",
+  // 고속 폭발
+  "passive.ricia.name": "Rapid Blast",
+  // 광선 지원
+  "passive.riciaStar.name": "Beam Support",
+  // 추가 산탄
+  "passive.bron.name": "Extra Pellets",
+  // 산탄 가속
+  "passive.bronStar.name": "Scatter Acceleration",
+  // 연쇄 지원
+  "passive.tarq.name": "Chain Support",
+  // 광선 강화
+  "passive.tarqStar.name": "Beam Reinforcement",
+  // 연쇄 가속
+  "passive.belka.name": "Chain Acceleration",
+  // 폭발 지원
+  "passive.belkaStar.name": "Blast Support",
+  // 폭발 확장
+  "passive.kyle.name": "Blast Expansion",
+  // 폭발 강화
+  "passive.kyleStar.name": "Blast Reinforcement",
+  // 광선 지원
+  "passive.seria.name": "Beam Support",
+  // 산탄 증설
+  "passive.seriaStar.name": "Expanded Volley",
+  // 광선 강화
+  "passive.dorman.name": "Beam Reinforcement",
+  // 광선 확장
+  "passive.dormanStar.name": "Beam Expansion",
+  // 연쇄 증설
+  "passive.rokan.name": "Extended Chain",
+  // 연쇄 강화
+  "passive.rokanStar.name": "Chain Reinforcement",
+  // 산탄 지원
+  "passive.azra.name": "Scatter Support",
+  // 폭발 확장
+  "passive.azraStar.name": "Blast Expansion",
+  // 산탄 강화
+  "passive.yuna.name": "Scatter Reinforcement",
+  // 광선 지원
+  "passive.yunaStar.name": "Beam Support",
+  // 광선 가속
+  "passive.elion.name": "Beam Acceleration",
+  // 폭발 지원
+  "passive.elionStar.name": "Blast Support",
+  // 폭발 지원
+  "passive.grim.name": "Blast Support",
+  // 연쇄 지원
+  "passive.grimStar.name": "Chain Support",
+  // 폭발 강화
+  "passive.teon.name": "Blast Reinforcement",
+  // 폭발 확장
+  "passive.teonStar.name": "Blast Expansion",
+  // 산탄 가속
+  "passive.nia.name": "Scatter Acceleration",
+  // 탄막 증설
+  "passive.niaStar.name": "Expanded Barrage",
+  // 광선 확장
+  "passive.miren.name": "Beam Expansion",
+  // 광선 강화
+  "passive.mirenStar.name": "Beam Reinforcement",
+  // 연쇄 증폭
+  "passive.astel.name": "Chain Amplification",
+  // 다양성의 결속
+  "passive.astelStar.name": "Diverse Alliance",
+  // 폭발 치명
+  "passive.volkan.name": "Critical Blast",
+  // 폭발 증폭
+  "passive.volkanStar.name": "Blast Amplification",
+  // 거인 사냥
+  "passive.kira.name": "Giant Slayer",
+  // 감전 추격
+  "passive.kiraStar.name": "Shock Pursuit",
   // 초점 수렴
   "passive.seraph.name": "Focus Convergence",
-  // 마족 강림
-  "passive.seraphStar.name": "Demon Descent",
+  // 광선 가속
+  "passive.seraphStar.name": "Beam Acceleration",
   // 잔류 방전
   "passive.ruhen.name": "Residual Discharge",
-  // 용융 잔류
-  "passive.ruhenStar.name": "Molten Residue",
+  // 융해 추적
+  "passive.ruhenStar.name": "Melt Pursuit",
   // 연쇄 붕괴
   "passive.morga.name": "Chain Collapse",
-  // 용융 붕괴
-  "passive.morgaStar.name": "Molten Collapse",
-  // 정조준
-  "passive.shan.name": "Precision Aim",
-  // 감전 정밀
-  "passive.shanStar.name": "Shock Precision",
-  // 임계 출력
-  "passive.ornel.name": "Critical Output",
-  // 임계 감전
-  "passive.ornelStar.name": "Critical Shock",
+  // 융해 폭발
+  "passive.morgaStar.name": "Melting Blast",
+  // 중앙 집중
+  "passive.shan.name": "Center Focus",
+  // 마족 공명
+  "passive.shanStar.name": "Demon Resonance",
+  // 강화 광선
+  "passive.ornel.name": "Empowered Beam",
+  // 감전 광선
+  "passive.ornelStar.name": "Shock Beam",
 
   /* ── race ── */
   // 인간

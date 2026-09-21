@@ -64,9 +64,11 @@ character.toast.grown,{name} 성장 완료,{name} grew stronger
 character.toast.deployed,{name} · {module} 편성 완료,{name} · {module} slot set
 passive.scopeAll,전체,All
 passive.factor,{scope} {stat} +{pct}%,{scope} {stat} +{pct}%
+passive.moduleSpecial,{module} {stat} 옵션 {level}단계 선적용,Start with {level} {module} {stat} upgrade
+passive.condition.allUniqueRaces,편성한 4명의 종족이 모두 다르면 {effect},If all 4 guardians have different races: {effect}
+passive.condition.raceCount,{race} {count}명 편성 시 {effect},With {count} {race} guardians: {effect}
 passive.statusOnHit,적중 시 {chance}% 확률로 {status} {duration}초,{chance}% chance on hit to apply {status} for {duration}s
 passive.damageVsStatus,{status} 상태의 적에게 피해 +{pct}%,+{pct}% damage to {status} enemies
-passive.formation,{tag} {count}명 편성 시 {scope} {stat} +{pct}%,With {count} {tag} in the squad: {scope} {stat} +{pct}%
 passive.rule.unusedTargetBonus,남은 연결 횟수당 첫 대상 피해 +{pct}%,+{pct}% first-target damage per unused chain jump
 passive.rule.centerDamageBonus,중앙 탄환 피해 +{pct}%,+{pct}% center pellet damage
 passive.rule.secondary,처치 시 2차 폭발 · 피해 {damage}% / 반경 {radius}%,Secondary blast on kill · {damage}% damage / {radius}% radius
@@ -397,46 +399,54 @@ missile.scatter.label,산탄,Scatter
 missile.scatter.stat,발사 수,Pellets
 missile.laser.label,레이저,Laser
 missile.laser.stat,광선 폭,Beam width
-passive.adel.name,전류 개방,Current Release
-passive.ricia.name,과전 폭연,Overcharge Burst
-passive.bron.name,정비 숙련,Maintenance Mastery
-passive.tarq.name,야성 조준,Feral Aim
-passive.belka.name,무법 결속,Outlaw Bond
-passive.kyle.name,인간 전술,Human Tactics
-passive.seria.name,용융 탄환,Molten Rounds
-passive.dorman.name,용융 절단,Molten Cut
-passive.rokan.name,추적 전류,Tracking Current
-passive.rokanStar.name,무법자의 연대,Outlaws' Solidarity
-passive.azra.name,열충격,Thermal Shock
-passive.azraStar.name,마족 공명,Demon Resonance
-passive.yuna.name,표식 산개,Marked Spread
-passive.yunaStar.name,귀족 지휘,Noble Command
-passive.elion.name,용융 관통,Molten Pierce
-passive.elionStar.name,엘프 정밀,Elven Precision
-passive.grim.name,용해 전류,Melting Current
-passive.grimStar.name,용병 연대,Mercenary Bond
-passive.teon.name,열파 증폭,Heatwave Amp
-passive.teonStar.name,정비 라인,Assembly Line
-passive.nia.name,감전 산탄,Shock Shot
-passive.niaStar.name,기사 서약,Knight's Oath
-passive.miren.name,전도 절단,Conductive Cut
-passive.mirenStar.name,인류 연합,Human Alliance
-passive.astel.name,고전압 증폭,High Voltage Amp
-passive.astelStar.name,엘프 결계,Elven Ward
-passive.volkan.name,작열 각인,Searing Brand
-passive.volkanStar.name,드워프 제련,Dwarven Forging
-passive.kira.name,관통 산개,Piercing Spread
-passive.kiraStar.name,귀족 대열,Noble Ranks
+passive.adel.name,연쇄 강화,Chain Reinforcement
+passive.adelStar.name,연쇄 확장,Chain Expansion
+passive.ricia.name,고속 폭발,Rapid Blast
+passive.riciaStar.name,광선 지원,Beam Support
+passive.bron.name,추가 산탄,Extra Pellets
+passive.bronStar.name,산탄 가속,Scatter Acceleration
+passive.tarq.name,연쇄 지원,Chain Support
+passive.tarqStar.name,광선 강화,Beam Reinforcement
+passive.belka.name,연쇄 가속,Chain Acceleration
+passive.belkaStar.name,폭발 지원,Blast Support
+passive.kyle.name,폭발 확장,Blast Expansion
+passive.kyleStar.name,폭발 강화,Blast Reinforcement
+passive.seria.name,광선 지원,Beam Support
+passive.seriaStar.name,산탄 증설,Expanded Volley
+passive.dorman.name,광선 강화,Beam Reinforcement
+passive.dormanStar.name,광선 확장,Beam Expansion
+passive.rokan.name,연쇄 증설,Extended Chain
+passive.rokanStar.name,연쇄 강화,Chain Reinforcement
+passive.azra.name,산탄 지원,Scatter Support
+passive.azraStar.name,폭발 확장,Blast Expansion
+passive.yuna.name,산탄 강화,Scatter Reinforcement
+passive.yunaStar.name,광선 지원,Beam Support
+passive.elion.name,광선 가속,Beam Acceleration
+passive.elionStar.name,폭발 지원,Blast Support
+passive.grim.name,폭발 지원,Blast Support
+passive.grimStar.name,연쇄 지원,Chain Support
+passive.teon.name,폭발 강화,Blast Reinforcement
+passive.teonStar.name,폭발 확장,Blast Expansion
+passive.nia.name,산탄 가속,Scatter Acceleration
+passive.niaStar.name,탄막 증설,Expanded Barrage
+passive.miren.name,광선 확장,Beam Expansion
+passive.mirenStar.name,광선 강화,Beam Reinforcement
+passive.astel.name,연쇄 증폭,Chain Amplification
+passive.astelStar.name,다양성의 결속,Diverse Alliance
+passive.volkan.name,폭발 치명,Critical Blast
+passive.volkanStar.name,폭발 증폭,Blast Amplification
+passive.kira.name,거인 사냥,Giant Slayer
+passive.kiraStar.name,감전 추격,Shock Pursuit
 passive.seraph.name,초점 수렴,Focus Convergence
-passive.seraphStar.name,마족 강림,Demon Descent
+passive.seraphStar.name,광선 가속,Beam Acceleration
 passive.ruhen.name,잔류 방전,Residual Discharge
-passive.ruhenStar.name,용융 잔류,Molten Residue
+passive.ruhenStar.name,융해 추적,Melt Pursuit
 passive.morga.name,연쇄 붕괴,Chain Collapse
-passive.morgaStar.name,용융 붕괴,Molten Collapse
-passive.shan.name,정조준,Precision Aim
-passive.shanStar.name,감전 정밀,Shock Precision
-passive.ornel.name,임계 출력,Critical Output
-passive.ornelStar.name,임계 감전,Critical Shock
+passive.morgaStar.name,융해 폭발,Melting Blast
+passive.shan.name,중앙 집중,Center Focus
+passive.shanStar.name,마족 공명,Demon Resonance
+passive.ornel.name,강화 광선,Empowered Beam
+passive.ornelStar.name,감전 광선,Shock Beam
 race.human,인간,Human
 race.elf,엘프,Elf
 race.dwarf,드워프,Dwarf

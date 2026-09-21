@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title data-i18n="app.title"></title>
 <meta name="theme-color" content="#12282b">
-<meta name="slagma-build" content="v0919_1">
+<meta name="slagma-build" content="v0921_1">
 
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/base.css">
@@ -25,9 +25,10 @@
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
         <div class="journey-scene"><div class="journey-caption"><span id="stage-eyebrow"></span><h2 id="stage-name"></h2><p id="stage-meta" class="journey-meta"></p></div><div class="forge-beacon" aria-hidden="true"></div><button id="open-milestones" class="milestone-pill" data-i18n-aria="milestone.title"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button></div>
-        <div class="home-controls"><div class="section-label"><h3 data-i18n="lobby.party.title"></h3><button class="text-button" data-open-characters data-i18n="lobby.party.change"></button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label" data-i18n="lobby.skills.equipped"></span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span><span data-i18n="lobby.party.avgAtk"></span> <b id="home-party-atk">0</b></span><span><span data-i18n="lobby.party.totalHp"></span> <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span data-i18n="lobby.footnote"></span><span>v0919_1</span></div></div>
+        <div class="home-controls"><div class="section-label"><h3 data-i18n="lobby.party.title"></h3><button class="text-button" data-open-characters data-i18n="lobby.party.change"></button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label" data-i18n="lobby.skills.equipped"></span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span><span data-i18n="lobby.party.avgAtk"></span> <b id="home-party-atk">0</b></span><span><span data-i18n="lobby.party.totalHp"></span> <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span data-i18n="lobby.footnote"></span><span>v0921_1</span></div></div>
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow" data-i18n="character.eyebrow"></span><h2 data-i18n="character.title"></h2></div><span class="character-count" id="character-count"></span></div><div id="growth-list"></div></section>
+      <section id="lobby-codex" class="lobby-page" hidden aria-labelledby="nav-codex"><div class="character-page-head"><div><span class="eyebrow" data-i18n="codex.eyebrow"></span><h2 data-i18n="codex.title"></h2><p data-i18n="codex.intro"></p></div><span class="character-count" id="codex-count"></span></div><div class="codex-tabs" role="tablist"><button class="active" data-codex-tab="base" role="tab" data-i18n="codex.tab.base"></button><button data-codex-tab="relation" role="tab" data-i18n="codex.tab.relation"></button></div><div id="codex-summary"></div><div id="codex-content"></div></section>
       <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow" data-i18n="skill.eyebrow"></span><h2 data-i18n="skill.title"></h2></div><span class="character-count" id="skill-count"></span></div><div id="skill-lobby-content"></div></section>
       <section id="lobby-upgrade" class="lobby-page" hidden aria-labelledby="nav-upgrade"><div class="character-page-head"><div><span class="eyebrow" data-i18n="upgrade.eyebrow"></span><h2 data-i18n="upgrade.title"></h2></div><span class="character-count" id="upgrade-count"></span></div>
         <p class="upgrade-intro" data-i18n="upgrade.intro"></p>
@@ -35,7 +36,7 @@
         <details class="recruit-details"><summary><span data-i18n="upgrade.details"></span> <span>⌄</span></summary><div class="character-modal-section"><strong data-i18n="upgrade.progress.title"></strong><div id="upgrade-progress" class="gacha-odds"></div></div></details>
       </section>
     </div>
-    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-upgrade" data-lobby-nav="upgrade"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.upgrade"></b><i id="upgrade-nav-dot" hidden></i></button></nav>
+    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-codex" data-lobby-nav="codex"><span data-ui-icon="codex"></span><b data-i18n="lobby.nav.codex"></b></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-upgrade" data-lobby-nav="upgrade"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.upgrade"></b><i id="upgrade-nav-dot" hidden></i></button></nav>
   </div>
 
   <div id="character-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-character-close></div><section class="character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-modal-title"><button class="character-modal-close" data-character-close data-i18n-aria="character.modal.closeAria">×</button><div id="character-modal-content"></div></section></div>
@@ -180,7 +181,10 @@
 <script src="js/tools.js"></script>
 <script src="js/game.js"></script>
 <script src="js/characters.js"></script>
+<script src="js/codex-data.js"></script>
+<script src="js/codex.js"></script>
 <script src="js/character-ui.js"></script>
+<script src="js/codex-ui.js"></script>
 <script src="js/campaign-ui.js"></script>
 <script src="js/campaign.js"></script>
 

@@ -17,6 +17,12 @@ const CharacterLobbyUI={
     return PassiveEffectTable.filter(e=>e.passiveId===id).map(e=>{
       const pct=v=>Math.round((Number(v)||0)*100);
       if(e.kind==='factor')return t('passive.factor',{scope:e.scope==='global'?t('passive.scopeAll'):t(MISSILE_DEFS[e.targetId].labelKey),stat:labels[e.factorKey]||e.factorKey,pct:pct(e.value)});
+      if(e.kind==='conditional_factor'){
+        const effect=t('passive.factor',{scope:e.scope==='global'?t('passive.scopeAll'):t(MISSILE_DEFS[e.targetId].labelKey),stat:labels[e.factorKey]||e.factorKey,pct:pct(e.value)});
+        if(e.condition.type==='all_unique_races')return t('passive.condition.allUniqueRaces',{effect});
+        return t('passive.condition.raceCount',{race:t(RaceTable[e.condition.raceId]),count:e.condition.count,effect});
+      }
+      if(e.kind==='module_special')return t('passive.moduleSpecial',{module:t(MISSILE_DEFS[e.targetId].labelKey),stat:t(MISSILE_DEFS[e.targetId].special.labelKey),level:e.level});
       if(e.kind==='status_on_hit')return t('passive.statusOnHit',{chance:pct(e.chance),status:t(StatusEffectTable[e.statusId].nameKey),duration:StatusEffectTable[e.statusId].duration});
       if(e.kind==='damage_vs_status')return t('passive.damageVsStatus',{status:t(StatusEffectTable[e.statusId].nameKey),pct:pct(e.value)});
       if(e.kind==='module_rule'){
@@ -27,8 +33,7 @@ const CharacterLobbyUI={
         if(e.ruleId==='empowered')return t('passive.rule.empowered',{chance:pct(q.chance),damage:pct(q.damagePct),width:pct(q.widthPct)});
         if(e.ruleId==='focused')return t('passive.rule.focused',{damage:pct(q.damagePct)});
       }
-      const c=e.condition,tagKey=c.tagType==='race'?RaceTable[c.tagId]:c.tagType==='identity'?IdentityTable[c.tagId]:MISSILE_DEFS[c.tagId]?.labelKey;
-      return t('passive.formation',{tag:tagKey?t(tagKey):'',count:c.count,scope:e.scope==='module'?t(MISSILE_DEFS[e.targetId].labelKey):t('passive.scopeAll'),stat:labels[e.factorKey],pct:pct(e.value)});
+      return '';
     }).join(' / ');
   },
   init(campaign){

@@ -158,6 +158,8 @@ const RunConfig = {
   skillSnapshot: null,
   // 전투 입장 시 4인 편성의 능력치·고정 패시브를 불변 스냅샷으로 전달한다.
   partySnapshot: null,
+  // 성급에서 계산한 도감 진행도와 영구 전투 팩터. 저장값이 아니라 입장 시점의 불변 계산 결과다.
+  codexSnapshot: null,
   // [2026-09-16 v0916_7] 스테이지·편성으로 확정되는 전투 수치. 이전에는 Campaign.enter가
   // CONFIG.player·CONFIG.enemy.base·CONFIG.waves를 직접 덮어써서, 같은 값이 CONFIG와
   // partySnapshot 두 경로로 읽혔고 에디터 입력이 입장 시 덮여 효과가 없었다.
@@ -168,7 +170,7 @@ const RunConfig = {
   enemyBaseStat(key){ return this.battle?.enemyBase?.[key] ?? CONFIG.enemy.base[key] ?? 0; },
   waves(){ return this.battle?.waves ?? buildStageWaves(DEFAULT_STAGE_COUNT,CONFIG.stage); },
   bossComposition(wave){ return (this.battle?.bossCompositions ?? buildBossCompositions(this.waves().length,CONFIG.stage,this.battle?.stageId??1))[wave]; },
-  clear(){ this.selectedSkills=[]; this.skillSnapshot=null; this.partySnapshot=null; this.battle=null; },
+  clear(){ this.selectedSkills=[]; this.skillSnapshot=null; this.partySnapshot=null; this.codexSnapshot=null; this.battle=null; },
 };
 
 // 전투 중 빠르게 구분할 수 있도록 미사일·강화 종류에 고정 아이콘과 강조색을 부여한다. 스킬은 SKILL_DEFS에 있다.

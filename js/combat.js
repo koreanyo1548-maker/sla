@@ -308,7 +308,7 @@ class VisualEffects {
    ===================================================================== */
 const COMBAT_FACTOR_KEYS = [
   'attackPct','damagePct','critChance','critDamagePct',
-  'defenseIgnore','pierceRate','attackSpeedPct','bossDamagePct',
+  'defensePct','defenseIgnore','pierceRate','attackSpeedPct','bossDamagePct',
 ];
 // 전투 팩터 표시 이름. 밸런스 에디터는 '증가율'이 붙은 긴 이름, 패시브 문구는 짧은 이름을 쓴다.
 // [2026-09-18 세션 3B] 표시 문구가 아니라 문자열 키를 담는다.
@@ -317,6 +317,7 @@ const COMBAT_FACTOR_LABELS = {
   damagePct:{shortKey:'factor.damagePct.short',longKey:'factor.damagePct.long'},
   critChance:{shortKey:'factor.critChance.short',longKey:'factor.critChance.long'},
   critDamagePct:{shortKey:'factor.critDamagePct.short',longKey:'factor.critDamagePct.long'},
+  defensePct:{shortKey:'factor.defensePct.short',longKey:'factor.defensePct.long'},
   defenseIgnore:{shortKey:'factor.defenseIgnore.short',longKey:'factor.defenseIgnore.long'},
   pierceRate:{shortKey:'factor.pierceRate.short',longKey:'factor.pierceRate.long'},
   attackSpeedPct:{shortKey:'factor.attackSpeedPct.short',longKey:'factor.attackSpeedPct.long'},
@@ -331,6 +332,7 @@ class CombatFactorSystem {
     this.sources=new Map();
     this.registerSource('config',()=>CONFIG.combatFactors);
     this.registerSource('party',cloneConfig(RunConfig.partySnapshot?.factors||{}));
+    this.registerSource('codex',cloneConfig(RunConfig.codexSnapshot?.factors||{}));
     // 기존 주문서의 공격력·공격속도 강화도 2차 팩터 공급원으로 편입한다.
     this.registerSource('order_upgrades',()=>({
       global:{},
@@ -518,7 +520,8 @@ class AttackModuleSystem {
     const def=CONFIG.attackModules[moduleKey], state=this.modules[moduleKey];
     const spec=AttackModuleSystem.SPECIAL[moduleKey];
     if(!spec) return 0;
-    return def[spec.base]+state.specialBonus;
+    const passiveBonus=Number(RunConfig.partySnapshot?.specialBonuses?.[moduleKey])||0;
+    return def[spec.base]+passiveBonus+state.specialBonus;
   }
 }
 
@@ -728,7 +731,8 @@ class CombatSystem {
   // 더 이상 정수/최소값을 강제하지 않고 소수 피해를 그대로 반환 — HP도 내부적으로는
   // 소수로 추적하고 화면 표시(updateHpUi)에서만 반올림한다.
   computeIncomingDamage(enemyAtk){
-    const finalDef = RunConfig.playerStat('def') * (1 + CONFIG.player.defIncreaseRate + (this.game.skillSystem?.defenseBuffPct?.()||0));
+    const codexDefensePct=this.game.combatFactorSystem.snapshot().global.defensePct;
+    const finalDef = RunConfig.playerStat('def') * (1 + CONFIG.player.defIncreaseRate + codexDefensePct + (this.game.skillSystem?.defenseBuffPct?.()||0));
     const raw = Math.max(CONFIG.combatRules.minimumIncomingDamage, enemyAtk - finalDef);
     return raw * (1 - this.activeDamageReduction);
   }

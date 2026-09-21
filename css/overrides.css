@@ -1,7 +1,7 @@
 /* ===== v0916_2 · skills / milestones / summon ===== */
 .wallet{grid-template-columns:1.05fr .92fr .92fr}.wallet-starfire strong{color:var(--energy)!important}.wallet-starfire .ui-icon{color:var(--energy)}
-#lobby-nav{grid-template-columns:repeat(4,1fr)}
-#lobby-skills,#lobby-upgrade{padding:20px 16px 18px;background:var(--surface);min-height:100%}
+#lobby-nav{grid-template-columns:repeat(5,1fr)}
+#lobby-skills,#lobby-upgrade,#lobby-codex{padding:20px 16px 18px;background:var(--surface);min-height:100%}
 .home-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.home-shortcuts button{min-height:45px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);border-radius:5px;font-weight:800}.home-shortcuts b{display:block;color:var(--energy);font-size:10px;margin-top:2px}
 .skill-equipped-panel{padding:11px;border:1px solid var(--border);background:var(--surface-2);border-radius:5px;margin-bottom:14px}.skill-equipped-panel>strong{display:block;color:var(--text-primary);font-size:12px;margin-bottom:9px}.skill-equipped-grid,.prepare-skills{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .skill-slot,.skill-card{position:relative;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);border-radius:5px;text-align:left;padding:10px;min-width:0}.skill-slot{min-height:70px}.skill-slot b,.skill-card b{display:block;font-size:13px}.skill-slot small,.skill-card small{display:block;margin-top:5px;color:var(--text-secondary);font-size:10px;line-height:1.45}.skill-slot .skill-icon,.skill-card .skill-icon{float:left;width:34px;height:34px;display:grid;place-items:center;margin-right:8px;border:1px solid var(--skill-accent);color:var(--skill-accent);background:var(--surface);font-size:19px}
@@ -586,7 +586,7 @@ h2.reveal-kicker{margin-top:0}
 .order-status-title{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap}
 
-/* 5. 로비 내비 4칸 — 칸이 좁아 긴 단어 하나가 칸을 넘길 수 있다.
+/* 5. 로비 내비 5칸 — 칸이 좁아 긴 단어 하나가 칸을 넘길 수 있다.
       한국어는 어절 단위를 지키고(keep-all), 칸보다 긴 단어만 끊는다. */
 #lobby-nav button{min-width:0;word-break:keep-all}
 #lobby-nav button b{display:block;min-width:0;line-height:1.15;overflow-wrap:anywhere}
@@ -615,3 +615,31 @@ h2.reveal-kicker{margin-top:0}
 
 /* 스킬 상세는 본문 감싸는 칸이 없어 머리에 붙는다 — 배너만 위 여백을 갖는다. */
 .skill-dialog .unlock-banner{margin:14px 0 0}
+
+/* =====================================================================
+   [도감] 등급·종족·신분 기본 도감과 선택 관계 5종
+   ---------------------------------------------------------------------
+   기본 도감은 2열 카드, 관계 도감은 서사와 양측 진행도를 읽기 쉬운 1열 카드로 둔다.
+   좁은 화면에서는 기본 도감도 1열로 내려 이름·보상·구성원이 잘리지 않게 한다.
+   ===================================================================== */
+.codex-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;padding:4px;border:1px solid var(--border);background:var(--bg);border-radius:7px}
+.codex-tabs button{min-height:38px;border:0;border-radius:4px;background:transparent;color:var(--text-secondary);font-size:11px;font-weight:800;cursor:pointer}
+.codex-tabs button.active{background:var(--surface-2);color:var(--text-primary);box-shadow:inset 0 2px var(--primary)}
+.codex-summary{padding:11px 12px;margin-bottom:16px;border:1px solid var(--border);border-left:3px solid var(--primary);background:var(--surface-2);border-radius:5px}
+.codex-summary>strong{display:block;margin-bottom:8px;font-size:11px;color:var(--text-primary)}
+.codex-effect-list{display:flex;flex-wrap:wrap;gap:5px}.codex-effect-list span{padding:4px 7px;border:1px solid var(--border);background:var(--surface);color:var(--energy);border-radius:3px;font-size:9.5px;font-weight:800}.codex-effect-list small{color:var(--text-secondary);font-size:10px}
+.codex-group{margin-top:18px}.codex-group:first-child{margin-top:0}.codex-group>h3{margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-primary)}
+.codex-base-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.codex-card{min-width:0;padding:10px;border:1px solid var(--border);border-top:2px solid var(--codex-accent);background:var(--surface-2);border-radius:5px}
+.codex-card header{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:6px}.codex-card header b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--text-primary)}.codex-card header em{font:800 8.5px "Orbitron",sans-serif;color:var(--codex-accent);font-style:normal}.codex-mark{width:7px;height:7px;border:1px solid var(--codex-accent);background:color-mix(in srgb,var(--codex-accent) 35%,transparent);transform:rotate(45deg)}
+.codex-progress{height:5px;margin:8px 0 5px;overflow:hidden;background:var(--bg);border-radius:3px}.codex-progress>span{display:block;height:100%;background:var(--codex-accent);transition:width .2s ease}
+.codex-card-meta{min-height:34px}.codex-card-meta small{display:block;color:var(--text-secondary);font-size:8.5px}.codex-card-meta strong{display:block;margin-top:3px;color:var(--codex-accent);font-size:9px;line-height:1.35}
+.codex-members{display:flex;gap:3px;margin-top:8px;min-width:0}.codex-member{flex:1;min-width:0;text-align:center}.codex-member-art{display:block;width:100%;aspect-ratio:1;overflow:hidden;border:1px solid color-mix(in srgb,var(--codex-accent) 55%,var(--border));background:var(--surface);border-radius:3px}.codex-member .hero-art{width:100%;height:100%}.codex-member b{display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);font-size:7.5px}.codex-member small{display:block;color:var(--codex-accent);font-size:7.5px}.codex-member.locked{filter:grayscale(1);opacity:.42}.codex-member.locked small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)}
+.codex-relation-list{display:grid;gap:11px}.codex-relation-card{padding:14px;border:1px solid var(--border);border-left:3px solid var(--codex-accent);background:var(--surface-2);border-radius:5px}.codex-relation-card>header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.codex-relation-card>header span{display:block;color:var(--codex-accent);font:800 8px "Orbitron",sans-serif;letter-spacing:.12em}.codex-relation-card>header h3{margin:2px 0 0;color:var(--text-primary);font-size:17px}.codex-relation-card>header em{flex:none;color:var(--codex-accent);font:800 9px "Orbitron",sans-serif;font-style:normal}.codex-relation-current{display:block;margin-top:8px;color:var(--codex-accent);font-size:11px}.codex-relation-card>p{margin:5px 0 12px;color:var(--text-secondary);font-size:10.5px;line-height:1.6}
+.codex-relation-sides{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;align-items:center}.codex-relation-sides>i{color:var(--text-secondary);font-style:normal;font-weight:900}.codex-relation-side{min-width:0;padding:8px;border:1px solid var(--border);background:var(--surface);border-radius:4px}.codex-relation-side>strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);font-size:9.5px}.codex-relation-side>small{display:block;color:var(--text-secondary);font-size:8px}.codex-relation-side .codex-members{margin-top:6px}.codex-relation-side .codex-member b{font-size:7px}
+.codex-relation-levels{display:grid;gap:5px;margin-top:10px}.codex-relation-levels>div{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:7px;padding:6px 7px;border:1px solid var(--border);background:var(--bg);color:var(--text-disabled)}.codex-relation-levels span{display:grid;place-items:center;width:18px;height:18px;border:1px solid currentColor;border-radius:50%;font:800 8px "Orbitron",sans-serif}.codex-relation-levels b{font-size:9.5px}.codex-relation-levels small{font-size:8.5px}.codex-relation-levels>div.unlocked{border-color:color-mix(in srgb,var(--codex-accent) 55%,var(--border));color:var(--text-primary)}.codex-relation-levels>div.unlocked span{color:var(--codex-accent)}.codex-relation-levels>div.unlocked small{color:var(--codex-accent)}
+@media(max-width:380px){
+  #lobby-nav button{padding-left:2px;padding-right:2px;font-size:9px}#lobby-nav .ui-icon{width:21px;height:21px}
+  .codex-base-grid{grid-template-columns:1fr}.codex-card{padding:11px}.codex-member-art{max-width:42px;margin:0 auto}
+  .codex-relation-card{padding:11px}.codex-relation-sides{gap:4px}.codex-relation-side{padding:6px}.codex-relation-levels>div{grid-template-columns:20px minmax(0,1fr)}.codex-relation-levels small{grid-column:2}
+}

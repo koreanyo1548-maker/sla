@@ -276,21 +276,21 @@ const DEFAULT_CONFIG = {
     atk: 1000, // [2026-09-06] 공격력·적 HP 단위 ×100, 배율 계산 후 반올림
     def: 20,
     atkSpeed: 1,        // 회/초
-    defIncreaseRate: 0, // §5 방어력 증가율 슬롯(현재 공급원 없음). 강철 외피는 SkillSystem.defenseBuffPct로 따로 더한다
+    defIncreaseRate: 0, // §5 설정 기본 방어력 증가율. 도감 defensePct와 강철 외피는 CombatSystem에서 별도 합산한다
     damageReductionBase: 0, // §5 기본 피해 감소율. 용광 방벽 감소율(SkillSystem)과 곱연산한다
     projectileSpeed: 620,   // px/sec, ASSUMPTION: §4 "0.5~0.8초 도달"을 속도값으로 환산
   },
   // [2026-09-13] 1차(공통)·2차(미사일별) 전투 팩터.
   // 모든 성장 콘텐츠는 이 스키마와 같은 값을 공급하고 DamageResolver만 최종 피해를 계산한다.
-  // 기존 밸런스를 유지하기 위해 신규 공격 팩터는 0, 치명타 피해 기본 보너스만 50%로 둔다.
+  // [2026-09-21] 확정(인철): 모든 공격의 기본 치명타율은 1%, 치명타 피해 기본 보너스는 50%로 둔다.
   combatFactors: {
     global: {
-      attackPct:0, damagePct:0, critChance:0, critDamagePct:0.50,
-      defenseIgnore:0, pierceRate:0, attackSpeedPct:0, bossDamagePct:0,
+      attackPct:0, damagePct:0, critChance:0.01, critDamagePct:0.50,
+      defensePct:0, defenseIgnore:0, pierceRate:0, attackSpeedPct:0, bossDamagePct:0,
     },
     modules: Object.fromEntries(MISSILE_KEYS.map(key=>[key,{
       attackPct:0, damagePct:0, critChance:0, critDamagePct:0,
-      defenseIgnore:0, pierceRate:0, attackSpeedPct:0, bossDamagePct:0,
+      defensePct:0, defenseIgnore:0, pierceRate:0, attackSpeedPct:0, bossDamagePct:0,
     }])),
   },
   // 수치 상한과 방어 공식은 아직 밸런스 미확정이므로 에디터에서 조정 가능한 구현 기본값이다.
@@ -369,9 +369,9 @@ const DEFAULT_CONFIG = {
     startCount: NORMAL_COUNT_CURVE.startCount,
     endCount: NORMAL_COUNT_CURVE.endCount,
     // [2026-09-18] 확정(인철): 스테이지1 체력 할인 0.90 → 0.70으로 낮춰 초반을 더 아프게 했다.
-    // [2026-09-19] 확정(인철): 한 칸짜리 할인을 1~5스테이지 램프로 늘렸다. 체력이 등비가 되며 벽이
-    // 전투로 옮겨 왔으므로, 최소 5스테이지까지는 무난히 깨지게 앞머리를 눌러 둔다. 6스테이지부터 1.0이다.
-    introHpMul: [0.70,0.75,0.80,0.85,0.90],
+    // [2026-09-21] 확정(인철): 체력 할인은 튜토리얼 성격의 1~3스테이지만 유지한다.
+    // 4스테이지부터 1.0을 적용해 난이도 곡선이 더 일찍 온전히 드러나게 한다.
+    introHpMul: [0.70,0.75,0.80],
     // [2026-09-17] 확정(인철): 스테이지당 적 HP 증가율 0.35 → 0.20 → 0.26(등차).
     // 0.35는 화력 상한(6성 Lv.60) 대비 스테이지 44에서 벽을 만들어 등반이 멈췄고,
     // 등반이 멈추면 별불(새 스테이지 돌파 전용)도 같이 끊겨 성장 순환 자체가 닫혔다.
@@ -561,9 +561,9 @@ const DEFAULT_CONFIG = {
     defenseGrowth:{freeStages:3,perStage:10},
     // [2026-09-04] HP 계수와 ATK 계수를 분리했다. 확정(인철): "적의 HP 성장 계수를 늘리면
     // 스킬 원샷·보스 미접근·피격 부족 세 문제가 같이 풀린다".
-    // HP 0.20이면 최종보스전이 12.8초가 되어 보스 도달시간(10초)을 넘기고, 강화 합산을 적용한
-    // 스킬 피해도 보스 HP의 69% 수준으로 들어온다(계산 확인). ATK는 기존 0.10 유지.
-    hpStepPct: 0.20,
+    // [2026-09-21] 확정(인철): 실제 플레이가 계산보다 쉬워 HP 단계 증가율만 0.20 → 0.22로 올린다.
+    // ATK 단계 증가율 0.10은 유지해 처치 요구 화력만 소폭 높인다.
+    hpStepPct: 0.22,
     atkStepPct: 0.10,
     // [2026-09-17] 확정(인철): 타입을 늘리지 않고 도달 시간만 분화한다. 기존에는 세 타입이 모두 10초라
     // WAVE 12초 안에서 2초 스폰 배치(물량의 50%)가 구조적으로 핵을 한 번도 때리지 못했다.
@@ -617,8 +617,9 @@ const DEFAULT_CONFIG = {
     muzzleFlashSec: 0.12,       // 적 원거리 발사 머즐 플래시 지속
   },
   boss: {
-    midHpExtraMul: 1.0,
-    finalHpExtraMul: 1.0,
+    // [2026-09-21] 확정(인철): 일반 난이도 상향과 별도로 보스 체력을 중간 +10%, 최종 +20% 보정한다.
+    midHpExtraMul: 1.10,
+    finalHpExtraMul: 1.20,
     midAtkMul: 1.25,
     finalAtkMul: 1.5,
     // [2026-09-18] 확정(인철): 중간보스·최종보스 스프라이트 크기를 각각 1.2배·1.3배로 키운다.
@@ -688,14 +689,14 @@ const DEFAULT_CONFIG = {
       skill_levels: { target:10, targetMul:1.10, reward:80,  rewardMul:1.12 },
       stars:        { target:4,  targetMul:1.12, reward:200, rewardMul:1.14 },
       guardians:    { target:2,  targetMul:1.15, reward:300, rewardMul:1.18 },
-      // 골드 6줄. 스테이지 보상이 주 공급원이므로 여기는 보조다 — 60스테이지 기준 23,264골드로
-      // 스테이지 보상(311,984)의 7.5%다.
-      waves:        { target:20, targetMul:1.10, reward:50,  rewardMul:1.13 },
-      bosses:       { target:5,  targetMul:1.10, reward:50,  rewardMul:1.13 },
-      skills_used:  { target:25, targetMul:1.10, reward:40,  rewardMul:1.13 },
-      orders:       { target:25, targetMul:1.12, reward:40,  rewardMul:1.15 },
-      merges:       { target:50, targetMul:1.12, reward:40,  rewardMul:1.15 },
-      owned_skills: { target:1,  targetMul:1.15, reward:60,  rewardMul:1.20 },
+      // 골드 6줄. [2026-09-21] 확정(인철): 수급량을 아주 소폭 낮추기 위해 기본 보상만 10% 줄인다.
+      // 목표·보상 공비는 유지하며 스테이지 직접 골드와 별불 마일스톤은 건드리지 않는다.
+      waves:        { target:20, targetMul:1.10, reward:45,  rewardMul:1.13 },
+      bosses:       { target:5,  targetMul:1.10, reward:45,  rewardMul:1.13 },
+      skills_used:  { target:25, targetMul:1.10, reward:36,  rewardMul:1.13 },
+      orders:       { target:25, targetMul:1.12, reward:36,  rewardMul:1.15 },
+      merges:       { target:50, targetMul:1.12, reward:36,  rewardMul:1.15 },
+      owned_skills: { target:1,  targetMul:1.15, reward:54,  rewardMul:1.20 },
     },
     // [2026-09-15] 확정(인철): 성급 상승 때 능력치 배율을 준다(이전에는 레벨 상한만 열었다).
     // 승급 상승률을 15/10/10/10/20%로 고정해 레벨과 무관하게 같은 체감을 준다.
