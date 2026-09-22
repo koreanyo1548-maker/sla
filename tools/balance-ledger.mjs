@@ -20,8 +20,9 @@
    [경계 — 이 스크립트가 계산하지 않는 것]
    마일스톤 12줄 중 5줄(module_levels·skill_levels·stars·guardians·owned_skills)은
    "무엇을 얼마나 샀는가"가 정해져야 값이 나온다. 그건 단계 B(세션 2, 성장 최적화
-   계산기)의 결과이므로 여기서는 0으로 두고 미산입으로 표시한다. 자원 원장이 성장
-   계산의 입력이고 그 5줄은 성장 계산의 출력이라, 두 단계는 한 번 왕복해야 닫힌다.
+   계산기)의 결과이므로 여기서는 0으로 두고 미산입으로 표시한다. 순환은 아니다 —
+   골드로 트랙을 올리면 그 줄이 터져 별불이 들어오고, 그 별불로 성급을 올리면 다음
+   줄이 터지는 단방향 순서라, 세션 2가 더 못 사는 지점까지 한 방향으로 돌리면 닫힌다.
    ===================================================================== */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -132,10 +133,15 @@ function buildLedger(stages) {
       orders: PLAY_INPUT.orders * id,
       merges: PLAY_INPUT.merges * id,
     };
+    /* 지표가 누적값이므로 milestoneYield도 "지금까지 받은 총액"을 돌려준다.
+       이 스테이지에서 새로 열린 몫은 직전 스테이지 총액과의 차로 구한다. */
     const yields = Object.fromEntries(Object.entries(metrics).map(([mid, v]) => [mid, milestoneYield(mid, v)]));
     const sumBy = cur => Object.values(yields).filter(y => y.currencyId === cur).reduce((n, y) => n + y.total, 0);
-    const milestoneGold = sumBy('gold');
-    const milestoneStarfire = sumBy('starfire');
+    const cumMilestoneGold = sumBy('gold');
+    const cumStarfire = sumBy('starfire');
+    const prev = rows[rows.length - 1];
+    const milestoneGold = cumMilestoneGold - (prev?.cumMilestoneGold ?? 0);
+    const milestoneStarfire = cumStarfire - (prev?.cumStarfire ?? 0);
 
     /* 반복 보상 — 이 스테이지를 한 번 더 깼을 때. 직접 골드는 그대로 다시 들어오고,
        stagesCleared는 "서로 다른 스테이지 수"라 오르지 않는다. 마일스톤은 waves·bosses와
@@ -159,9 +165,10 @@ function buildLedger(stages) {
       directGold,
       cumDirectGold,
       milestoneGold,
-      cumGold: cumDirectGold + milestoneGold,
+      cumMilestoneGold,
+      cumGold: cumDirectGold + cumMilestoneGold,
       milestoneStarfire,
-      cumStarfire: milestoneStarfire,
+      cumStarfire,
       repeatGold: repeat.directGold + repeat.milestoneGold,
       repeatStarfire: repeat.milestoneStarfire,
       hpScale: stage.hpScale,
@@ -177,6 +184,7 @@ function buildLedger(stages) {
 const num = n => Number(n).toLocaleString('en-US');
 function printTable(rows) {
   const head = ['ST', 'WAVE', '보스', '직접골드', '누적직접', '마일골드', '누적골드', '마일별불', '누적별불', '반복골드', 'hpScale'];
+  /* 마일골드·마일별불은 그 스테이지에서 새로 열린 몫이고, 누적골드·누적별불이 총액이다. */
   const body = rows.map(r => [
     r.stage, r.waves, r.bosses, num(r.directGold), num(r.cumDirectGold), num(r.milestoneGold),
     num(r.cumGold), num(r.milestoneStarfire), num(r.cumStarfire), num(r.repeatGold), r.hpScale.toFixed(3),
@@ -189,7 +197,8 @@ function printTable(rows) {
 }
 function toCsv(rows) {
   const cols = ['stage', 'waves', 'bosses', 'waveGold', 'clearGold', 'directGold', 'cumDirectGold',
-    'milestoneGold', 'cumGold', 'milestoneStarfire', 'cumStarfire', 'repeatGold', 'repeatStarfire', 'hpScale', 'atkScale'];
+    'milestoneGold', 'cumMilestoneGold', 'cumGold', 'milestoneStarfire', 'cumStarfire',
+    'repeatGold', 'repeatStarfire', 'hpScale', 'atkScale'];
   const tierCols = [...Object.keys(PLAY_DRIVEN), 'stage_clear', 'best_wave', 'waves', 'bosses']
     .filter((v, i, a) => a.indexOf(v) === i);
   return [
