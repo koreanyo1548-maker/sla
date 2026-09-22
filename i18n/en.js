@@ -87,6 +87,12 @@ I18N.register("en", "English", {
   "codex.overview.ready": "{n} codex entries ready to claim",
   // {name} {n}단계 수령 — {reward}
   "codex.toast.claimed": "{name} +{n} tiers — {reward}",
+  // {reward} 적용
+  "codex.applied": "{reward} applied",
+  // {name} {star}성 보유
+  "codex.memberAria": "{name}, {star} stars, owned",
+  // {name} 미보유
+  "codex.memberLockedAria": "{name}, not owned",
   // 기본 도감
   "codex.tab.base": "Base Codex",
   // 관계 도감

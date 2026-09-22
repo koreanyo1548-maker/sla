@@ -650,50 +650,51 @@ h2.reveal-kicker{margin-top:0}
 
 .codex-group{margin-top:18px}.codex-group:first-child{margin-top:0}
 .codex-group>h3{margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-primary)}
-/* align-items:start — 한 카드를 펼쳐도 같은 줄의 옆 카드가 따라 늘어나지 않는다. */
-.codex-base-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:8px;align-items:start}
-.codex-card{min-width:0;padding:10px;border:1px solid var(--border);border-top:2px solid var(--codex-accent);background:var(--surface-2);border-radius:5px}
-.codex-card.open{border-color:color-mix(in srgb,var(--codex-accent) 55%,var(--border))}
-
-/* 여닫기는 카드 영역 전체가 맡는다(article이 role="button"). 머리는 배치만 담당한다 —
-   <button> 안에 받기 <button>을 넣을 수 없어 카드 쪽을 버튼 태그에서 뺐다. */
-.codex-card,.codex-relation-card{cursor:pointer}
-.codex-card:focus-visible,.codex-relation-card:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+/* 수호자 초상이 카드의 본문이다. 숫자 진행바 대신 보유 명도와 여섯 별 문양이 진행을 말한다. */
+.codex-base-grid{display:grid;gap:10px}
+.codex-card{position:relative;min-width:0;padding:11px;border:1px solid var(--border);border-top:2px solid var(--codex-accent);overflow:hidden;background:var(--surface-2);border-radius:5px}
 .codex-card-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:7px}
 .codex-card-head b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;color:var(--text-primary)}
 .codex-card-head em{font:800 9.5px "Orbitron",sans-serif;font-style:normal;color:var(--codex-accent)}
 .codex-mark{width:7px;height:7px;border:1px solid var(--codex-accent);background:color-mix(in srgb,var(--codex-accent) 35%,transparent);transform:rotate(45deg)}
 .codex-steps{display:flex;gap:3px}
-.codex-steps i{width:6px;height:6px;border:1px solid color-mix(in srgb,var(--codex-accent) 60%,transparent);border-radius:50%}
+.codex-steps i{width:7px;height:7px;border:1px solid color-mix(in srgb,var(--codex-accent) 60%,transparent);border-radius:50%}
 .codex-steps i.on{background:var(--codex-accent);border-color:var(--codex-accent)}
 
 .codex-progress{height:5px;margin:9px 0 6px;overflow:hidden;background:var(--bg);border-radius:3px}
 .codex-progress>span{display:block;height:100%;background:var(--codex-accent);transition:width .2s ease}
-.codex-card-meta small{display:block;color:var(--text-secondary);font-size:10px;line-height:1.4}
-.codex-card-meta strong{display:block;margin-top:3px;color:var(--codex-accent);font-size:10.5px;line-height:1.4}
+.codex-card-meta{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.codex-card-meta small{color:var(--text-secondary);font-size:10px;line-height:1.4}
+.codex-card-meta strong{color:var(--codex-accent);font-size:10.5px;line-height:1.4;text-align:right}
 
-.codex-members{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-.codex-member{min-width:0;text-align:center}
-.codex-member-art{display:block;width:100%;aspect-ratio:1;overflow:hidden;border:1px solid color-mix(in srgb,var(--codex-accent) 55%,var(--border));background:var(--surface);border-radius:3px}
-.codex-member .hero-art{width:100%;height:100%}
-.codex-member b{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);font-size:10px}
-.codex-member small{display:block;color:var(--codex-accent);font-size:9px;letter-spacing:-.5px}
-.codex-member small .empty{opacity:.35}
-.codex-member.locked{filter:grayscale(1);opacity:.42}
-.codex-member.locked small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);letter-spacing:0}
+.codex-portraits{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+.codex-portrait{min-width:0;margin:0;text-align:center}
+.codex-portrait-art{position:relative;display:block;width:100%;aspect-ratio:1;overflow:hidden;border:1px solid color-mix(in srgb,var(--codex-accent) 62%,var(--border));background:var(--surface);border-radius:4px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
+.codex-portrait .hero-art{width:100%;height:100%;transition:filter .2s,opacity .2s,transform .2s}
+.codex-portrait.owned .codex-portrait-art{box-shadow:0 0 12px color-mix(in srgb,var(--codex-accent) 20%,transparent),inset 0 -18px 22px rgba(0,0,0,.25)}
+.codex-portrait.locked .hero-art{filter:grayscale(1) brightness(.28);opacity:.62}
+.codex-portrait.locked .codex-portrait-art::after{content:'';position:absolute;inset:8px;border:1px solid var(--text-disabled);transform:rotate(45deg);opacity:.55}
+.codex-portrait figcaption{margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);font-size:9.5px;font-weight:800}
+.codex-portrait.locked figcaption{color:var(--text-disabled)}
+.codex-portrait-stars{display:flex;justify-content:center;gap:3px;width:max-content;min-height:13px;margin:-15px auto 0;padding:3px 5px 2px;position:relative;z-index:1;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:rgba(8,13,16,.88);box-shadow:0 2px 6px rgba(0,0,0,.42)}
+.codex-portrait-stars i{width:6px;height:6px;border:1px solid color-mix(in srgb,var(--codex-accent) 68%,var(--text-disabled));background:var(--bg);transform:rotate(45deg)}
+.codex-portrait-stars i.on{border-color:var(--codex-accent);background:var(--codex-accent);box-shadow:0 0 4px var(--codex-accent)}
 
 .codex-relation-list{display:grid;gap:11px}
-.codex-relation-card{padding:14px;border:1px solid var(--border);border-left:3px solid var(--codex-accent);background:var(--surface-2);border-radius:5px}
+.codex-relation-card{position:relative;padding:13px;border:1px solid var(--border);border-left:3px solid var(--codex-accent);overflow:hidden;background:var(--surface-2);border-radius:5px}
 .codex-relation-label{color:var(--codex-accent);font:800 8px "Orbitron",sans-serif;letter-spacing:.12em}
 .codex-relation-head b{font-size:15px}
 .codex-relation-current{display:block;margin-top:9px;color:var(--codex-accent);font-size:11.5px}
-.codex-relation-card>p{margin:5px 0 12px;color:var(--text-secondary);font-size:11px;line-height:1.6}
-.codex-relation-sides{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;align-items:center}
-.codex-relation-sides>i{color:var(--text-secondary);font-style:normal;font-weight:900}
-.codex-relation-side{min-width:0;padding:9px;border:1px solid var(--border);background:var(--surface);border-radius:4px}
+.codex-relation-card>p{margin:5px 0 10px;color:var(--text-secondary);font-size:10.5px;line-height:1.5}
+.codex-relation-sides{display:grid;grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr);gap:6px;align-items:center;margin-top:11px}
+.codex-relation-sides>i{display:grid;place-items:center;color:var(--codex-accent);font-style:normal;font-weight:900}
+.codex-relation-side{min-width:0;padding:8px;border:1px solid var(--border);background:var(--surface);border-radius:4px}
 .codex-relation-side>strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);font-size:10.5px}
-.codex-relation-side>small{display:block;color:var(--text-secondary);font-size:9.5px}
-.codex-relation-side .codex-progress{margin:7px 0 5px}
+.codex-relation-side>small{display:block;margin-top:6px;color:var(--codex-accent);font-size:9.5px;text-align:center}
+.codex-portraits.compact{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:7px}
+.codex-portraits.compact .codex-portrait figcaption{font-size:8.5px}
+.codex-portraits.compact .codex-portrait-stars{gap:2px;padding-inline:4px}
+.codex-portraits.compact .codex-portrait-stars i{width:5px;height:5px}
 .codex-relation-levels{display:grid;gap:5px;margin-top:10px}
 .codex-relation-levels>div{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:7px;padding:7px;border:1px solid var(--border);background:var(--bg);color:var(--text-disabled)}
 .codex-relation-levels span{display:grid;place-items:center;width:18px;height:18px;border:1px solid currentColor;border-radius:50%;font:800 8px "Orbitron",sans-serif}
@@ -714,10 +715,21 @@ h2.reveal-kicker{margin-top:0}
 .codex-overview-ready{display:block;margin-bottom:8px;color:var(--danger);font-size:10.5px;font-weight:800}
 .codex-tabs button.has-ready{position:relative}
 .codex-tabs button.has-ready::after{content:'';position:absolute;top:7px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--danger)}
+.codex-claim-burst{position:absolute;left:12px;right:12px;top:50%;z-index:4;padding:10px;border:1px solid var(--primary);background:color-mix(in srgb,var(--surface) 94%,transparent);color:var(--primary);font-size:12px;font-weight:900;text-align:center;box-shadow:0 0 28px color-mix(in srgb,var(--primary) 45%,transparent);animation:codex-claim-burst 1.05s ease both;pointer-events:none}
+.just-claimed .codex-portrait.owned .hero-art{animation:codex-portrait-claim .72s ease both}
+.just-claimed .codex-steps i.on{animation:codex-step-claim .72s ease both}
+.codex-effect-list span.just-increased{animation:codex-effect-claim 1s ease both}
+@keyframes codex-portrait-claim{0%{filter:brightness(1);transform:scale(1)}35%{filter:brightness(1.75);transform:scale(1.05)}100%{filter:brightness(1);transform:scale(1)}}
+@keyframes codex-step-claim{0%,100%{box-shadow:none}40%{box-shadow:0 0 12px 4px var(--codex-accent)}}
+@keyframes codex-effect-claim{0%,100%{color:var(--energy);border-color:var(--border);transform:scale(1)}35%{color:var(--primary);border-color:var(--primary);transform:scale(1.08);box-shadow:0 0 14px color-mix(in srgb,var(--primary) 45%,transparent)}}
+@keyframes codex-claim-burst{0%{opacity:0;transform:translateY(12px) scale(.96)}20%,72%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-8px) scale(.98)}}
+@media (prefers-reduced-motion:reduce){
+  .just-claimed .codex-portrait.owned .hero-art,.just-claimed .codex-step.current,.codex-effect-chip.just-increased,.codex-claim-burst{animation:none}
+}
 
 @media(max-width:380px){
   #lobby-nav button{padding-left:2px;padding-right:2px;font-size:9px}#lobby-nav .ui-icon{width:21px;height:21px}
   .lobby-pills{max-width:74%;gap:5px}
-  .codex-base-grid{grid-template-columns:1fr}.codex-card{padding:11px}
-  .codex-relation-card{padding:11px}.codex-relation-sides{gap:4px}.codex-relation-side{padding:7px}.codex-relation-levels>div{grid-template-columns:20px minmax(0,1fr)}.codex-relation-levels small{grid-column:2}
+  .codex-card{padding:9px}.codex-portraits{gap:5px}.codex-portrait figcaption{font-size:8.5px}
+  .codex-relation-card{padding:10px}.codex-relation-sides{gap:3px}.codex-relation-side{padding:6px}.codex-relation-levels>div{grid-template-columns:20px minmax(0,1fr)}.codex-relation-levels small{grid-column:2}
 }
