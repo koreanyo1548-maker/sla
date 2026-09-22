@@ -61,6 +61,16 @@ I18N.register("en", "English", {
   "lobby.nav.skills": "Skills",
   // 강화
   "lobby.nav.upgrade": "Upgrade",
+  // 유물
+  "lobby.nav.relics": "Relics",
+
+  /* ── relic ── */
+  // ANCIENT RELICS
+  "relic.eyebrow": "ANCIENT RELICS",
+  // 유물
+  "relic.title": "Relics",
+  // COMING SOON
+  "relic.comingSoon": "COMING SOON",
 
   /* ── codex ── */
   // ARCHIVES
@@ -779,8 +789,8 @@ I18N.register("en", "English", {
   "options.language.title": "Language",
   // 전투 중에는 바꿀 수 없습니다.
   "options.language.note": "Cannot be changed during battle.",
-  // 게임 설명서
-  "options.manual": "Game guide",
+  // 옵션 팝업의 효과음 항목 제목이다.
+  "options.sound.title": "Sound effects",
   // 데이터 초기화
   "options.reset": "Reset data",
   // 로비에서만 초기화할 수 있습니다.

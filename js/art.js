@@ -7,6 +7,7 @@ const GameArt = {
     heroes:'<path d="M12 3 4 6v6c0 5 8 9 8 9s8-4 8-9V6z"/><path d="m9 9 3-2 3 2-3 7z"/>',
     codex:'<path d="M4 4h6a2 2 0 0 1 2 2v14a3 3 0 0 0-3-3H4z"/><path d="M20 4h-6a2 2 0 0 0-2 2v14a3 3 0 0 1 3-3h5z"/>',
     recruit:'<path d="M4 10h16v10H4zM3 7h18v4H3zM12 7v13"/><path d="M12 7C5 7 6 1 9 3l3 4c7 0 6-6 3-4z"/>',
+    relic:'<path d="m12 2 7 5-2.7 8.5L12 22l-4.3-6.5L5 7z"/><path d="m5 7 7 4 7-4M12 11v11"/>',
     skill:'<path d="M13 2 5 13h6l-1 9 9-13h-7z"/><circle cx="18" cy="5" r="2"/>',
     starfire:'<path d="m12 2 2.6 6.1L21 9l-4.8 4.4 1.3 6.4L12 16.5l-5.5 3.3 1.3-6.4L3 9l6.4-.9z"/>',
     gold:'<ellipse cx="12" cy="12" rx="8" ry="9"/><path d="M14 7h-4v5h4v5h-4M12 5v14"/>',
@@ -125,7 +126,15 @@ const SOUND_PREF_KEY='slagma.sound';
 const GameAudio={
   enabled:false,context:null,
   init(){try{this.enabled=SaveStorage.load(SOUND_PREF_KEY)==='on';}catch(_){}this.render();},
-  render(){const b=document.getElementById('sound-toggle');if(b){b.setAttribute('aria-pressed',String(this.enabled));b.title=t(this.enabled?'tools.soundOff':'tools.soundOn');b.innerHTML=GameArt.icon('sound');b.classList.toggle('muted',!this.enabled);}},
+  render(){
+    const b=document.getElementById('sound-toggle'); if(!b) return;
+    const actionKey=this.enabled?'tools.soundOff':'tools.soundOn';
+    b.setAttribute('aria-pressed',String(this.enabled));
+    b.setAttribute('aria-label',t(actionKey));
+    b.title=t(actionKey);
+    b.innerHTML=`<span class="sound-option-label">${GameArt.icon('sound')}<span>${t('options.sound.title')}</span></span><strong>${this.enabled?'ON':'OFF'}</strong>`;
+    b.classList.toggle('muted',!this.enabled);
+  },
   toggle(){this.enabled=!this.enabled;try{SaveStorage.save(SOUND_PREF_KEY,this.enabled?'on':'off');}catch(_){}this.render();this.play('up');},
   /* [2026-09-18 연출 세션 A] 호출 지점을 먼저 심는다.
      아래 MELODIES에 있는 kind만 소리가 나고, 없는 kind는 조용히 통과한다. 연출

@@ -238,7 +238,7 @@ const Campaign = {
     });
   },
   navigate(name){
-    if(!['home','characters','skills','upgrade'].includes(name))name='home';
+    if(!['home','characters','skills','upgrade','relics'].includes(name))name='home';
     this.currentLobbyPage=name;
     $('#app').dataset.lobbyPage=name;
     if(name!=='characters')CharacterLobbyUI.close();
@@ -270,7 +270,7 @@ const Campaign = {
     SkillLobbyUI.render(this);
     MilestoneUI.render(this);
     UpgradeLobbyUI.render(this);
-    CampaignView.lobbyPage(['characters','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
+    CampaignView.lobbyPage(['characters','skills','upgrade','relics'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
   },
   // [2026-09-19 세션 7] 출전 준비 화면을 없애면서 prepare()가 하던 검사를 여기로
   // 합쳤다. 로비의 출전 버튼이 부르는 유일한 입장 경로다.
@@ -351,11 +351,11 @@ const Campaign = {
 
 
 /* =====================================================================
-   [OptionsUI] 옵션 팝업 — 언어 · 게임 설명서 · 데이터 초기화
+   [OptionsUI] 옵션 팝업 — 언어 · 효과음
    ---------------------------------------------------------------------
-   [2026-09-18] 셋 다 도구 메뉴(⚙)에 아이콘 버튼으로 흩어져 있었다. 아이콘만
-   보고는 무엇을 하는 버튼인지 알 수 없어 한 장에 이름과 함께 모았다. 도구
-   메뉴에 남는 것은 효과음과 전투 종료뿐이다.
+   [2026-09-22] 효과음 토글을 도구 메뉴의 독립 아이콘에서 이 팝업으로 옮기고,
+   더 이상 유지하지 않는 게임 설명서는 제거했다. 도구 메뉴에는 옵션 진입과
+   전투 중 종료만 남는다.
 
    언어 목록은 I18N.languages()에서 만든다. i18n/ 에 언어 파일이 하나 늘면
    버튼도 하나 늘고, 이 코드는 손대지 않는다. 각 언어는 자기 이름을 자기
@@ -376,11 +376,6 @@ const OptionsUI = {
     // [연출 세션 B] 패시브 해금 카드는 옵션과 무관하지만 여기서 한 번만 묶는다.
     $('#passive-reveal-close').onclick=()=>GameFeedback.closePassiveReveal();
     $('#passive-reveal').onclick=event=>{ if(event.target===$('#passive-reveal')) GameFeedback.closePassiveReveal(); };
-    $('#options-manual').onclick=()=>{
-      this.close();
-      ManualPanel.build();
-      $('#manual-panel').classList.add('open');
-    };
     $('#options-panel').onclick=event=>{ if(event.target===$('#options-panel')) this.close(); };
     document.addEventListener('keydown',event=>{
       const panel=$('#options-panel');
@@ -519,4 +514,3 @@ window.addEventListener('DOMContentLoaded', ()=>{
 
   OptionsUI.init();
 });
-

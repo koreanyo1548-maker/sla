@@ -1,7 +1,12 @@
 /* ===== v0916_2 · skills / milestones / summon ===== */
 .wallet{grid-template-columns:1.05fr .92fr .92fr}.wallet-starfire strong{color:var(--energy)!important}.wallet-starfire .ui-icon{color:var(--energy)}
 #lobby-nav{grid-template-columns:repeat(5,1fr)}
-#lobby-skills,#lobby-upgrade{padding:20px 16px 18px;background:var(--surface);min-height:100%}
+#lobby-skills,#lobby-upgrade,#lobby-relics{padding:20px 16px 18px;background:var(--surface);min-height:100%}
+.relic-page{display:flex;flex-direction:column}
+.relic-coming-soon{position:relative;isolation:isolate;flex:1;min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;margin-top:18px;overflow:hidden;border:1px solid var(--border);border-radius:14px;background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--primary) 12%,var(--surface-2)),var(--surface) 62%);color:var(--text-secondary)}
+.relic-coming-soon::before{content:"";position:absolute;z-index:-1;width:210px;aspect-ratio:1;border:1px solid color-mix(in srgb,var(--primary) 20%,transparent);transform:rotate(45deg);box-shadow:0 0 60px color-mix(in srgb,var(--primary) 10%,transparent)}
+.relic-coming-soon .ui-icon{width:92px;height:92px;color:color-mix(in srgb,var(--primary) 42%,var(--text-disabled));filter:drop-shadow(0 0 18px color-mix(in srgb,var(--primary) 16%,transparent))}
+.relic-coming-soon strong{padding:8px 14px;border:1px solid color-mix(in srgb,var(--primary) 35%,var(--border));border-radius:999px;background:color-mix(in srgb,var(--bg) 58%,transparent);color:var(--text-primary);font-size:12px;letter-spacing:.18em}
 .home-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0}.home-shortcuts button{min-height:45px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);border-radius:5px;font-weight:800}.home-shortcuts b{display:block;color:var(--energy);font-size:10px;margin-top:2px}
 .skill-equipped-panel{padding:11px;border:1px solid var(--border);background:var(--surface-2);border-radius:5px;margin-bottom:14px}.skill-equipped-panel>strong{display:block;color:var(--text-primary);font-size:12px;margin-bottom:9px}.skill-equipped-grid,.prepare-skills{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .skill-slot,.skill-card{position:relative;border:1px solid var(--border);background:var(--surface-2);color:var(--text-primary);border-radius:5px;text-align:left;padding:10px;min-width:0}.skill-slot{min-height:70px}.skill-slot b,.skill-card b{display:block;font-size:13px}.skill-slot small,.skill-card small{display:block;margin-top:5px;color:var(--text-secondary);font-size:10px;line-height:1.45}.skill-slot .skill-icon,.skill-card .skill-icon{float:left;width:34px;height:34px;display:grid;place-items:center;margin-right:8px;border:1px solid var(--skill-accent);color:var(--skill-accent);background:var(--surface);font-size:19px}
@@ -226,13 +231,7 @@ h2.reveal-kicker{margin-top:0}
 .wallet{padding-top:calc(9px + env(safe-area-inset-top));padding-right:56px}
 #tools-toggle{position:absolute;top:calc(11px + env(safe-area-inset-top));right:12px}
 
-/* --- 2. 소리 버튼은 도구 메뉴 세 번째 칸 --- */
-#sound-toggle{position:fixed;top:154px;bottom:auto;left:auto;height:38px!important;
-  min-height:0;min-width:0;padding:0!important;display:grid;place-items:center}
-#sound-toggle.muted{opacity:.45}
-#sound-toggle svg{width:19px;height:19px}
-
-/* --- 3. 마일스톤 — 배너 오른쪽 위의 작은 pill 버튼. --- */
+/* --- 2. 마일스톤 — 배너 오른쪽 위의 작은 pill 버튼. --- */
 /* [2026-09-16 정정] 가로로 긴 스트립은 배경 배너의 일부로 읽혀 누를 수 있는 줄 몰랐다.
    목표 이름과 진행(4 / 5)은 그대로 두고 게이지만 버리면, 같은 정보가 버튼 모양에 들어간다. */
 #open-milestones.milestone-pill,#open-codex.milestone-pill{position:absolute;right:14px;left:auto;top:14px;bottom:auto;z-index:2;
@@ -377,8 +376,7 @@ h2.reveal-kicker{margin-top:0}
                             "창을 키우면 되는데 왜 돌리라고 하나"가 된다.
 
    JS는 관여하지 않는다 — 게임 루프도 멈추지 않으므로 세로로 되돌리면 전투가 그대로 이어진다.
-   z-index 300은 #app 안의 최상단(#manual-panel 200)보다 위지만, #app이 isolation:isolate로
-   자체 스택 문맥을 만들므로 실제로 겨루는 상대는 #app 자신이다. */
+   z-index 300은 #app보다 위에 두어 앱 전체를 덮는다. */
 #rotate-notice{display:none}
 @media (max-height:500px) and (orientation:landscape) and (pointer:coarse){
   #rotate-notice{display:flex;position:fixed;inset:0;z-index:300;
@@ -401,8 +399,8 @@ h2.reveal-kicker{margin-top:0}
 }
 
 /* =========================================================================
-   [세션 3 2026-09-18] 옵션 팝업 — 언어 · 게임 설명서 · 데이터 초기화.
-   도구 메뉴(⚙)에 아이콘으로 흩어져 있던 셋을 한 장에 이름과 함께 모았다.
+   [2026-09-22] 옵션 팝업 — 언어 · 효과음.
+   효과음 토글은 도구 메뉴의 독립 버튼이 아니라 상태가 보이는 팝업 항목이다.
    언어 목록은 등록된 언어 파일에서 만들어지므로 언어가 늘어도 이 스타일은 그대로다.
    ========================================================================= */
 #options-panel{position:fixed;inset:0;z-index:210;display:grid;place-items:center;padding:20px;
@@ -422,6 +420,12 @@ h2.reveal-kicker{margin-top:0}
   color:var(--text-primary);font:600 14px system-ui;cursor:pointer}
 .lang-list button[aria-current="true"]{border-color:var(--primary);background:var(--border)}
 .lang-list button:disabled,.options-item:disabled{opacity:.45;cursor:default}
+.sound-option{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sound-option .sound-option-label{display:flex;align-items:center;gap:9px}
+.sound-option svg{width:19px;height:19px;stroke:currentColor}
+.sound-option strong{min-width:38px;color:var(--primary);font-size:12px;text-align:right;letter-spacing:.08em}
+.sound-option.muted{color:var(--text-secondary)}
+.sound-option.muted strong{color:var(--text-disabled)}
 .options-item.danger{color:var(--danger);border-color:color-mix(in srgb, var(--danger) 45%, var(--border))}
 .options-note{margin:0;font-size:11px;color:var(--text-secondary)}
 .options-note[hidden]{display:none!important}

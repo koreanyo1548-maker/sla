@@ -11,7 +11,7 @@ const CampaignView={
   warn(message){$('#save-status').textContent=message;},
   notice(message){GameFeedback.toast(message);},
   lobbyPage(page){
-    ['home','characters','skills','upgrade'].forEach(p=>$('#lobby-'+p).hidden=p!==page);
+    ['home','characters','skills','upgrade','relics'].forEach(p=>$('#lobby-'+p).hidden=p!==page);
     $$('[data-lobby-nav]').forEach(b=>{if(b.dataset.lobbyNav===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   },
   scrollLobbyTop(){$('#lobby-scroll').scrollTop=0;},

@@ -323,7 +323,7 @@
     #combat-wrap.fx-shake,#combat-wrap.fx-shake-soft,#combat-wrap.fx-player-hit::after,#hud .hp-wrap.fx-hp-hit,#generator-btn.fx-generate,#generator-btn.fx-energy-grant,#energy-display.fx-gain,#energy-status-row.fx-gain,.energy-gain-pop,.skill-btn.fx-ready,.order-gauge-wrap.fx-charge,.order-gauge-wrap.fx-full .order-gauge-track,.piece.fx-spawn,.piece.fx-merge,.piece.fx-critical,.piece.fx-invalid,.order-card.fx-complete,.order-card.fx-invalid,#action-log.fx-log,#result-title,#cinematic-layer.active::before,#cinematic-layer.active::after,#cinematic-layer.active #cinematic-card,#screen-game.cinematic-ending #combat-canvas{animation-duration:.01ms!important;}
   }
 
-  /* ---------- Player-facing tool menu (❓ 게임 설명서) ---------- */
+  /* ---------- Player-facing tool menu ---------- */
   /* [UX 2026-09-02] 이전엔 하단 우측 고정이라 머지 보드 마지막 칸(3행 8열) 바로 위에
      겹쳐서 그 칸의 피스를 드래그/클릭할 수 없었다(치명적 버그). 보드가 닿지 않는
      상단 우측 코너로 옮겨 모든 화면(시작/게임/결과)에서 항상 접근 가능하면서
@@ -333,36 +333,14 @@
     cursor:pointer;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.4);}
   /* [2026-09-18] 폭에 관계없이 낸다. 원래 display:none이고 아래 @media (max-width:600px)에서만
      block이었다 — 게임이 모바일 전용이던 때의 규칙이다. 그런데 .tool-button은 play.css에서
-     display:none!important이고 .tools-open일 때만 block이므로, ⚙에 닿지 못하면 효과음·게임
-     설명서·전투 종료·데이터 초기화 전부에 닿을 수 없었다. 폭 600px을 넘는 모든 화면에서
+     display:none!important이고 .tools-open일 때만 block이므로, ⚙에 닿지 못하면 도구 메뉴
+     전체에 접근할 수 없었다. 폭 600px을 넘는 모든 화면에서
      도구 메뉴가 통째로 막혀 있었고, 데스크톱에서는 런을 끝낼 방법이 없었다(세션 2 자동 검사가 잡았다).
      배치는 건드리지 않았다 — #app이 position:relative라 버튼들이 앱 열 안쪽 우상단에 그대로 들어간다
      (1280×720에서 x≈825, 화면을 벗어나지 않는다). [2026-09-18 세션 4] 넓은 화면 배치를 다시
      실측해 문제 없음으로 확정했다 — 1280 폭에서 x=829(열 400~880), 1920 폭에서 x=1149
      (열 720~1200). 가로 레이아웃이 취소돼 더 손댈 것이 없다. */
   #tools-toggle{display:block;top:44px;}
-  /* [2026-09-02] 게임 설명서 — 기획서(기획서.md, 개발/기획 결정 로그)와는 별개로, 플레이어가
-     "어떻게 하면 되는지"만 보는 순수 플레이 가이드. 인철 요청: "기획서 말고 별도로
-     내부 메뉴로 설명서를 만들어봐. 게임 설명서" (2026-09-02). 밸런스 에디터(⚙)는
-     2026-09-16 구조 정비로 인게임에서 빠졌고, 2026-09-18에 분리본까지 지워
-     지금은 어느 진입점에도 없다 — 나중에 별도 빌드 에디터로 다시 만든다. */
-  #manual-panel{position:fixed;inset:0;background:rgba(4,6,9,.92);z-index:200;display:none;
-    overflow-y:auto;overscroll-behavior:contain;padding:16px;}
-  #manual-panel.open{display:block;}
-  #manual-panel h2{margin:0 0 4px;font-size:18px;font-family:"Orbitron",sans-serif;}
-  #manual-panel .note{color:var(--dim);font-size:12px;margin-bottom:14px;}
-  .doc-rules{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--ember);
-    border-radius:8px;padding:12px 14px;margin-bottom:14px;max-width:560px;}
-  .doc-rules h3{margin:0 0 8px;font-size:12px;color:var(--ember);letter-spacing:.02em;}
-  .doc-rules ul{margin:0;padding-left:18px;font-size:12px;line-height:1.7;color:var(--text-primary);}
-  .doc-section{background:var(--panel2);border:1px solid var(--border);border-radius:10px;
-    padding:14px;margin-bottom:12px;max-width:560px;}
-  .doc-section h3{margin:0 0 10px;font-size:13px;color:var(--accent);}
-  .doc-section ul{margin:0;padding-left:18px;font-size:12px;line-height:1.7;color:var(--text);}
-  .doc-section ul.warn li{color:var(--explosion);}
-  .editor-buttons{display:flex;gap:10px;margin:14px 0 30px;flex-wrap:wrap;}
-  .editor-buttons button{padding:10px 16px;border-radius:8px;border:none;font-weight:600;
-    font-size:13px;cursor:pointer;}
 
   /* 브라우저 주소창을 제외한 실제 가용 높이에 맞춰 전투 영역만 유동 축소한다. */
   @media (max-width:600px){

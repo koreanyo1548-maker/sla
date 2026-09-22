@@ -35,6 +35,12 @@ I18N.register("ko", "한국어", {
   "lobby.nav.characters": "수호자",
   "lobby.nav.skills": "스킬",
   "lobby.nav.upgrade": "강화",
+  "lobby.nav.relics": "유물",
+
+  /* ── relic ── */
+  "relic.eyebrow": "ANCIENT RELICS",
+  "relic.title": "유물",
+  "relic.comingSoon": "COMING SOON",
 
   /* ── codex ── */
   "codex.eyebrow": "ARCHIVES",
@@ -408,7 +414,7 @@ I18N.register("ko", "한국어", {
   "options.title": "옵션",
   "options.language.title": "언어",
   "options.language.note": "전투 중에는 바꿀 수 없습니다.",
-  "options.manual": "게임 설명서",
+  "options.sound.title": "효과음",
   "options.reset": "데이터 초기화",
   "options.reset.note": "로비에서만 초기화할 수 있습니다.",
 
