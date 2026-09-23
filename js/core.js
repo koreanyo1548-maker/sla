@@ -91,8 +91,21 @@ function restartCssAnimation(el, className){
   el.classList.add(className);
   el.addEventListener('animationend', ()=>el.classList.remove(className), {once:true});
 }
-// 피해 숫자도 현재 언어의 자릿수 구분을 쓴다(1000 이상이 자주 나온다).
-function formatDamage(n){ return n < 1 ? I18N.num(n,{min:1,max:1}) : I18N.num(Math.round(n)); }
+// [2026-09-23] 확정(인철): 백만 이상 피해는 뒤 세 자리씩 a·b·c 단위로 접는다.
+// 백만은 1000a, 십억은 1000b이며 실제 전투 계산값은 줄이지 않는다.
+function damageUnit(index){
+  let value=index,unit='';
+  do{unit=String.fromCharCode(97+value%26)+unit;value=Math.floor(value/26)-1;}while(value>=0);
+  return unit;
+}
+function formatDamage(n){
+  if(n<1)return I18N.num(n,{min:1,max:1});
+  const value=Math.round(n);
+  if(value<1000000)return I18N.num(value);
+  let divisor=1000,unitIndex=0;
+  while(value/divisor>=1000000){divisor*=1000;unitIndex++;}
+  return `${Math.floor(value/divisor)}${damageUnit(unitIndex)}`;
+}
 // Canvas 판정 좌표를 CSS로 표시되는 전투 컨테이너 좌표로 변환한다.
 // 모바일에서는 canvas.width(440)와 표시 폭이 달라 이 변환 없이는 피해 숫자가 피격 지점에서 벗어난다.
 function combatLayerPoint(container,x,y){

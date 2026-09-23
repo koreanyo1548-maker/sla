@@ -482,9 +482,9 @@ class Game {
       [I18N.num(this.stats.ordersCompleted),'result.stat.orders'],
       [I18N.num(this.stats.merges),'result.stat.merges'],
       [I18N.num(this.stats.skillsUsed),'result.stat.skills'],
-      [I18N.num(Math.round(this.stats.damageDealt)),'result.stat.damage'],
+      [formatDamage(this.stats.damageDealt),'result.stat.damage'],
       [I18N.num(this.stats.criticalHits),'result.stat.crit'],
-      [I18N.num(Math.round(this.stats.pierceDamage)),'result.stat.pierce'],
+      [formatDamage(this.stats.pierceDamage),'result.stat.pierce'],
     ];
     const renderRow=([value,labelKey])=>`<div class="result-stat"><strong>${value}</strong><span>${t(labelKey)}</span></div>`;
     el.innerHTML=rows.slice(0,6).map(renderRow).join('')+`<details class="result-details"><summary>${t('result.details')}</summary><div>${rows.slice(6).map(renderRow).join('')}</div></details>`;

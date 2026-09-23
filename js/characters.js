@@ -8,8 +8,10 @@ const CAMPAIGN_CONFIG = {
 function stageEnemyDefense(stageId,enemyConfig=DEFAULT_CONFIG.enemy){
   const id=Math.max(1,Math.floor(Number(stageId)||1));
   const freeStages=Math.max(0,Math.floor(Number(enemyConfig.defenseGrowth?.freeStages)||0));
-  const perStage=Math.max(0,Number(enemyConfig.defenseGrowth?.perStage)||0);
-  return Math.max(0,id-freeStages)*perStage;
+  if(id<=freeStages)return 0;
+  const base=Math.max(0,Number(enemyConfig.defenseGrowth?.base)||0);
+  const scaleRatio=Math.max(0,Number(enemyConfig.defenseGrowth?.scaleRatio)||0);
+  return Math.round(base*Math.pow(scaleRatio,id-freeStages-1));
 }
 // [2026-09-19] 확정(인철): 적 체력과 보상을 둘 다 등비로 바꾼다.
 //   - 등차(hpScalePerStage 0.26)는 스테이지 60에서 체력 16.3배인데 플레이어 파워는 750배라, 전투가
@@ -32,8 +34,8 @@ function campaignStage(id){
     nameKey:CAMPAIGN_CONFIG.stageNameKeys[stageId-1]||'stage.endless',
     waves:Math.min(stageId,3)*10,
     hpScale:combatScale*introMul,
-    // [2026-09-22] 확정(인철): 방어력 성장 뒤에도 피격 한 방의 위협이 남도록 공격력도
-    // 체력과 같은 1.130 등비로 성장한다. introHpMul은 체력 전용 튜토리얼 완충이므로 곱하지 않는다.
+    // [2026-09-23] 확정(인철): 방어력 성장 뒤에도 피격 한 방의 위협이 남도록 공격력도
+    // 체력과 같은 1.117846915 등비로 성장한다. introHpMul은 체력 전용 튜토리얼 완충이므로 곱하지 않는다.
     atkScale:combatScale,
     // 공비 1.085 — 모든 칸이 +8.5%로 같다. 60스테이지 한 판이 25,000골드로 후반 1레벨(19,377골드)과
     // 맞물려 "한 판 = 한 레벨"이 되고, 등반이 막히면 같은 스테이지 반복이 그대로 성장이 된다.
