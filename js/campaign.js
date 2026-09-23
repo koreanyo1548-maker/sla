@@ -306,7 +306,7 @@ const Campaign = {
       enemyBase:{
         hp:Math.round(CONFIG.enemy.base.hp*st.hpScale),
         atk:Math.round(CONFIG.enemy.base.atk*st.atkScale),
-        def:stageEnemyDefense(st.id,CONFIG.enemy),
+        def:stageEnemyDefense(st.id,CONFIG.enemy,CONFIG.stage),
       },
       waves:buildStageWaves(st.waves,CONFIG.stage,st.id),
       bossCompositions:buildBossCompositions(st.waves,CONFIG.stage,st.id),

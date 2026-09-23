@@ -5,13 +5,27 @@ const CAMPAIGN_CONFIG = {
   // 표시 이름은 문자열 테이블에 있다. 여기에는 키만 둔다(세션 3B).
   stageNameKeys:['stage.1','stage.2','stage.3','stage.4','stage.5'],
 };
-function stageEnemyDefense(stageId,enemyConfig=DEFAULT_CONFIG.enemy){
+function enemyGrowthLevel(stageId,stageConfig=CONFIG.stage){
+  const id=Math.max(1,Math.floor(Number(stageId)||1));
+  if(id<=3)return id;
+  const step=Math.max(1,Math.floor(Number(stageConfig.enemyGrowthLevelStep)||4));
+  return 4+(id-4)*step;
+}
+function enemyCharacterGrowthScale(stat,stageId,stageConfig=CONFIG.stage){
+  const base=CHARACTER_BASE_STATS[stat],growth=GrowthProfileTable.standard[stat];
+  if(!(base>0))return 1;
+  const factor=LevelGrowthFactor.at(enemyGrowthLevel(stageId,stageConfig),{clamp:false});
+  return (base+factor*growth)/base;
+}
+function enemyDifficultyMul(enemyConfig=DEFAULT_CONFIG.enemy){
+  return Math.max(0,Number(enemyConfig.growthDifficultyMul)||1);
+}
+function stageEnemyDefense(stageId,enemyConfig=DEFAULT_CONFIG.enemy,stageConfig=CONFIG.stage){
   const id=Math.max(1,Math.floor(Number(stageId)||1));
   const freeStages=Math.max(0,Math.floor(Number(enemyConfig.defenseGrowth?.freeStages)||0));
   if(id<=freeStages)return 0;
   const base=Math.max(0,Number(enemyConfig.defenseGrowth?.base)||0);
-  const scaleRatio=Math.max(0,Number(enemyConfig.defenseGrowth?.scaleRatio)||0);
-  return Math.round(base*Math.pow(scaleRatio,id-freeStages-1));
+  return Math.round(base*enemyCharacterGrowthScale('def',id,stageConfig)*enemyDifficultyMul(enemyConfig));
 }
 // [2026-09-19] 확정(인철): 적 체력과 보상을 둘 다 등비로 바꾼다.
 //   - 등차(hpScalePerStage 0.26)는 스테이지 60에서 체력 16.3배인데 플레이어 파워는 750배라, 전투가
@@ -28,15 +42,15 @@ function introHpMul(stageId){
 function campaignStage(id){
   const stageId=Math.max(1,Math.floor(Number(id)||1));
   const introMul=introHpMul(stageId);
-  const combatScale=Math.pow(CONFIG.stage.hpScaleRatio,stageId-1);
+  const difficultyMul=enemyDifficultyMul(CONFIG.enemy);
   return {
     id:stageId,
     nameKey:CAMPAIGN_CONFIG.stageNameKeys[stageId-1]||'stage.endless',
     waves:Math.min(stageId,3)*10,
-    hpScale:combatScale*introMul,
-    // [2026-09-23] 확정(인철): 방어력 성장 뒤에도 피격 한 방의 위협이 남도록 공격력도
-    // 체력과 같은 1.117846915 등비로 성장한다. introHpMul은 체력 전용 튜토리얼 완충이므로 곱하지 않는다.
-    atkScale:combatScale,
+    hpScale:enemyCharacterGrowthScale('hp',stageId)*difficultyMul*introMul,
+    // [2026-09-23] 확정(인철): HP·공격력·방어력은 캐릭터와 같은 복합 성장식을 공유한다.
+    // 1.15 난도 보정은 공통 적용하고 introHpMul은 체력 전용 튜토리얼 완충으로 남긴다.
+    atkScale:enemyCharacterGrowthScale('atk',stageId)*difficultyMul,
     // 공비 1.085 — 모든 칸이 +8.5%로 같다. 60스테이지 한 판이 25,000골드로 후반 1레벨(19,377골드)과
     // 맞물려 "한 판 = 한 레벨"이 되고, 등반이 막히면 같은 스테이지 반복이 그대로 성장이 된다.
     waveGold:Math.round(10*Math.pow(CONFIG.stage.goldRatio,stageId-1)),
@@ -61,6 +75,7 @@ const RarityTable={
 };
 const RARITY_KEYS=Object.keys(RarityTable).sort((a,b)=>RarityTable[a].order-RarityTable[b].order);
 function rarityConf(rarityId){ return CONFIG.meta.rarity[rarityId]||CONFIG.meta.rarity.normal; }
+const CHARACTER_BASE_STATS={atk:1000,def:5,hp:300};
 // 기본 성장 폭. 캐릭터의 실제 값은 여기에 희귀도 배율을 곱한 것이다.
 const GrowthProfileTable={standard:{atk:100,def:1,hp:30}};
 // [2026-09-17] 레벨 L까지의 누적 성장 배수. blend=0이면 (L-1)이 되어 기존 선형과 완전히 같다.
@@ -72,16 +87,20 @@ const GrowthProfileTable={standard:{atk:100,def:1,hp:30}};
 const LevelGrowthFactor={
   cache:null, key:null,
   shape(x,expBase){ return (100+10*x+100*Math.floor(x/20))*Math.pow(expBase,x); },
-  table(){
+  table(maxLevel=CharacterGrowthRules.maxLevel){
     const c=CONFIG.meta.character.growthCurve||{blend:0,expBase:1},
           blend=Number(c.blend)||0, expBase=Number(c.expBase)||1, key=`${blend}|${expBase}`;
-    if(this.key===key&&this.cache) return this.cache;
-    const unit=this.shape(1,expBase), out=[0,0];
-    let sum=0;
-    for(let x=1;x<CharacterGrowthRules.maxLevel;x++){ sum+=(1-blend)+blend*this.shape(x,expBase)/unit; out[x+1]=sum; }
-    this.key=key; this.cache=out; return out;
+    if(this.key!==key||!this.cache){this.key=key;this.cache=[0,0];}
+    const unit=this.shape(1,expBase),out=this.cache;
+    let sum=out[out.length-1]||0;
+    for(let x=out.length-1;x<maxLevel;x++){sum+=(1-blend)+blend*this.shape(x,expBase)/unit;out[x+1]=sum;}
+    return out;
   },
-  at(level){ const table=this.table(); return table[Math.max(1,Math.min(table.length-1,Math.floor(level)||1))]||0; },
+  at(level,{clamp=true}={}){
+    const requested=Math.max(1,Math.floor(level)||1);
+    const target=clamp?Math.min(CharacterGrowthRules.maxLevel,requested):requested;
+    return this.table(target)[target]||0;
+  },
 };
 // [2026-09-18] 확정(인철): 뽑기를 없앤다. 수호자는 해당 미사일의 공용 레벨이 임계에 닿을 때
 // 등급 오름차순으로 열리고, 노말 4명(미사일 1명씩)만 처음부터 지급한다 — 미사일 4슬롯을
@@ -263,7 +282,7 @@ const STAR_PASSIVE_UNLOCK = 3;
 CharacterSeedTable.forEach((seed,i)=>{
   const suffix=String(i+1).padStart(3,'0'),characterId=`CHR_${suffix}`,passiveId=`CP_${suffix}`;
   const starPassiveId=seed.starEffects?`${passiveId}S`:null;
-  CharacterTable[characterId]={characterId,nameKey:seed.nameKey,rarityId:seed.rarityId,identityId:seed.identityId,raceId:seed.raceId,specialtyMissileId:seed.module,innatePassiveId:passiveId,starPassiveId,passiveSlots:{innate:passiveId,star:starPassiveId?[starPassiveId]:[],tier:[],awakening:[]},baseStats:{atk:1000,def:5,hp:300},growthProfileId:'standard',costGroupId:'standard',sortOrder:i};
+  CharacterTable[characterId]={characterId,nameKey:seed.nameKey,rarityId:seed.rarityId,identityId:seed.identityId,raceId:seed.raceId,specialtyMissileId:seed.module,innatePassiveId:passiveId,starPassiveId,passiveSlots:{innate:passiveId,star:starPassiveId?[starPassiveId]:[],tier:[],awakening:[]},baseStats:{...CHARACTER_BASE_STATS},growthProfileId:'standard',costGroupId:'standard',sortOrder:i};
   const addRows=(pid,rows,unlockType)=>rows.forEach((effect,effectIndex)=>PassiveEffectTable.push({effectId:`${pid}_E${effectIndex+1}`,passiveId:pid,sourceId:seed.module,operation:'add',stackMode:'add',unlockType,...effect,duration:effect.statusId?(effect.duration??StatusEffectTable[effect.statusId].duration):effect.duration,targetId:effect.scope==='module'?(effect.targetId??seed.module):(effect.targetId??null)}));
   PassiveTable[passiveId]={passiveId,nameKey:seed.passiveKey,category:'innate'};
   PassiveUnlockTable.push({characterId,passiveId,unlockType:'base',unlockValue:1});

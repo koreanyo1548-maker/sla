@@ -11,7 +11,7 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const ROOT = path.resolve(import.meta.dirname,'..');
-const DEFAULT_TARGET_MULTIPLIER = 10.35;
+const DEFAULT_TARGET_MULTIPLIER = 1.15;
 const FACTOR_KEYS = [
   'attackPct','damagePct','critChance','critDamagePct',
   'defensePct','defenseIgnore','pierceRate','attackSpeedPct','bossDamagePct',
@@ -292,37 +292,10 @@ export function growthAtStage(stageId,{mode='focused',focusModule='chain',target
   };
 }
 
-function fitSharedExponential(rows){
-  const meanX=rows.reduce((sum,row)=>sum+row.x,0)/rows.length;
-  const series=['hp','atk'];
-  let numerator=0,denominator=0;
-  for(const key of series){
-    const meanY=rows.reduce((sum,row)=>sum+row[key],0)/rows.length;
-    for(const row of rows){
-      numerator+=(row.x-meanX)*(row[key]-meanY);
-      denominator+=(row.x-meanX)**2;
-    }
-  }
-  const slope=denominator>0?numerator/denominator:0;
-  const ratio=Math.exp(slope);
-  const base={};
-  for(const key of series){
-    base[key]=Math.exp(rows.reduce((sum,row)=>sum+row[key]-slope*row.x,0)/rows.length);
-  }
-  return {ratio,base};
-}
-
-function fitExponential(rows,key){
-  const meanX=rows.reduce((sum,row)=>sum+row.x,0)/rows.length;
-  const meanY=rows.reduce((sum,row)=>sum+row[key],0)/rows.length;
-  const denominator=rows.reduce((sum,row)=>sum+(row.x-meanX)**2,0);
-  const slope=denominator>0
-    ?rows.reduce((sum,row)=>sum+(row.x-meanX)*(row[key]-meanY),0)/denominator
-    :0;
-  return {
-    base:Math.exp(meanY-slope*meanX),
-    ratio:Math.exp(slope),
-  };
+function fitBase(rows,factorKey,targetKey){
+  const denominator=rows.reduce((sum,row)=>sum+row[factorKey]**2,0);
+  if(!(denominator>0))return 0;
+  return rows.reduce((sum,row)=>sum+row[factorKey]*row[targetKey],0)/denominator;
 }
 
 /* 기존 변수 위치에 넣을 값을 스테이지별 목표 스펙에 최소제곱으로 맞춘다. */
@@ -333,52 +306,39 @@ export function fitEnemyVariables(maxStage,{mode='even',focusModule='chain',targ
   for(let stage=1;stage<=end;stage++){
     const result=growthAtStage(stage,{mode,focusModule,targetMultiplier,...options});
     growth.push(result);
-    const intro=stage<=MODEL.CONFIG.stage.introHpMul.length
-      ?Number(MODEL.CONFIG.stage.introHpMul[stage-1])||1
-      :1;
+    const stageCurve=MODEL.campaignStage(stage);
+    const defenseUnit=MODEL.stageEnemyDefense(stage,{
+      ...MODEL.CONFIG.enemy,
+      defenseGrowth:{...MODEL.CONFIG.enemy.defenseGrowth,base:1e6},
+    },MODEL.CONFIG.stage)/1e6;
     rows.push({
       stage,
-      x:stage-1,
-      hp:Math.log(Math.max(1,result.stats.target.hp/intro)),
-      atk:Math.log(Math.max(1,result.stats.target.atk)),
+      hpFactor:stageCurve.hpScale,
+      atkFactor:stageCurve.atkScale,
+      defFactor:defenseUnit,
+      hp:Math.max(0,result.stats.target.hp),
+      atk:Math.max(0,result.stats.target.atk),
       def:Math.max(0,result.stats.target.def),
     });
   }
 
-  const exponential=fitSharedExponential(rows);
-  const freeStages=MODEL.CONFIG.enemy.defenseGrowth.freeStages;
-  const defenseRows=rows
-    .filter(row=>row.stage>freeStages)
-    .map(row=>({x:row.stage-freeStages-1,def:Math.log(Math.max(1,row.def))}));
-  const defenseExponential=defenseRows.length
-    ?fitExponential(defenseRows,'def')
-    :{
-      base:MODEL.CONFIG.enemy.defenseGrowth.base,
-      ratio:MODEL.CONFIG.enemy.defenseGrowth.scaleRatio,
-    };
-
   const values={
-    'CONFIG.enemy.base.hp':Math.round(exponential.base.hp),
-    'CONFIG.enemy.base.atk':Math.round(exponential.base.atk),
-    'CONFIG.stage.hpScaleRatio':Math.round(exponential.ratio*1e6)/1e6,
-    'CONFIG.enemy.defenseGrowth.base':Math.round(defenseExponential.base),
-    'CONFIG.enemy.defenseGrowth.scaleRatio':Math.round(defenseExponential.ratio*1e9)/1e9,
+    'CONFIG.enemy.base.hp':Math.round(fitBase(rows,'hpFactor','hp')),
+    'CONFIG.enemy.base.atk':Math.round(fitBase(rows,'atkFactor','atk')),
+    'CONFIG.enemy.defenseGrowth.base':Math.round(fitBase(rows,'defFactor','def')),
+    'CONFIG.enemy.growthDifficultyMul':MODEL.CONFIG.enemy.growthDifficultyMul,
+    'CONFIG.stage.enemyGrowthLevelStep':MODEL.CONFIG.stage.enemyGrowthLevelStep,
   };
 
-  const comparison=growth.map(result=>{
-    const stage=result.stage;
-    const intro=stage<=MODEL.CONFIG.stage.introHpMul.length
-      ?Number(MODEL.CONFIG.stage.introHpMul[stage-1])||1
-      :1;
+  const comparison=growth.map((result,index)=>{
+    const row=rows[index];
     return {
-      stage,
+      stage:result.stage,
       target:result.stats.target,
       fitted:{
-        hp:values['CONFIG.enemy.base.hp']*Math.pow(values['CONFIG.stage.hpScaleRatio'],stage-1)*intro,
-        atk:values['CONFIG.enemy.base.atk']*Math.pow(values['CONFIG.stage.hpScaleRatio'],stage-1),
-        def:stage<=freeStages?0:Math.round(
-          values['CONFIG.enemy.defenseGrowth.base']*
-          Math.pow(values['CONFIG.enemy.defenseGrowth.scaleRatio'],stage-freeStages-1)),
+        hp:Math.round(values['CONFIG.enemy.base.hp']*row.hpFactor),
+        atk:Math.round(values['CONFIG.enemy.base.atk']*row.atkFactor),
+        def:Math.round(values['CONFIG.enemy.defenseGrowth.base']*row.defFactor),
       },
     };
   });
