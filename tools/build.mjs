@@ -55,6 +55,10 @@ const fail = m => problems.push(m);
    zip 이름 · 대시보드 버전 · 로비 표기가 한 문자열에서 나온다. 로비 푸터는 아직
    손으로 적은 값이라 여기서 두 값이 같은지 본다. */
 const indexHtml = fs.readFileSync(path.join(ROOT,'index.html'), 'utf8');
+// 개발 중에는 원본 index.html에서만 쓰고, 출시물에서는 UI와 실행 코드를 블록째 뺀다.
+const releaseIndexHtml = indexHtml.replace(/<!-- DEV_ONLY_START -->[\s\S]*?<!-- DEV_ONLY_END -->/g, '');
+if(releaseIndexHtml.includes('DEV_ONLY_')) fail('출시 index.html에 DEV_ONLY 표시가 남았다.');
+if(releaseIndexHtml.includes('reset-data-btn')) fail('출시 index.html에 데이터 초기화 UI가 남았다.');
 const version = indexHtml.match(/<meta name="slagma-build" content="([^"]+)">/)?.[1];
 if(!version) throw new Error('index.html 에서 <meta name="slagma-build"> 를 찾지 못했다.');
 const footnote = indexHtml.match(/<div class="home-footnote">.*?<span>([^<]*)<\/span>\s*<\/div>/s)?.[1];
@@ -99,7 +103,7 @@ function checkRef(fromRel, raw){
   const target = path.posix.normalize(path.posix.join(path.posix.dirname(fromRel), raw.split(/[?#]/)[0]));
   if(!inBundle.has(target)) fail(`참조 대상이 번들에 없다: ${fromRel} → ${raw}`);
 }
-for(const m of indexHtml.matchAll(/\s(?:src|href)="([^"]*)"/g)) checkRef('index.html', m[1]);
+for(const m of releaseIndexHtml.matchAll(/\s(?:src|href)="([^"]*)"/g)) checkRef('index.html', m[1]);
 for(const rel of files.filter(f=>f.endsWith('.css'))){
   const src = fs.readFileSync(path.join(ROOT, rel), 'utf8');
   for(const m of src.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)) checkRef(rel, m[1]);
@@ -120,8 +124,9 @@ const sizeByTop = {};
 for(const rel of files){
   const src = path.join(ROOT, rel), dst = path.join(STAGE, rel);
   fs.mkdirSync(path.dirname(dst), {recursive:true});
-  fs.copyFileSync(src, dst);
-  const size = fs.statSync(src).size;
+  if(rel==='index.html') fs.writeFileSync(dst, releaseIndexHtml, 'utf8');
+  else fs.copyFileSync(src, dst);
+  const size = rel==='index.html' ? Buffer.byteLength(releaseIndexHtml) : fs.statSync(src).size;
   bytes += size;
   const top = rel.includes('/') ? rel.split('/')[0] + '/' : rel;
   sizeByTop[top] = (sizeByTop[top]||0) + size;

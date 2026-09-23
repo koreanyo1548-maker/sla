@@ -157,7 +157,7 @@
   #cinematic-layer.end-clear #cinematic-sub{color:var(--text-primary);}
   #cinematic-layer.end-defeat #cinematic-title{color:var(--danger);}
   #screen-game.cinematic-ending #combat-canvas{animation:cinematicCameraPush var(--cinematic-duration,.65s) ease-out both;}
-  #screen-game.cinematic-ending #board-wrap,#screen-game.cinematic-ending #skill-row,#screen-game.cinematic-ending #quit-run{pointer-events:none;}
+  #screen-game.cinematic-ending #board-wrap,#screen-game.cinematic-ending #skill-row{pointer-events:none;}
   /* [UX 2026-09-02] 생성기가 보드 바로 위에 있어서, 길게 눌러 연속 생성하는 동안
      엄지손가락이 보드 위 칸들을 가리는 문제가 있었다 — 보드 아래(엄지가 자연스럽게
      닿는 화면 하단)로 옮겼다. */
@@ -323,7 +323,7 @@
     #combat-wrap.fx-shake,#combat-wrap.fx-shake-soft,#combat-wrap.fx-player-hit::after,#hud .hp-wrap.fx-hp-hit,#generator-btn.fx-generate,#generator-btn.fx-energy-grant,#energy-display.fx-gain,#energy-status-row.fx-gain,.energy-gain-pop,.skill-btn.fx-ready,.order-gauge-wrap.fx-charge,.order-gauge-wrap.fx-full .order-gauge-track,.piece.fx-spawn,.piece.fx-merge,.piece.fx-critical,.piece.fx-invalid,.order-card.fx-complete,.order-card.fx-invalid,#action-log.fx-log,#result-title,#cinematic-layer.active::before,#cinematic-layer.active::after,#cinematic-layer.active #cinematic-card,#screen-game.cinematic-ending #combat-canvas{animation-duration:.01ms!important;}
   }
 
-  /* ---------- Player-facing tool menu ---------- */
+  /* ---------- Player-facing options button ---------- */
   /* [UX 2026-09-02] 이전엔 하단 우측 고정이라 머지 보드 마지막 칸(3행 8열) 바로 위에
      겹쳐서 그 칸의 피스를 드래그/클릭할 수 없었다(치명적 버그). 보드가 닿지 않는
      상단 우측 코너로 옮겨 모든 화면(시작/게임/결과)에서 항상 접근 가능하면서
@@ -331,21 +331,12 @@
   #tools-toggle{position:fixed;right:10px;width:38px;height:38px;border-radius:50%;
     background:rgba(25,29,36,.9);border:1px solid var(--border);color:var(--text);font-size:15px;
     cursor:pointer;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.4);}
-  /* [2026-09-18] 폭에 관계없이 낸다. 원래 display:none이고 아래 @media (max-width:600px)에서만
-     block이었다 — 게임이 모바일 전용이던 때의 규칙이다. 그런데 .tool-button은 play.css에서
-     display:none!important이고 .tools-open일 때만 block이므로, ⚙에 닿지 못하면 도구 메뉴
-     전체에 접근할 수 없었다. 폭 600px을 넘는 모든 화면에서
-     도구 메뉴가 통째로 막혀 있었고, 데스크톱에서는 런을 끝낼 방법이 없었다(세션 2 자동 검사가 잡았다).
-     배치는 건드리지 않았다 — #app이 position:relative라 버튼들이 앱 열 안쪽 우상단에 그대로 들어간다
-     (1280×720에서 x≈825, 화면을 벗어나지 않는다). [2026-09-18 세션 4] 넓은 화면 배치를 다시
-     실측해 문제 없음으로 확정했다 — 1280 폭에서 x=829(열 400~880), 1920 폭에서 x=1149
-     (열 720~1200). 가로 레이아웃이 취소돼 더 손댈 것이 없다. */
+  /* 폭과 화면 상태에 관계없이 옵션에 접근할 수 있게 낸다. 톱니 버튼이 팝업을 직접
+     열며, 전투 종료처럼 상태에 따른 기능은 팝업 내부에서 가시성을 제어한다. */
   #tools-toggle{display:block;top:44px;}
 
   /* 브라우저 주소창을 제외한 실제 가용 높이에 맞춰 전투 영역만 유동 축소한다. */
   @media (max-width:600px){
-    .tool-button{opacity:0;pointer-events:none;transform:translateY(-8px) scale(.9);transition:.16s ease;}
-    #app.tools-open .tool-button{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);}
     #hud{padding:6px 8px;gap:7px;}
     #hud .wave-label{font-size:11px;}
     #hud .run-metrics{font-size:8.5px;gap:6px;}
@@ -445,7 +436,6 @@
   #result-reward strong{display:block;color:var(--energy);font-size:28px;margin:8px 0;}
   #result-reward p{font-size:12px;color:var(--dim);margin:5px 0;line-height:1.6;}
   #screen-result{justify-content:flex-start;padding-top:38px;padding-bottom:28px;}
-  #quit-run{font-size:10px;color:var(--dim);border:1px solid var(--border);background:var(--panel2);padding:5px 10px;border-radius:5px;cursor:pointer;}
   #action-log{display:flex;justify-content:space-between;align-items:center;}
   .skill-pick-card{color:var(--text);text-align:left;width:100%;}
   #screen-game #hud{padding-right:42px;gap:5px;}#hud .wave-label{font-size:10px;}

@@ -123,14 +123,13 @@
     <button id="retry-btn" data-i18n="result.retry"></button>
   </div>
 
-  <button id="tools-toggle" data-i18n-title="tools.toggleTitle" data-i18n-aria="tools.openAria">⚙</button>
-  <button id="quit-run" class="tool-button" data-i18n-title="tools.quitTitle" hidden>⏻</button>
-  <button id="options-toggle" class="tool-button" data-i18n-title="options.title" data-i18n-aria="options.title">☰</button>
+  <button id="tools-toggle" data-i18n-title="options.title" data-i18n-aria="options.title">⚙</button>
 
-  <!-- [2026-09-22] 옵션 팝업 — 언어 · 효과음.
+  <!-- [2026-09-23] 톱니 버튼이 이 옵션 팝업을 직접 연다. 언어 · 효과음 · 전투 종료를 제공하고,
+       데이터 초기화는 DEV_ONLY 구간이라 출시 빌드에서 마크업과 동작을 함께 제거한다.
+       [2026-09-22] 옵션 팝업 — 언어 · 효과음.
        효과음 토글을 도구 메뉴의 독립 아이콘에서 이름과 상태가 보이는 항목으로 옮겼다.
        플레이어용 게임 설명서는 제거했다.
-       [2026-09-19 세션 7] 여기 있던 데이터 초기화를 출시 빌드에서 걷어냈다.
        언어 목록은 등록된 언어 파일에서 만들어지므로 i18n/ 에 파일이 하나 늘면
        버튼도 하나 는다 — 이 마크업은 손대지 않는다. -->
   <div id="options-panel" hidden role="dialog" aria-modal="true" data-i18n-aria="options.title">
@@ -145,6 +144,15 @@
         <h3 data-i18n="options.sound.title"></h3>
         <button id="sound-toggle" class="options-item sound-option" data-i18n-aria="tools.soundAria" aria-pressed="false"></button>
       </section>
+      <section id="run-options-section" class="options-section" hidden>
+        <button id="options-quit-run" class="options-item danger" data-i18n="tools.quitTitle"></button>
+      </section>
+      <!-- DEV_ONLY_START -->
+      <section class="options-section">
+        <button id="reset-data-btn" class="options-item danger" data-i18n="options.reset"></button>
+        <p id="reset-data-note" class="options-note" data-i18n="options.reset.note"></p>
+      </section>
+      <!-- DEV_ONLY_END -->
       <button id="options-close" data-i18n="common.close"></button>
     </div>
   </div>
@@ -190,6 +198,22 @@
 <script src="js/codex-ui.js"></script>
 <script src="js/campaign-ui.js"></script>
 <script src="js/campaign.js"></script>
+
+<!-- DEV_ONLY_START -->
+<script>
+  window.addEventListener('DOMContentLoaded',()=>{
+    const reset=document.querySelector('#reset-data-btn');
+    if(!reset)return;
+    reset.onclick=()=>{
+      if(GameState.current!=='lobby'||!confirm(t('notice.reset.confirm')))return;
+      const result=CampaignStore.remove();
+      if(!result.ok){Campaign.warn(result.error);return;}
+      alert(t('notice.reset.done'));
+      location.reload();
+    };
+  });
+</script>
+<!-- DEV_ONLY_END -->
 
 <!-- [2026-09-19 세션 7-1] 분석 구현체를 꽂는다. DOMContentLoaded보다 먼저 도는
      자리라 첫 이벤트(session_start)가 어댑터를 지나간다.

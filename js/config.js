@@ -374,8 +374,8 @@ const DEFAULT_CONFIG = {
     introHpMul: [0.70,0.75,0.80],
     // [2026-09-23] 확정(인철): 적은 캐릭터와 같은 복합 성장식을 쓰되, 1~3스테이지는
     // 성장 레벨 1·2·3을 그대로 쓰고 4부터는 스테이지마다 이 값만큼 성장 레벨을 올린다.
-    // 기본값 4면 성장 레벨은 1, 2, 3, 4, 8, 12, 16… 순서다.
-    enemyGrowthLevelStep: 4,
+    // 기본값 2면 성장 레벨은 1, 2, 3, 4, 6, 8, 10… 순서다.
+    enemyGrowthLevelStep: 2,
     // 스테이지 보상 공비(waveGold·clearGold 공통). 자세한 근거는 characters.js의 campaignStage에 있다.
     goldRatio: 1.085,
   },

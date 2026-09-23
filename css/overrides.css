@@ -217,13 +217,9 @@ h2.reveal-kicker{margin-top:0}
   #combat-wrap>#energy-status-row{bottom:4px;padding:2px 7px}
   #combat-wrap>#energy-status-row #energy-display{font-size:15px}}
 
-/* --- 5. 종료를 도구 메뉴로. 전투 중에만 뜨고, 데이터 초기화와 자리를 공유한다. --- */
-#quit-run{position:fixed;top:109px;bottom:auto;left:auto;font-size:15px}
-.tool-button[hidden]{display:none!important}
-
 /* =========================================================================
    [로비 정비 2026-09-16] 브랜드 로고 줄 제거, 마일스톤을 배너 컨텐츠로,
-   소리 버튼을 도구 메뉴로. 로고는 매번 볼 필요가 없는 정보라 자리를 비우고,
+   옵션 버튼을 우상단으로. 로고는 매번 볼 필요가 없는 정보라 자리를 비우고,
    마일스톤은 소리·설정과 나란히 있으면 옵션으로 읽혀 모험 안으로 들인다.
    ========================================================================= */
 

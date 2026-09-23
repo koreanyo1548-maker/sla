@@ -33,35 +33,14 @@ const RunHost = {
 };
 
 /* =====================================================================
-   [도구 버튼 가시성] 전투 종료 버튼은 전투 중에만 낸다
+   [옵션 내 전투 항목 가시성] 전투 종료 항목은 실제 전투 중에만 낸다
    ---------------------------------------------------------------------
-   [2026-09-18] 데이터 초기화는 옵션 팝업(OptionsUI)으로 옮겨 도구 메뉴에서
-   빠졌다. 이 함수가 맡는 것은 #quit-run 하나뿐이다.
-   ---------------------------------------------------------------------
-   [2026-09-18 세션 4 항목을 세션 2에서 처리] 이 두 줄은 원래 ⚙(#tools-toggle)
-   click 처리기 안에만 있었다. 그런데 ⚙는 css/base.css에서 display:none이고
-   @media (max-width:600px) 안에서만 display:block이었다 — 폭이 600px을 넘으면
-   처리기가 아예 돌지 않아 #quit-run의 hidden이 풀리지 않았고, 데스크톱에서는
-   런을 끝낼 방법이 없었다(세션 2 자동 검사가 잡았다). ⚙ 쪽은 css/base.css에서
-   모든 폭에 내도록 고쳤고, 이 함수는 갱신 시점 문제를 맡는다.
-
-   갱신을 ⚙에서 떼어내 상태가 바뀌는 지점마다 부른다:
-     - GameState.set()      화면 전환 (로비·출전 준비·전투·결과)
-     - Game.start() 끝       running=true 가 세워진 뒤
-     - Game.awaitResult()   승패 연출로 running=false 가 된 뒤
-     - ⚙ click 처리기        메뉴를 여닫을 때 (기존 동작 유지)
-
-   화면 전환만으로는 부족하다 — Game.start()는 맨 위에서 GameState.set('playing')을
-   부르는데 running=true는 함수 끝에서 세운다. running이 바뀌는 두 지점에서도 불러야
-   판정이 맞는다.
-
-   판정은 RunHost.running 그대로다 — 기존 의미를 바꾸지 않는다. 특히 승패 연출
-   구간(awaitResult)에서는 화면이 아직 playing이지만 running이 false여서 종료
-   버튼이 숨는다. 연출 중에 종료를 누르면 finishRun이 this.ending 때문에 그대로
-   진행돼 클리어가 패배로 정산된다.
+   톱니 버튼은 옵션 팝업을 바로 열고, 전투 종료도 그 안에 들어간다. 화면 상태만
+   보면 승패 연출 중에도 playing이므로 RunHost.running을 기준으로 별도 구역을
+   숨긴다. Game.start()와 awaitResult()처럼 running이 바뀌는 지점에서도 호출한다.
    ===================================================================== */
 function syncToolButtons(){
-  const quit=$('#quit-run'); if(quit) quit.hidden = !RunHost.running;
+  const section=$('#run-options-section'); if(section) section.hidden=!RunHost.running;
 }
 
 /* =====================================================================
@@ -129,6 +108,11 @@ const CampaignStore = {
   },
   commit(next){
     try{ SaveStorage.save(CAMPAIGN_CONFIG.saveKey,JSON.stringify(next)); return {ok:true}; }
+    catch(e){ return {ok:false,error:this.WRITE_ERROR}; }
+  },
+  // 개발 옵션의 초기화 버튼도 저장 어댑터만 통한다. 다른 localStorage 값은 건드리지 않는다.
+  remove(){
+    try{ SaveStorage.remove(CAMPAIGN_CONFIG.saveKey); return {ok:true}; }
     catch(e){ return {ok:false,error:this.WRITE_ERROR}; }
   },
   isOwnKey(key){ return key===CAMPAIGN_CONFIG.saveKey; },
@@ -220,9 +204,10 @@ const Campaign = {
     CodexLobbyUI.init(this);
     UpgradeLobbyUI.init(this);
     $('#prepare-btn').onclick=()=>this.enter();
-    $('#quit-run').onclick=()=>{
-      $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙';
+    const quit=$('#options-quit-run');
+    if(quit)quit.onclick=()=>{
       if(!RunHost.running)return;
+      OptionsUI.close();
       RunHost.holdStop();
       if(confirm(t('notice.quit.confirm')))RunHost.defeat();
     };
@@ -351,11 +336,11 @@ const Campaign = {
 
 
 /* =====================================================================
-   [OptionsUI] 옵션 팝업 — 언어 · 효과음
+   [OptionsUI] 옵션 팝업 — 언어 · 효과음 · 전투 종료 · 개발용 데이터 초기화
    ---------------------------------------------------------------------
-   [2026-09-22] 효과음 토글을 도구 메뉴의 독립 아이콘에서 이 팝업으로 옮기고,
-   더 이상 유지하지 않는 게임 설명서는 제거했다. 도구 메뉴에는 옵션 진입과
-   전투 중 종료만 남는다.
+   [2026-09-23] 톱니 버튼이 이 팝업을 바로 연다. 별도 햄버거 메뉴는 제거했고,
+   전투 종료는 전투 중에만 팝업 항목으로 표시한다. 데이터 초기화 마크업과
+   처리기는 index.html의 DEV_ONLY 구간이라 출시 빌드에서 함께 제거된다.
 
    언어 목록은 I18N.languages()에서 만든다. i18n/ 에 언어 파일이 하나 늘면
    버튼도 하나 늘고, 이 코드는 손대지 않는다. 각 언어는 자기 이름을 자기
@@ -364,14 +349,13 @@ const Campaign = {
    언어는 전투 화면에서 막는다. 전투 화면은 Screens.rerender()가 다시 그리는
    대상이 아니라 바꿔도 이전 언어가 남는다.
 
-   [2026-09-19 세션 7] 여기 있던 데이터 초기화 항목을 출시 빌드에서 걷어냈다.
    ===================================================================== */
 const OptionsUI = {
   lastFocus:null,
   languageAvailable(){ return GameState.current!=='playing'; },
   init(){
-    const toggle=$('#options-toggle'); if(!toggle) return;
-    toggle.onclick=()=>{ $('#app').classList.remove('tools-open'); $('#tools-toggle').textContent='⚙'; this.open(); };
+    const toggle=$('#tools-toggle'); if(!toggle) return;
+    toggle.onclick=()=>this.open();
     $('#options-close').onclick=()=>this.close();
     // [연출 세션 B] 패시브 해금 카드는 옵션과 무관하지만 여기서 한 번만 묶는다.
     $('#passive-reveal-close').onclick=()=>GameFeedback.closePassiveReveal();
@@ -408,6 +392,11 @@ const OptionsUI = {
       this.close();
     });
     $('#options-language-note').hidden=!languageBlocked;
+    const reset=$('#reset-data-btn');
+    if(reset)reset.disabled=GameState.current!=='lobby';
+    const resetNote=$('#reset-data-note');
+    if(resetNote)resetNote.hidden=GameState.current==='lobby';
+    syncToolButtons();
   },
   open(){
     this.lastFocus=document.activeElement;
@@ -467,14 +456,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   $('#sound-toggle').onclick=()=>GameAudio.toggle();
   $$('[data-open-characters]').forEach(b=>b.onclick=()=>Campaign.navigate('characters'));
   $$('[data-lobby-nav]').forEach(b=>b.addEventListener('click',()=>GameAudio.play()));
-
-  $('#tools-toggle').addEventListener('click', ()=>{
-    const app=$('#app');
-    const open=app.classList.toggle('tools-open');
-    $('#tools-toggle').textContent=open?'×':'⚙';
-    $('#tools-toggle').setAttribute('aria-label',t(open?'tools.closeAria':'tools.openAria'));
-    syncToolButtons();
-  });
 
   // [2026-09-07] 화면 크기가 바뀌면 표시 배율만 다시 계산한다. 판정 좌표(CONFIG.field)는
   // 고정이라 적·투사체 위치를 재스케일하던 기존 보정은 필요 없다.

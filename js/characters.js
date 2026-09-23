@@ -8,7 +8,7 @@ const CAMPAIGN_CONFIG = {
 function enemyGrowthLevel(stageId,stageConfig=CONFIG.stage){
   const id=Math.max(1,Math.floor(Number(stageId)||1));
   if(id<=3)return id;
-  const step=Math.max(1,Math.floor(Number(stageConfig.enemyGrowthLevelStep)||4));
+  const step=Math.max(1,Math.floor(Number(stageConfig.enemyGrowthLevelStep)||2));
   return 4+(id-4)*step;
 }
 function enemyCharacterGrowthScale(stat,stageId,stageConfig=CONFIG.stage){
