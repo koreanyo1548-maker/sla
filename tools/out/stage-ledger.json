@@ -1,0 +1,3881 @@
+{
+  "meta": {
+    "generatedFrom": [
+      "js/config.js",
+      "js/core.js",
+      "js/heroes.js",
+      "js/combat.js",
+      "js/board.js",
+      "js/characters.js",
+      "js/codex-data.js",
+      "js/codex.js",
+      "js/character-ui.js",
+      "js/campaign.js"
+    ],
+    "stages": 60,
+    "basis": "최초 도달 기준 — 스테이지 1..N을 각각 1회 클리어, 패배·반복 없음",
+    "playInput": {
+      "skillsUsed": 0,
+      "orders": 0,
+      "merges": 0
+    },
+    "excluded": {
+      "growthDriven": [
+        "module_levels",
+        "skill_levels",
+        "stars",
+        "guardians",
+        "owned_skills"
+      ],
+      "why": "구매 내역이 정해져야 값이 나오는 줄 — 단계 B(세션 2)의 출력이다"
+    },
+    "combatSpec": {
+      "attackUpgradeLevel": 6,
+      "damageBonus": 0.58,
+      "otherFactors": 5,
+      "partySize": 4
+    }
+  },
+  "rows": [
+    {
+      "stage": 1,
+      "waves": 10,
+      "bosses": 3,
+      "waveGold": 10,
+      "clearGold": 100,
+      "directGold": 200,
+      "cumDirectGold": 200,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 0,
+      "cumGold": 200,
+      "milestoneStarfire": 376,
+      "cumStarfire": 376,
+      "repeatGold": 290,
+      "repeatStarfire": 0,
+      "hpScale": 0.7,
+      "atkScale": 1,
+      "tiers": {
+        "stage_clear": 1,
+        "best_wave": 2,
+        "waves": 0,
+        "bosses": 0,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 1,
+          "total": 250,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 2,
+          "total": 126,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 2,
+      "waves": 20,
+      "bosses": 5,
+      "waveGold": 11,
+      "clearGold": 109,
+      "directGold": 329,
+      "cumDirectGold": 529,
+      "milestoneGold": 90,
+      "cumMilestoneGold": 90,
+      "cumGold": 619,
+      "milestoneStarfire": 332,
+      "cumStarfire": 708,
+      "repeatGold": 431,
+      "repeatStarfire": 0,
+      "hpScale": 0.8474999999999999,
+      "atkScale": 1.13,
+      "tiers": {
+        "stage_clear": 2,
+        "best_wave": 3,
+        "waves": 1,
+        "bosses": 1,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 2,
+          "total": 509,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 3,
+          "total": 199,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 1,
+          "total": 45,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 1,
+          "total": 45,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 3,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 12,
+      "clearGold": 118,
+      "directGold": 478,
+      "cumDirectGold": 1007,
+      "milestoneGold": 102,
+      "cumMilestoneGold": 192,
+      "cumGold": 1199,
+      "milestoneStarfire": 436,
+      "cumStarfire": 1144,
+      "repeatGold": 592,
+      "repeatStarfire": 0,
+      "hpScale": 1.0215199999999998,
+      "atkScale": 1.2768999999999997,
+      "tiers": {
+        "stage_clear": 3,
+        "best_wave": 5,
+        "waves": 2,
+        "bosses": 2,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 3,
+          "total": 777,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 2,
+          "total": 96,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 2,
+          "total": 96,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 4,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 13,
+      "clearGold": 128,
+      "directGold": 518,
+      "cumDirectGold": 1525,
+      "milestoneGold": 114,
+      "cumMilestoneGold": 306,
+      "cumGold": 1831,
+      "milestoneStarfire": 277,
+      "cumStarfire": 1421,
+      "repeatGold": 583,
+      "repeatStarfire": 0,
+      "hpScale": 1.4428969999999997,
+      "atkScale": 1.4428969999999997,
+      "tiers": {
+        "stage_clear": 4,
+        "best_wave": 5,
+        "waves": 3,
+        "bosses": 3,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 4,
+          "total": 1054,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 3,
+          "total": 153,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 3,
+          "total": 153,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 5,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 14,
+      "clearGold": 139,
+      "directGold": 559,
+      "cumDirectGold": 2084,
+      "milestoneGold": 65,
+      "cumMilestoneGold": 371,
+      "cumGold": 2455,
+      "milestoneStarfire": 287,
+      "cumStarfire": 1708,
+      "repeatGold": 697,
+      "repeatStarfire": 0,
+      "hpScale": 1.6304736099999992,
+      "atkScale": 1.6304736099999992,
+      "tiers": {
+        "stage_clear": 5,
+        "best_wave": 5,
+        "waves": 4,
+        "bosses": 3,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 5,
+          "total": 1341,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 4,
+          "total": 218,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 3,
+          "total": 153,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 6,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 15,
+      "clearGold": 150,
+      "directGold": 600,
+      "cumDirectGold": 2684,
+      "milestoneGold": 138,
+      "cumMilestoneGold": 509,
+      "cumGold": 3193,
+      "milestoneStarfire": 297,
+      "cumStarfire": 2005,
+      "repeatGold": 756,
+      "repeatStarfire": 0,
+      "hpScale": 1.8424351792999991,
+      "atkScale": 1.8424351792999991,
+      "tiers": {
+        "stage_clear": 6,
+        "best_wave": 5,
+        "waves": 5,
+        "bosses": 4,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 6,
+          "total": 1638,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 5,
+          "total": 291,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 4,
+          "total": 218,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 7,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 16,
+      "clearGold": 163,
+      "directGold": 643,
+      "cumDirectGold": 3327,
+      "milestoneGold": 156,
+      "cumMilestoneGold": 665,
+      "cumGold": 3992,
+      "milestoneStarfire": 307,
+      "cumStarfire": 2312,
+      "repeatGold": 737,
+      "repeatStarfire": 0,
+      "hpScale": 2.081951752608999,
+      "atkScale": 2.081951752608999,
+      "tiers": {
+        "stage_clear": 7,
+        "best_wave": 5,
+        "waves": 6,
+        "bosses": 5,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 7,
+          "total": 1945,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 6,
+          "total": 374,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 5,
+          "total": 291,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 8,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 18,
+      "clearGold": 177,
+      "directGold": 717,
+      "cumDirectGold": 4044,
+      "milestoneGold": 94,
+      "cumMilestoneGold": 759,
+      "cumGold": 4803,
+      "milestoneStarfire": 318,
+      "cumStarfire": 2630,
+      "repeatGold": 906,
+      "repeatStarfire": 0,
+      "hpScale": 2.3526054804481684,
+      "atkScale": 2.3526054804481684,
+      "tiers": {
+        "stage_clear": 8,
+        "best_wave": 5,
+        "waves": 7,
+        "bosses": 5,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 8,
+          "total": 2263,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 7,
+          "total": 468,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 5,
+          "total": 291,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 9,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 19,
+      "clearGold": 192,
+      "directGold": 762,
+      "cumDirectGold": 4806,
+      "milestoneGold": 189,
+      "cumMilestoneGold": 948,
+      "cumGold": 5754,
+      "milestoneStarfire": 329,
+      "cumStarfire": 2959,
+      "repeatGold": 856,
+      "repeatStarfire": 0,
+      "hpScale": 2.65844419290643,
+      "atkScale": 2.65844419290643,
+      "tiers": {
+        "stage_clear": 9,
+        "best_wave": 5,
+        "waves": 8,
+        "bosses": 6,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 9,
+          "total": 2592,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 8,
+          "total": 574,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 6,
+          "total": 374,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 10,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 21,
+      "clearGold": 208,
+      "directGold": 838,
+      "cumDirectGold": 5644,
+      "milestoneGold": 94,
+      "cumMilestoneGold": 1042,
+      "cumGold": 6686,
+      "milestoneStarfire": 341,
+      "cumStarfire": 3300,
+      "repeatGold": 958,
+      "repeatStarfire": 0,
+      "hpScale": 3.0040419379842658,
+      "atkScale": 3.0040419379842658,
+      "tiers": {
+        "stage_clear": 10,
+        "best_wave": 5,
+        "waves": 8,
+        "bosses": 7,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 10,
+          "total": 2933,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 8,
+          "total": 574,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 7,
+          "total": 468,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 11,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 23,
+      "clearGold": 226,
+      "directGold": 916,
+      "cumDirectGold": 6560,
+      "milestoneGold": 120,
+      "cumMilestoneGold": 1162,
+      "cumGold": 7722,
+      "milestoneStarfire": 353,
+      "cumStarfire": 3653,
+      "repeatGold": 1157,
+      "repeatStarfire": 0,
+      "hpScale": 3.39456738992222,
+      "atkScale": 3.39456738992222,
+      "tiers": {
+        "stage_clear": 11,
+        "best_wave": 5,
+        "waves": 9,
+        "bosses": 7,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 11,
+          "total": 3286,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 9,
+          "total": 694,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 7,
+          "total": 468,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 12,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 25,
+      "clearGold": 245,
+      "directGold": 995,
+      "cumDirectGold": 7555,
+      "milestoneGold": 241,
+      "cumMilestoneGold": 1403,
+      "cumGold": 8958,
+      "milestoneStarfire": 365,
+      "cumStarfire": 4018,
+      "repeatGold": 995,
+      "repeatStarfire": 0,
+      "hpScale": 3.835861150612108,
+      "atkScale": 3.835861150612108,
+      "tiers": {
+        "stage_clear": 12,
+        "best_wave": 5,
+        "waves": 10,
+        "bosses": 8,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 12,
+          "total": 3651,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 10,
+          "total": 829,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 8,
+          "total": 574,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 13,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 27,
+      "clearGold": 266,
+      "directGold": 1076,
+      "cumDirectGold": 8631,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 1403,
+      "cumGold": 10034,
+      "milestoneStarfire": 378,
+      "cumStarfire": 4396,
+      "repeatGold": 1229,
+      "repeatStarfire": 0,
+      "hpScale": 4.3345231001916815,
+      "atkScale": 4.3345231001916815,
+      "tiers": {
+        "stage_clear": 13,
+        "best_wave": 5,
+        "waves": 10,
+        "bosses": 8,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 13,
+          "total": 4029,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 10,
+          "total": 829,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 8,
+          "total": 574,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 14,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 29,
+      "clearGold": 289,
+      "directGold": 1159,
+      "cumDirectGold": 9790,
+      "milestoneGold": 153,
+      "cumMilestoneGold": 1556,
+      "cumGold": 11346,
+      "milestoneStarfire": 391,
+      "cumStarfire": 4787,
+      "repeatGold": 1279,
+      "repeatStarfire": 0,
+      "hpScale": 4.8980111032166,
+      "atkScale": 4.8980111032166,
+      "tiers": {
+        "stage_clear": 14,
+        "best_wave": 5,
+        "waves": 11,
+        "bosses": 8,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 14,
+          "total": 4420,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 11,
+          "total": 982,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 8,
+          "total": 574,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 15,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 31,
+      "clearGold": 313,
+      "directGold": 1243,
+      "cumDirectGold": 11033,
+      "milestoneGold": 120,
+      "cumMilestoneGold": 1676,
+      "cumGold": 12709,
+      "milestoneStarfire": 405,
+      "cumStarfire": 5192,
+      "repeatGold": 1416,
+      "repeatStarfire": 0,
+      "hpScale": 5.534752546634757,
+      "atkScale": 5.534752546634757,
+      "tiers": {
+        "stage_clear": 15,
+        "best_wave": 5,
+        "waves": 11,
+        "bosses": 9,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 15,
+          "total": 4825,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 11,
+          "total": 982,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 9,
+          "total": 694,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 16,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 34,
+      "clearGold": 340,
+      "directGold": 1360,
+      "cumDirectGold": 12393,
+      "milestoneGold": 173,
+      "cumMilestoneGold": 1849,
+      "cumGold": 14242,
+      "milestoneStarfire": 419,
+      "cumStarfire": 5611,
+      "repeatGold": 1495,
+      "repeatStarfire": 0,
+      "hpScale": 6.254270377697275,
+      "atkScale": 6.254270377697275,
+      "tiers": {
+        "stage_clear": 16,
+        "best_wave": 5,
+        "waves": 12,
+        "bosses": 9,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 16,
+          "total": 5244,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 12,
+          "total": 1155,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 9,
+          "total": 694,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 17,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 37,
+      "clearGold": 369,
+      "directGold": 1479,
+      "cumDirectGold": 13872,
+      "milestoneGold": 135,
+      "cumMilestoneGold": 1984,
+      "cumGold": 15856,
+      "milestoneStarfire": 433,
+      "cumStarfire": 6044,
+      "repeatGold": 1674,
+      "repeatStarfire": 0,
+      "hpScale": 7.06732552679792,
+      "atkScale": 7.06732552679792,
+      "tiers": {
+        "stage_clear": 17,
+        "best_wave": 5,
+        "waves": 12,
+        "bosses": 10,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 17,
+          "total": 5677,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 12,
+          "total": 1155,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 10,
+          "total": 829,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 18,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 40,
+      "clearGold": 400,
+      "directGold": 1600,
+      "cumDirectGold": 15472,
+      "milestoneGold": 195,
+      "cumMilestoneGold": 2179,
+      "cumGold": 17651,
+      "milestoneStarfire": 449,
+      "cumStarfire": 6493,
+      "repeatGold": 1600,
+      "repeatStarfire": 0,
+      "hpScale": 7.986077845281649,
+      "atkScale": 7.986077845281649,
+      "tiers": {
+        "stage_clear": 18,
+        "best_wave": 5,
+        "waves": 13,
+        "bosses": 10,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 18,
+          "total": 6126,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 13,
+          "total": 1350,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 10,
+          "total": 829,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 19,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 43,
+      "clearGold": 434,
+      "directGold": 1724,
+      "cumDirectGold": 17196,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 2179,
+      "cumGold": 19375,
+      "milestoneStarfire": 464,
+      "cumStarfire": 6957,
+      "repeatGold": 2097,
+      "repeatStarfire": 0,
+      "hpScale": 9.024267965168264,
+      "atkScale": 9.024267965168264,
+      "tiers": {
+        "stage_clear": 19,
+        "best_wave": 5,
+        "waves": 13,
+        "bosses": 10,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 19,
+          "total": 6590,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 13,
+          "total": 1350,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 10,
+          "total": 829,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 20,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 47,
+      "clearGold": 471,
+      "directGold": 1881,
+      "cumDirectGold": 19077,
+      "milestoneGold": 373,
+      "cumMilestoneGold": 2552,
+      "cumGold": 21629,
+      "milestoneStarfire": 481,
+      "cumStarfire": 7438,
+      "repeatGold": 1881,
+      "repeatStarfire": 0,
+      "hpScale": 10.197422800640137,
+      "atkScale": 10.197422800640137,
+      "tiers": {
+        "stage_clear": 20,
+        "best_wave": 5,
+        "waves": 14,
+        "bosses": 11,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 20,
+          "total": 7071,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 14,
+          "total": 1570,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 11,
+          "total": 982,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 21,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 51,
+      "clearGold": 511,
+      "directGold": 2041,
+      "cumDirectGold": 21118,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 2552,
+      "cumGold": 23670,
+      "milestoneStarfire": 497,
+      "cumStarfire": 7935,
+      "repeatGold": 2214,
+      "repeatStarfire": 0,
+      "hpScale": 11.523087764723353,
+      "atkScale": 11.523087764723353,
+      "tiers": {
+        "stage_clear": 21,
+        "best_wave": 5,
+        "waves": 14,
+        "bosses": 11,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 21,
+          "total": 7568,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 14,
+          "total": 1570,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 11,
+          "total": 982,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 22,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 55,
+      "clearGold": 555,
+      "directGold": 2205,
+      "cumDirectGold": 23323,
+      "milestoneGold": 173,
+      "cumMilestoneGold": 2725,
+      "cumGold": 26048,
+      "milestoneStarfire": 515,
+      "cumStarfire": 8450,
+      "repeatGold": 2454,
+      "repeatStarfire": 0,
+      "hpScale": 13.021089174137387,
+      "atkScale": 13.021089174137387,
+      "tiers": {
+        "stage_clear": 22,
+        "best_wave": 5,
+        "waves": 14,
+        "bosses": 12,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 22,
+          "total": 8083,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 14,
+          "total": 1570,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 12,
+          "total": 1155,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 23,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 60,
+      "clearGold": 602,
+      "directGold": 2402,
+      "cumDirectGold": 25725,
+      "milestoneGold": 249,
+      "cumMilestoneGold": 2974,
+      "cumGold": 28699,
+      "milestoneStarfire": 533,
+      "cumStarfire": 8983,
+      "repeatGold": 2402,
+      "repeatStarfire": 0,
+      "hpScale": 14.713830766775246,
+      "atkScale": 14.713830766775246,
+      "tiers": {
+        "stage_clear": 23,
+        "best_wave": 5,
+        "waves": 15,
+        "bosses": 12,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 23,
+          "total": 8616,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 15,
+          "total": 1819,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 12,
+          "total": 1155,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 24,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 65,
+      "clearGold": 653,
+      "directGold": 2603,
+      "cumDirectGold": 28328,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 2974,
+      "cumGold": 31302,
+      "milestoneStarfire": 552,
+      "cumStarfire": 9535,
+      "repeatGold": 2884,
+      "repeatStarfire": 0,
+      "hpScale": 16.626628766456026,
+      "atkScale": 16.626628766456026,
+      "tiers": {
+        "stage_clear": 24,
+        "best_wave": 5,
+        "waves": 15,
+        "bosses": 12,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 24,
+          "total": 9168,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 15,
+          "total": 1819,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 12,
+          "total": 1155,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 25,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 71,
+      "clearGold": 708,
+      "directGold": 2838,
+      "cumDirectGold": 31166,
+      "milestoneGold": 281,
+      "cumMilestoneGold": 3255,
+      "cumGold": 34421,
+      "milestoneStarfire": 571,
+      "cumStarfire": 10106,
+      "repeatGold": 3033,
+      "repeatStarfire": 0,
+      "hpScale": 18.78809050609531,
+      "atkScale": 18.78809050609531,
+      "tiers": {
+        "stage_clear": 25,
+        "best_wave": 5,
+        "waves": 16,
+        "bosses": 12,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 25,
+          "total": 9739,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 12,
+          "total": 1155,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 26,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 77,
+      "clearGold": 769,
+      "directGold": 3079,
+      "cumDirectGold": 34245,
+      "milestoneGold": 195,
+      "cumMilestoneGold": 3450,
+      "cumGold": 37695,
+      "milestoneStarfire": 591,
+      "cumStarfire": 10697,
+      "repeatGold": 3079,
+      "repeatStarfire": 0,
+      "hpScale": 21.230542271887696,
+      "atkScale": 21.230542271887696,
+      "tiers": {
+        "stage_clear": 26,
+        "best_wave": 5,
+        "waves": 16,
+        "bosses": 13,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 26,
+          "total": 10330,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 13,
+          "total": 1350,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 27,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 83,
+      "clearGold": 834,
+      "directGold": 3324,
+      "cumDirectGold": 37569,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 3450,
+      "cumGold": 41019,
+      "milestoneStarfire": 611,
+      "cumStarfire": 11308,
+      "repeatGold": 3324,
+      "repeatStarfire": 0,
+      "hpScale": 23.990512767233096,
+      "atkScale": 23.990512767233096,
+      "tiers": {
+        "stage_clear": 27,
+        "best_wave": 5,
+        "waves": 16,
+        "bosses": 13,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 27,
+          "total": 10941,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 13,
+          "total": 1350,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 28,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 90,
+      "clearGold": 905,
+      "directGold": 3605,
+      "cumDirectGold": 41174,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 3450,
+      "cumGold": 44624,
+      "milestoneStarfire": 633,
+      "cumStarfire": 11941,
+      "repeatGold": 4143,
+      "repeatStarfire": 0,
+      "hpScale": 27.109279426973394,
+      "atkScale": 27.109279426973394,
+      "tiers": {
+        "stage_clear": 28,
+        "best_wave": 5,
+        "waves": 16,
+        "bosses": 13,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 28,
+          "total": 11574,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 13,
+          "total": 1350,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 29,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 98,
+      "clearGold": 982,
+      "directGold": 3922,
+      "cumDirectGold": 45096,
+      "milestoneGold": 538,
+      "cumMilestoneGold": 3988,
+      "cumGold": 49084,
+      "milestoneStarfire": 655,
+      "cumStarfire": 12596,
+      "repeatGold": 3922,
+      "repeatStarfire": 0,
+      "hpScale": 30.633485752479935,
+      "atkScale": 30.633485752479935,
+      "tiers": {
+        "stage_clear": 29,
+        "best_wave": 5,
+        "waves": 17,
+        "bosses": 14,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 29,
+          "total": 12229,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 14,
+          "total": 1570,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 30,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 107,
+      "clearGold": 1065,
+      "directGold": 4275,
+      "cumDirectGold": 49371,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 3988,
+      "cumGold": 53359,
+      "milestoneStarfire": 678,
+      "cumStarfire": 13274,
+      "repeatGold": 4275,
+      "repeatStarfire": 0,
+      "hpScale": 34.61583890030232,
+      "atkScale": 34.61583890030232,
+      "tiers": {
+        "stage_clear": 30,
+        "best_wave": 5,
+        "waves": 17,
+        "bosses": 14,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 30,
+          "total": 12907,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 14,
+          "total": 1570,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 31,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 116,
+      "clearGold": 1156,
+      "directGold": 4636,
+      "cumDirectGold": 54007,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 3988,
+      "cumGold": 57995,
+      "milestoneStarfire": 702,
+      "cumStarfire": 13976,
+      "repeatGold": 4995,
+      "repeatStarfire": 0,
+      "hpScale": 39.115897957341616,
+      "atkScale": 39.115897957341616,
+      "tiers": {
+        "stage_clear": 31,
+        "best_wave": 5,
+        "waves": 17,
+        "bosses": 14,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 31,
+          "total": 13609,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 14,
+          "total": 1570,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 32,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 125,
+      "clearGold": 1254,
+      "directGold": 5004,
+      "cumDirectGold": 59011,
+      "milestoneGold": 359,
+      "cumMilestoneGold": 4347,
+      "cumGold": 63358,
+      "milestoneStarfire": 726,
+      "cumStarfire": 14702,
+      "repeatGold": 5253,
+      "repeatStarfire": 0,
+      "hpScale": 44.200964691796024,
+      "atkScale": 44.200964691796024,
+      "tiers": {
+        "stage_clear": 32,
+        "best_wave": 5,
+        "waves": 18,
+        "bosses": 14,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 32,
+          "total": 14335,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 14,
+          "total": 1570,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 33,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 136,
+      "clearGold": 1361,
+      "directGold": 5441,
+      "cumDirectGold": 64452,
+      "milestoneGold": 249,
+      "cumMilestoneGold": 4596,
+      "cumGold": 69048,
+      "milestoneStarfire": 752,
+      "cumStarfire": 15454,
+      "repeatGold": 5441,
+      "repeatStarfire": 0,
+      "hpScale": 49.9470901017295,
+      "atkScale": 49.9470901017295,
+      "tiers": {
+        "stage_clear": 33,
+        "best_wave": 5,
+        "waves": 18,
+        "bosses": 15,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 33,
+          "total": 15087,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 15,
+          "total": 1819,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 34,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 148,
+      "clearGold": 1476,
+      "directGold": 5916,
+      "cumDirectGold": 70368,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 4596,
+      "cumGold": 74964,
+      "milestoneStarfire": 778,
+      "cumStarfire": 16232,
+      "repeatGold": 5916,
+      "repeatStarfire": 0,
+      "hpScale": 56.44021181495434,
+      "atkScale": 56.44021181495434,
+      "tiers": {
+        "stage_clear": 34,
+        "best_wave": 5,
+        "waves": 18,
+        "bosses": 15,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 34,
+          "total": 15865,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 15,
+          "total": 1819,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 35,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 160,
+      "clearGold": 1602,
+      "directGold": 6402,
+      "cumDirectGold": 76770,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 4596,
+      "cumGold": 81366,
+      "milestoneStarfire": 805,
+      "cumStarfire": 17037,
+      "repeatGold": 6808,
+      "repeatStarfire": 0,
+      "hpScale": 63.77743935089839,
+      "atkScale": 63.77743935089839,
+      "tiers": {
+        "stage_clear": 35,
+        "best_wave": 5,
+        "waves": 18,
+        "bosses": 15,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 35,
+          "total": 16670,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 15,
+          "total": 1819,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 36,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 174,
+      "clearGold": 1738,
+      "directGold": 6958,
+      "cumDirectGold": 83728,
+      "milestoneGold": 406,
+      "cumMilestoneGold": 5002,
+      "cumGold": 88730,
+      "milestoneStarfire": 833,
+      "cumStarfire": 17870,
+      "repeatGold": 7239,
+      "repeatStarfire": 0,
+      "hpScale": 72.06850646651517,
+      "atkScale": 72.06850646651517,
+      "tiers": {
+        "stage_clear": 36,
+        "best_wave": 5,
+        "waves": 19,
+        "bosses": 15,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 36,
+          "total": 17503,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 15,
+          "total": 1819,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 37,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 189,
+      "clearGold": 1886,
+      "directGold": 7556,
+      "cumDirectGold": 91284,
+      "milestoneGold": 281,
+      "cumMilestoneGold": 5283,
+      "cumGold": 96567,
+      "milestoneStarfire": 863,
+      "cumStarfire": 18733,
+      "repeatGold": 7556,
+      "repeatStarfire": 0,
+      "hpScale": 81.43741230716213,
+      "atkScale": 81.43741230716213,
+      "tiers": {
+        "stage_clear": 37,
+        "best_wave": 5,
+        "waves": 19,
+        "bosses": 16,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 37,
+          "total": 18366,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 38,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 205,
+      "clearGold": 2046,
+      "directGold": 8196,
+      "cumDirectGold": 99480,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 5283,
+      "cumGold": 104763,
+      "milestoneStarfire": 893,
+      "cumStarfire": 19626,
+      "repeatGold": 8196,
+      "repeatStarfire": 0,
+      "hpScale": 92.02427590709321,
+      "atkScale": 92.02427590709321,
+      "tiers": {
+        "stage_clear": 38,
+        "best_wave": 5,
+        "waves": 19,
+        "bosses": 16,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 38,
+          "total": 19259,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 39,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 222,
+      "clearGold": 2220,
+      "directGold": 8880,
+      "cumDirectGold": 108360,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 5283,
+      "cumGold": 113643,
+      "milestoneStarfire": 924,
+      "cumStarfire": 20550,
+      "repeatGold": 9339,
+      "repeatStarfire": 0,
+      "hpScale": 103.98743177501532,
+      "atkScale": 103.98743177501532,
+      "tiers": {
+        "stage_clear": 39,
+        "best_wave": 5,
+        "waves": 19,
+        "bosses": 16,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 39,
+          "total": 20183,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 40,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 241,
+      "clearGold": 2409,
+      "directGold": 9639,
+      "cumDirectGold": 117999,
+      "milestoneGold": 459,
+      "cumMilestoneGold": 5742,
+      "cumGold": 123741,
+      "milestoneStarfire": 956,
+      "cumStarfire": 21506,
+      "repeatGold": 9639,
+      "repeatStarfire": 0,
+      "hpScale": 117.5057979057673,
+      "atkScale": 117.5057979057673,
+      "tiers": {
+        "stage_clear": 40,
+        "best_wave": 5,
+        "waves": 20,
+        "bosses": 16,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 40,
+          "total": 21139,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 20,
+          "total": 3642,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 41,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 261,
+      "clearGold": 2613,
+      "directGold": 10443,
+      "cumDirectGold": 128442,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 5742,
+      "cumGold": 134184,
+      "milestoneStarfire": 990,
+      "cumStarfire": 22496,
+      "repeatGold": 10761,
+      "repeatStarfire": 0,
+      "hpScale": 132.78155163351704,
+      "atkScale": 132.78155163351704,
+      "tiers": {
+        "stage_clear": 41,
+        "best_wave": 5,
+        "waves": 20,
+        "bosses": 16,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 41,
+          "total": 22129,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 20,
+          "total": 3642,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 16,
+          "total": 2100,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 42,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 284,
+      "clearGold": 2835,
+      "directGold": 11355,
+      "cumDirectGold": 139797,
+      "milestoneGold": 318,
+      "cumMilestoneGold": 6060,
+      "cumGold": 145857,
+      "milestoneStarfire": 1024,
+      "cumStarfire": 23520,
+      "repeatGold": 11355,
+      "repeatStarfire": 0,
+      "hpScale": 150.04315334587423,
+      "atkScale": 150.04315334587423,
+      "tiers": {
+        "stage_clear": 42,
+        "best_wave": 5,
+        "waves": 20,
+        "bosses": 17,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 42,
+          "total": 23153,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 20,
+          "total": 3642,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 43,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 308,
+      "clearGold": 3076,
+      "directGold": 12316,
+      "cumDirectGold": 152113,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 6060,
+      "cumGold": 158173,
+      "milestoneStarfire": 1060,
+      "cumStarfire": 24580,
+      "repeatGold": 12835,
+      "repeatStarfire": 0,
+      "hpScale": 169.54876328083787,
+      "atkScale": 169.54876328083787,
+      "tiers": {
+        "stage_clear": 43,
+        "best_wave": 5,
+        "waves": 20,
+        "bosses": 17,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 43,
+          "total": 24213,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 20,
+          "total": 3642,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 44,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 334,
+      "clearGold": 3338,
+      "directGold": 13358,
+      "cumDirectGold": 165471,
+      "milestoneGold": 519,
+      "cumMilestoneGold": 6579,
+      "cumGold": 172050,
+      "milestoneStarfire": 1097,
+      "cumStarfire": 25677,
+      "repeatGold": 13358,
+      "repeatStarfire": 0,
+      "hpScale": 191.59010250734678,
+      "atkScale": 191.59010250734678,
+      "tiers": {
+        "stage_clear": 44,
+        "best_wave": 5,
+        "waves": 21,
+        "bosses": 17,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 44,
+          "total": 25310,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 21,
+          "total": 4161,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 45,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 362,
+      "clearGold": 3622,
+      "directGold": 14482,
+      "cumDirectGold": 179953,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 6579,
+      "cumGold": 186532,
+      "milestoneStarfire": 1136,
+      "cumStarfire": 26813,
+      "repeatGold": 14482,
+      "repeatStarfire": 0,
+      "hpScale": 216.49681583330184,
+      "atkScale": 216.49681583330184,
+      "tiers": {
+        "stage_clear": 45,
+        "best_wave": 5,
+        "waves": 21,
+        "bosses": 17,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 45,
+          "total": 26446,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 21,
+          "total": 4161,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 46,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 393,
+      "clearGold": 3930,
+      "directGold": 15720,
+      "cumDirectGold": 195673,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 6579,
+      "cumGold": 202252,
+      "milestoneStarfire": 1176,
+      "cumStarfire": 27989,
+      "repeatGold": 16079,
+      "repeatStarfire": 0,
+      "hpScale": 244.64140189163106,
+      "atkScale": 244.64140189163106,
+      "tiers": {
+        "stage_clear": 46,
+        "best_wave": 5,
+        "waves": 21,
+        "bosses": 17,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 46,
+          "total": 27622,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 21,
+          "total": 4161,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 17,
+          "total": 2418,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 47,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 426,
+      "clearGold": 4264,
+      "directGold": 17044,
+      "cumDirectGold": 212717,
+      "milestoneGold": 359,
+      "cumMilestoneGold": 6938,
+      "cumGold": 219655,
+      "milestoneStarfire": 1217,
+      "cumStarfire": 29206,
+      "repeatGold": 17044,
+      "repeatStarfire": 0,
+      "hpScale": 276.4447841375431,
+      "atkScale": 276.4447841375431,
+      "tiers": {
+        "stage_clear": 47,
+        "best_wave": 5,
+        "waves": 21,
+        "bosses": 18,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 47,
+          "total": 28839,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 21,
+          "total": 4161,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 48,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 463,
+      "clearGold": 4626,
+      "directGold": 18516,
+      "cumDirectGold": 231233,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 6938,
+      "cumGold": 238171,
+      "milestoneStarfire": 1259,
+      "cumStarfire": 30465,
+      "repeatGold": 19102,
+      "repeatStarfire": 0,
+      "hpScale": 312.3826060754236,
+      "atkScale": 312.3826060754236,
+      "tiers": {
+        "stage_clear": 48,
+        "best_wave": 5,
+        "waves": 21,
+        "bosses": 18,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 48,
+          "total": 30098,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 21,
+          "total": 4161,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 49,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 502,
+      "clearGold": 5019,
+      "directGold": 20079,
+      "cumDirectGold": 251312,
+      "milestoneGold": 586,
+      "cumMilestoneGold": 7524,
+      "cumGold": 258836,
+      "milestoneStarfire": 1303,
+      "cumStarfire": 31768,
+      "repeatGold": 20079,
+      "repeatStarfire": 0,
+      "hpScale": 352.9923448652287,
+      "atkScale": 352.9923448652287,
+      "tiers": {
+        "stage_clear": 49,
+        "best_wave": 5,
+        "waves": 22,
+        "bosses": 18,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 49,
+          "total": 31401,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 22,
+          "total": 4747,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 50,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 545,
+      "clearGold": 5446,
+      "directGold": 21796,
+      "cumDirectGold": 273108,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 7524,
+      "cumGold": 280632,
+      "milestoneStarfire": 1349,
+      "cumStarfire": 33117,
+      "repeatGold": 21796,
+      "repeatStarfire": 0,
+      "hpScale": 398.88134969770834,
+      "atkScale": 398.88134969770834,
+      "tiers": {
+        "stage_clear": 50,
+        "best_wave": 5,
+        "waves": 22,
+        "bosses": 18,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 50,
+          "total": 32750,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 22,
+          "total": 4747,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 51,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 591,
+      "clearGold": 5909,
+      "directGold": 23639,
+      "cumDirectGold": 296747,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 7524,
+      "cumGold": 304271,
+      "milestoneStarfire": 1396,
+      "cumStarfire": 34513,
+      "repeatGold": 24045,
+      "repeatStarfire": 0,
+      "hpScale": 450.7359251584104,
+      "atkScale": 450.7359251584104,
+      "tiers": {
+        "stage_clear": 51,
+        "best_wave": 5,
+        "waves": 22,
+        "bosses": 18,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 51,
+          "total": 34146,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 22,
+          "total": 4747,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 18,
+          "total": 2777,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 52,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 641,
+      "clearGold": 6411,
+      "directGold": 25641,
+      "cumDirectGold": 322388,
+      "milestoneGold": 406,
+      "cumMilestoneGold": 7930,
+      "cumGold": 330318,
+      "milestoneStarfire": 1445,
+      "cumStarfire": 35958,
+      "repeatGold": 25641,
+      "repeatStarfire": 0,
+      "hpScale": 509.3315954290037,
+      "atkScale": 509.3315954290037,
+      "tiers": {
+        "stage_clear": 52,
+        "best_wave": 5,
+        "waves": 22,
+        "bosses": 19,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 52,
+          "total": 35591,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 22,
+          "total": 4747,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 53,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 696,
+      "clearGold": 6956,
+      "directGold": 27836,
+      "cumDirectGold": 350224,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 7930,
+      "cumGold": 358154,
+      "milestoneStarfire": 1496,
+      "cumStarfire": 37454,
+      "repeatGold": 27836,
+      "repeatStarfire": 0,
+      "hpScale": 575.5447028347742,
+      "atkScale": 575.5447028347742,
+      "tiers": {
+        "stage_clear": 53,
+        "best_wave": 5,
+        "waves": 22,
+        "bosses": 19,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 53,
+          "total": 37087,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 22,
+          "total": 4747,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 54,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 755,
+      "clearGold": 7547,
+      "directGold": 30197,
+      "cumDirectGold": 380421,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 7930,
+      "cumGold": 388351,
+      "milestoneStarfire": 1548,
+      "cumStarfire": 39002,
+      "repeatGold": 30859,
+      "repeatStarfire": 0,
+      "hpScale": 650.3655142032947,
+      "atkScale": 650.3655142032947,
+      "tiers": {
+        "stage_clear": 54,
+        "best_wave": 5,
+        "waves": 22,
+        "bosses": 19,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 54,
+          "total": 38635,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 22,
+          "total": 4747,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 55,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 819,
+      "clearGold": 8189,
+      "directGold": 32759,
+      "cumDirectGold": 413180,
+      "milestoneGold": 662,
+      "cumMilestoneGold": 8592,
+      "cumGold": 421772,
+      "milestoneStarfire": 1602,
+      "cumStarfire": 40604,
+      "repeatGold": 32759,
+      "repeatStarfire": 0,
+      "hpScale": 734.913031049723,
+      "atkScale": 734.913031049723,
+      "tiers": {
+        "stage_clear": 55,
+        "best_wave": 5,
+        "waves": 23,
+        "bosses": 19,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 55,
+          "total": 40237,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 23,
+          "total": 5409,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 56,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 888,
+      "clearGold": 8885,
+      "directGold": 35525,
+      "cumDirectGold": 448705,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 8592,
+      "cumGold": 457297,
+      "milestoneStarfire": 1658,
+      "cumStarfire": 42262,
+      "repeatGold": 35525,
+      "repeatStarfire": 0,
+      "hpScale": 830.4517250861868,
+      "atkScale": 830.4517250861868,
+      "tiers": {
+        "stage_clear": 56,
+        "best_wave": 5,
+        "waves": 23,
+        "bosses": 19,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 56,
+          "total": 41895,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 23,
+          "total": 5409,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 57,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 964,
+      "clearGold": 9640,
+      "directGold": 38560,
+      "cumDirectGold": 487265,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 8592,
+      "cumGold": 495857,
+      "milestoneStarfire": 1716,
+      "cumStarfire": 43978,
+      "repeatGold": 39019,
+      "repeatStarfire": 0,
+      "hpScale": 938.410449347391,
+      "atkScale": 938.410449347391,
+      "tiers": {
+        "stage_clear": 57,
+        "best_wave": 5,
+        "waves": 23,
+        "bosses": 19,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 57,
+          "total": 43611,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 23,
+          "total": 5409,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 19,
+          "total": 3183,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 58,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 1046,
+      "clearGold": 10459,
+      "directGold": 41839,
+      "cumDirectGold": 529104,
+      "milestoneGold": 459,
+      "cumMilestoneGold": 9051,
+      "cumGold": 538155,
+      "milestoneStarfire": 1776,
+      "cumStarfire": 45754,
+      "repeatGold": 41839,
+      "repeatStarfire": 0,
+      "hpScale": 1060.4038077625519,
+      "atkScale": 1060.4038077625519,
+      "tiers": {
+        "stage_clear": 58,
+        "best_wave": 5,
+        "waves": 23,
+        "bosses": 20,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 58,
+          "total": 45387,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 23,
+          "total": 5409,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 20,
+          "total": 3642,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 59,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 1135,
+      "clearGold": 11348,
+      "directGold": 45398,
+      "cumDirectGold": 574502,
+      "milestoneGold": 0,
+      "cumMilestoneGold": 9051,
+      "cumGold": 583553,
+      "milestoneStarfire": 1839,
+      "cumStarfire": 47593,
+      "repeatGold": 46146,
+      "repeatStarfire": 0,
+      "hpScale": 1198.2563027716835,
+      "atkScale": 1198.2563027716835,
+      "tiers": {
+        "stage_clear": 59,
+        "best_wave": 5,
+        "waves": 23,
+        "bosses": 20,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 59,
+          "total": 47226,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 23,
+          "total": 5409,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 20,
+          "total": 3642,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    },
+    {
+      "stage": 60,
+      "waves": 30,
+      "bosses": 5,
+      "waveGold": 1231,
+      "clearGold": 12313,
+      "directGold": 49243,
+      "cumDirectGold": 623745,
+      "milestoneGold": 748,
+      "cumMilestoneGold": 9799,
+      "cumGold": 633544,
+      "milestoneStarfire": 1903,
+      "cumStarfire": 49496,
+      "repeatGold": 49243,
+      "repeatStarfire": 0,
+      "hpScale": 1354.0296221320023,
+      "atkScale": 1354.0296221320023,
+      "tiers": {
+        "stage_clear": 60,
+        "best_wave": 5,
+        "waves": 24,
+        "bosses": 20,
+        "skills_used": 0,
+        "orders": 0,
+        "merges": 0
+      },
+      "yields": {
+        "stage_clear": {
+          "tiers": 60,
+          "total": 49129,
+          "currencyId": "starfire"
+        },
+        "best_wave": {
+          "tiers": 5,
+          "total": 367,
+          "currencyId": "starfire"
+        },
+        "waves": {
+          "tiers": 24,
+          "total": 6157,
+          "currencyId": "gold"
+        },
+        "bosses": {
+          "tiers": 20,
+          "total": 3642,
+          "currencyId": "gold"
+        },
+        "skills_used": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "orders": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        },
+        "merges": {
+          "tiers": 0,
+          "total": 0,
+          "currencyId": "gold"
+        }
+      }
+    }
+  ]
+}
