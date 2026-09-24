@@ -18,14 +18,14 @@ const RunHost = {
     const game=this.current;
     if(!game) return;
     game.running=false;
-    game.generator.stopHold();
+    game.generator.stopHold();game.tutorial.stop();game.pauseReasons.clear();GamePresentation.resetPause();
   },
   // 다른 창에서 진행이 바뀐 경우 — 연출까지 되돌린 뒤 멈춘다.
   abort(){
     this.current?.resetCinematic();
     this.halt();
   },
-  defeat(){ this.current?.onDefeat(true); },
+  defeat(){ OptionsUI.close();this.current?.onDefeat(true); },
   relayout(){ this.current?.layoutField(); },
   holdStart(){ this.current?.generator.startHold(); },
   holdStop(){ this.current?.generator.stopHold(); },
@@ -223,7 +223,7 @@ const Campaign = {
     });
   },
   navigate(name){
-    if(!['home','characters','skills','upgrade','relics'].includes(name))name='home';
+    if(!['home','characters','skills','upgrade'].includes(name))name='home';
     this.currentLobbyPage=name;
     $('#app').dataset.lobbyPage=name;
     if(name!=='characters')CharacterLobbyUI.close();
@@ -367,7 +367,7 @@ const OptionsUI = {
       if(event.key==='Escape'){ event.preventDefault(); this.close(); }
       // 다른 모달(캐릭터·주문서·소환)과 같이 Tab을 팝업 안에 가둔다.
       if(event.key==='Tab'){
-        const focusable=[...panel.querySelectorAll('button:not(:disabled)')];
+        const focusable=[...panel.querySelectorAll('button:not(:disabled),input:not(:disabled)')];
         if(!focusable.length) return;
         event.preventDefault();
         const index=focusable.indexOf(document.activeElement);
@@ -402,10 +402,12 @@ const OptionsUI = {
     this.lastFocus=document.activeElement;
     this.render();
     $('#options-panel').hidden=false;
+    RunHost.current?.setPause('options',true);
     $('#options-close').focus();
   },
   close(){
     $('#options-panel').hidden=true;
+    RunHost.current?.setPause('options',false);
     if(this.lastFocus?.isConnected) this.lastFocus.focus();
     this.lastFocus=null;
   },
@@ -452,7 +454,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     orientation:window.innerWidth>window.innerHeight?'landscape':'portrait',
     isNew,
   });
-  GameArt.init();GameAudio.init();Campaign.init();
+  GameArt.init();GameAudio.init();Campaign.init();GamePresentation.init();
   $('#sound-toggle').onclick=()=>GameAudio.toggle();
   $$('[data-open-characters]').forEach(b=>b.onclick=()=>Campaign.navigate('characters'));
   $$('[data-lobby-nav]').forEach(b=>b.addEventListener('click',()=>GameAudio.play()));

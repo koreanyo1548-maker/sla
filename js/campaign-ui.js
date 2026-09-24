@@ -49,7 +49,7 @@ const CampaignView={
   },
   reward(r){
     this.rewardState={kind:'reward',r};
-    $('#retry-btn').disabled=false;
+    $('#retry-btn').disabled=false;$('#result-upgrade').disabled=false;
     // [연출 세션 B] 최고 기록을 갱신했으면 골드 옆에 스탬프를 찍는다.
     const stamp=r.newBestWave||r.newBestScore?`<span class="new-best">${t('growth.newBest')}</span>`:'';
     $('#result-reward').innerHTML=`<span>${t('result.reward.gold')}</span><strong><em data-count>+${I18N.num(r.total)}</em>${stamp}</strong><div class="reward-breakdown"><span>${t('result.reward.waves')} <b>+${I18N.num(r.waveGold)}</b></span><span>${t('result.reward.bonus')} <b>+${I18N.num(r.bonus)}</b></span></div><p>${r.clear?t('result.reward.unlocked',{stage:r.stageId+1}):t('result.reward.retryHint')}</p><small>${t('result.reward.done')}</small>`;
@@ -65,7 +65,7 @@ const CampaignView={
       ? t('result.starfireHint')
       : ready ? t('result.milestoneHint',{n:ready}) : '';
   },
-  rewardFailure(onRetry){this.rewardState={kind:'failure',onRetry};$('#result-reward').innerHTML=`<p>${t('result.reward.failed')}</p><button class="secondary" id="retry-reward">${t('result.reward.retrySave')}</button>`;$('#retry-reward').onclick=onRetry;$('#retry-btn').disabled=true;},
+  rewardFailure(onRetry){this.rewardState={kind:'failure',onRetry};$('#result-reward').innerHTML=`<p>${t('result.reward.failed')}</p><button class="secondary" id="retry-reward">${t('result.reward.retrySave')}</button>`;$('#retry-reward').onclick=onRetry;$('#retry-btn').disabled=true;$('#result-upgrade').disabled=true;},
 };
 
 /* =====================================================================
@@ -83,7 +83,7 @@ const UpgradeLobbyUI={
   trackIcon(state,track){
     if(track.kind==='module')return GameArt.module(track.moduleId,'module-mini');
     const key=state.skillInventory.equipped[track.slot];
-    return `<span class="uc-skill-icon" style="--icon-color:${SKILL_DEFS[key]?.color||PALETTE.skill}">${SKILL_DEFS[key]?.icon||'◆'}</span>`;
+    return `<span class="uc-skill-icon" style="--icon-color:${SKILL_DEFS[key]?.color||PALETTE.skill}">${GameArt.skill(key)}</span>`;
   },
   trackName(state,track){
     if(track.kind==='module')return t(MISSILE_DEFS[track.moduleId].labelKey);

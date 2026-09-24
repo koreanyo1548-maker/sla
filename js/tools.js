@@ -11,100 +11,104 @@ function replaceObjectContents(target,source){
   Object.keys(target).forEach(key=>delete target[key]);
   Object.assign(target,cloneConfig(source));
 }
-/* =====================================================================
-   [TutorialSystem] 스테이지 1 최초 입장 — 실제 행동에 반응하는 4단계 안내
-   ===================================================================== */
+/* [2026-09-24] First-run guided forge: two generated pieces → one manual merge
+   → an order → a skill. Combat waits during the first three actions. The short
+   skill lesson uses CONFIG.onboarding.skillTimeScale, then normal time resumes.
+   No save/economy schema changes; the existing tutorialCompleted flag is used. */
 class TutorialSystem {
   constructor(game){
-    this.game=game;
-    this.active=false;
-    this.step='';
-    this.focused=[];
+    this.game=game;this.active=false;this.step='';this.focused=[];this.generated=0;
     document.querySelectorAll('.tutorial-focus').forEach(el=>el.classList.remove('tutorial-focus'));
-    const layer=$('#tutorial-layer');
-    if(layer) layer.hidden=true;
-    const skip=$('#tutorial-skip');
-    if(skip) skip.onclick=()=>this.complete(true);
+    $('#tutorial-layer').hidden=true;
+    $('#tutorial-skip').onclick=()=>this.complete(true);
   }
   start(){
-    if(this.game.stageId!==1 || this.game.host.tutorialDone()) return;
-    this.active=true;
-    this.setStep('energy');
+    if(this.game.stageId!==1||this.game.host.tutorialDone())return;
+    const slot=this.game.orderSheetSystem.slots[0];
+    if(!slot)return;
+    this.practiceColor=slot.requirements[0].color;
+    // The first order retains its missile/stat; only this guided lesson uses one material.
+    slot.requirements=[{color:this.practiceColor,need:1,role:'designated'}];slot.grade=1;
+    this.active=true;this.generated=0;this.mergeStart=this.game.stats.merges;this.setStep('energy');
   }
-  /* [2026-09-18 세션 3B] 문구는 문자열 테이블에 있고 여기에는 키와 자리표시자 값만 둔다.
-     CONFIG 수치를 문장에 박지 않으므로 밸런스를 바꿔도 안내가 따로 낡지 않는다. */
-  data(){
-    return {
-      energy:{index:'1 / 4',titleKey:'tutorial.energy.title',bodyKey:'tutorial.energy.body',params:{cost:CONFIG.generator.costPerPiece,points:CONFIG.scoring.pointsPerGrant,energy:CONFIG.scoring.energyPerGrant},targets:['#energy-status-row','#generator-btn'],anchor:'#generator-btn'},
-      order:{index:'2 / 4',titleKey:'tutorial.order.title',bodyKey:'tutorial.order.body',targets:['#order-sheet-panel','#board'],anchor:'#order-sheet-panel'},
-      ready:{index:'3 / 4',titleKey:'tutorial.ready.title',bodyKey:'tutorial.ready.body',targets:['.order-card.ready'],anchor:'.order-card.ready'},
-      skill:{index:'4 / 4',titleKey:'tutorial.skill.title',bodyKey:'tutorial.skill.body',params:{step:CONFIG.skillEnergy.costStep},targets:['#skill-row'],anchor:'#skill-row'},
-    }[this.step];
+  allows(action){
+    if(!this.active||this.step==='skill')return true;
+    if(this.step==='energy')return action==='generate';
+    if(this.step==='merge')return action==='board';
+    return this.step==='order'&&action==='order';
+  }
+  holdsCombat(){return this.active&&this.step!=='skill';}
+  practicePiece(){
+    if(!this.active||this.step!=='energy'||this.generated>=CONFIG.onboarding.practicePieces)return null;
+    return {type:'color',color:this.practiceColor,tier:0,golden:false};
   }
   setStep(step){
-    if(!this.active) return;
-    this.step=step;
-    Analytics.track('tutorial_step',{step,skipped:0});
-    this.render();
+    this.game.generator.stopHold();this.step=step;
+    Analytics.track('tutorial_step',{step,skipped:0});this.render();
   }
-  clearFocus(){
-    this.focused.forEach(el=>el.classList.remove('tutorial-focus'));
-    this.focused=[];
-  }
+  clearFocus(){this.focused.forEach(el=>el.classList.remove('tutorial-focus'));this.focused=[];}
   render(){
-    const layer=$('#tutorial-layer'),card=$('#tutorial-card'),d=this.data();
-    if(!layer||!card||!d) return;
+    if(!this.active)return;
+    this.game.updateEnergyUi();this.game.orderSheetSystem.render();this.clearFocus();
+    const steps=['energy','merge','order','skill'],index=steps.indexOf(this.step);
+    $('#tutorial-step').textContent=t('tutorial.step',{index:`${index+1} / ${steps.length}`});
+    $('#tutorial-title').textContent=t('polish.tutorial.'+this.step+'.title');
+    $('#tutorial-body').textContent=t('polish.tutorial.'+this.step+'.body',{n:CONFIG.onboarding.practicePieces});
+    $('#tutorial-dots').innerHTML=steps.map((_,i)=>`<i class="${i<=index?'lit':''}"></i>`).join('');
+    $('#tutorial-layer').hidden=false;
+    this.positionGuide();
+  }
+  positionGuide(){
+    if(!this.active)return;
     this.clearFocus();
-    d.targets.forEach(selector=>document.querySelectorAll(selector).forEach(el=>{
-      el.classList.add('tutorial-focus');this.focused.push(el);
-    }));
-    $('#tutorial-step').textContent=t('tutorial.step',{index:d.index});
-    $('#tutorial-title').textContent=t(d.titleKey);
-    $('#tutorial-body').textContent=t(d.bodyKey,d.params);
-    layer.hidden=false;
-    requestAnimationFrame(()=>this.placeCard(document.querySelector(d.anchor)));
+    let target=null,from=null,to=null;
+    if(this.step==='energy')target=$('#generator-btn');
+    if(this.step==='merge'){
+      const pair=this.game.mergeBoard.findMergePair();
+      if(pair){from=this.game.mergeBoard.cellEls[pair[0]];to=this.game.mergeBoard.cellEls[pair[1]];target=from;this.focus(to);}
+    }
+    if(this.step==='order')target=$('.order-card[data-slot="0"] .oc-apply');
+    if(this.step==='skill')target=$('.skill-btn:not(:disabled)');
+    if(target)this.focus(target);
+    const card=$('#tutorial-card'),wrap=$('#combat-wrap').getBoundingClientRect();
+    const width=card.offsetWidth||280,height=card.offsetHeight||140;
+    card.style.left=Math.round(clamp(wrap.left+(wrap.width-width)/2,8,innerWidth-width-8))+'px';
+    const targetTop=target?.getBoundingClientRect().top??innerHeight;
+    const preferredTop=Math.min(wrap.top+18,targetTop-height-14);
+    card.style.top=Math.round(clamp(preferredTop,8,Math.max(8,innerHeight-height-8)))+'px';
+    const guide=$('#tutorial-guide');guide.hidden=!target;
+    if(!target)return;
+    const rect=target.getBoundingClientRect(),dest=to?.getBoundingClientRect();
+    guide.innerHTML=GameArt.icon('hand');guide.dataset.motion=from?'merge':'tap';
+    guide.style.left=rect.left+rect.width*.55+'px';guide.style.top=rect.top+rect.height*.6+'px';
+    guide.style.setProperty('--guide-dx',dest?dest.left+dest.width/2-rect.left-rect.width/2+'px':'0px');
+    guide.style.setProperty('--guide-dy',dest?dest.top+dest.height/2-rect.top-rect.height/2+'px':'0px');
   }
-  placeCard(target){
-    const card=$('#tutorial-card');
-    if(!card) return;
-    const margin=10,viewW=window.innerWidth,viewH=window.innerHeight;
-    const r=target?.getBoundingClientRect?.();
-    const cardW=card.offsetWidth,cardH=card.offsetHeight;
-    let left=r ? clamp(r.left+r.width/2-cardW/2,12,viewW-cardW-12) : (viewW-cardW)/2;
-    let top=r && r.top-cardH-margin>=8 ? r.top-cardH-margin : r ? r.bottom+margin : (viewH-cardH)/2;
-    top=clamp(top,8,viewH-cardH-8);
-    card.style.left=`${Math.round(left)}px`;
-    card.style.top=`${Math.round(top)}px`;
-  }
-  hasReadyOrder(){
-    return this.game.orderSheetSystem.slots.some(slot=>slot&&this.game.orderSheetSystem.preview(slot).ready);
-  }
+  focus(el){if(el){el.classList.add('tutorial-focus');this.focused.push(el);}}
   onGenerated(){
-    if(!this.active) return;
-    if(this.step==='energy'){
-      this.setStep('order');
-      setTimeout(()=>this.checkOrderReady(),500);
-    } else this.checkOrderReady();
+    if(!this.active)return;
+    if(this.step==='energy'&&++this.generated>=CONFIG.onboarding.practicePieces)this.setStep('merge');
   }
-  onBoardChanged(){ this.checkOrderReady(); }
-  checkOrderReady(){
-    if(this.active&&this.step==='order'&&this.hasReadyOrder()) this.setStep('ready');
+  onBoardChanged(){
+    if(!this.active)return;
+    if(this.step==='merge'&&this.game.stats.merges>this.mergeStart)this.setStep('order');
+    else this.positionGuide();
   }
-  onOrderCompleted(){
-    if(this.active&&this.step==='ready') this.setStep('skill');
+  onOrderCompleted(){if(this.active&&this.step==='order')this.setStep('skill');}
+  onSkillUsed(){if(this.active&&this.step==='skill')this.complete(false);}
+  update(){
+    if(!this.active||this.step!=='skill')return;
+    // Only move the hand when a different skill becomes usable, not every frame.
+    const key=$('.skill-btn:not(:disabled)')?.dataset.skill||'';
+    if(key!==this.readyKey){this.readyKey=key;this.positionGuide();}
   }
-  onSkillUsed(){
-    if(this.active&&this.step==='skill') this.complete(false);
+  stop(){
+    this.active=false;this.clearFocus();$('#tutorial-layer').hidden=true;$('#tutorial-guide').hidden=true;
   }
   complete(skipped=false){
-    if(!this.active) return;
-    this.active=false;
-    this.clearFocus();
-    const layer=$('#tutorial-layer');
-    if(layer) layer.hidden=true;
-    this.game.host.completeTutorial();
+    if(!this.active)return;
+    this.stop();this.game.host.completeTutorial();
+    this.game.updateEnergyUi();this.game.orderSheetSystem.render();
     Analytics.track('tutorial_step',{step:'done',skipped:skipped?1:0});
-    if(!skipped) logAction('튜토리얼 완료!');
   }
 }
-

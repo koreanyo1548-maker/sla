@@ -160,6 +160,7 @@ const GameState = {
     // 도구 버튼(종료·초기화)의 hidden을 화면에 맞춘다. campaign.js에 있고
     // 호출 시점은 항상 로딩 이후다. 이유는 그쪽 주석에 적었다.
     syncToolButtons();
+    GameAudio.setScene(state==='playing'?'battle':'lobby');
   }
 };
 

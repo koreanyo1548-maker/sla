@@ -18,6 +18,7 @@ class Game {
     this.energy = 0;
     this.lastTime = 0;
     this.running = false;
+    this.pauseReasons = new Set();
     this.ending = null;
     this.timeScale = 1;
     this.hitStopUntil = 0;
@@ -99,6 +100,24 @@ class Game {
     this.canvas.style.width=(f.width*sx).toFixed(1)+'px';
     this.canvas.style.height=(f.height*sy).toFixed(1)+'px';
   }
+  get paused(){return this.pauseReasons.size>0;}
+  inputAllowed(action){
+    // The discard action belongs to the paused order-detail dialog itself.
+    const detailAction=action==='discard'&&this.pauseReasons.size===1&&this.pauseReasons.has('order-detail');
+    return this.running&&!this.ending&&(!this.paused||detailAction)&&(this.tutorial?.allows(action)??true);
+  }
+  setPause(reason,on){
+    if(!this.running||this.ending)return;
+    const wasPaused=this.paused;
+    if(on)this.pauseReasons.add(reason);else this.pauseReasons.delete(reason);
+    if(wasPaused!==this.paused){
+      this.generator.stopHold();this.mergeBoard.endDrag();this.lastTime=null;
+      if(this.paused)Platform.gameplayStop();else Platform.gameplayStart();
+    }
+    GamePresentation.renderPause(this);
+    this.orderSheetSystem.updateInputState();
+    this.updateEnergyUi();
+  }
   prefersReducedMotion(){
     return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   }
@@ -156,6 +175,7 @@ class Game {
   beginEndSequence(outcome){
     if(!this.running || this.ending) return;
     this.ending=outcome;
+    this.pauseReasons.clear();GamePresentation.resetPause();this.tutorial.stop();
     this.generator.stopHold();
     this.orderSheetSystem.closeDetail();
     const clear=outcome==='clear';
@@ -192,6 +212,7 @@ class Game {
     if(!this.running && !this.ending) return;
     if(this.endSequenceTimer){ clearTimeout(this.endSequenceTimer); this.endSequenceTimer=null; }
     this.running=false;
+    this.tutorial.stop();this.pauseReasons.clear();GamePresentation.resetPause();
     this.generator.stopHold();
     this.timeScale=1;
     this.ending=null;
@@ -222,7 +243,7 @@ class Game {
     if(!screen) return;
     this.resultRevealTimers?.forEach(clearTimeout);
     this.resultRevealTimers=[];
-    const steps=[$('#result-title'),$('#result-sub'),$('#result-stats'),$('#result-reward'),$('#result-milestone-hint'),$('#retry-btn')].filter(Boolean);
+    const steps=[$('#result-title'),$('#result-sub'),$('#result-reward'),$('#result-stats'),$('#result-milestone-hint'),$('#retry-btn'),$('#result-upgrade')].filter(Boolean);
     // 지난 판의 shown이 남아 있으면 순서 없이 한꺼번에 보인다 — 먼저 걷어낸다.
     steps.forEach(el=>{ el.classList.add('result-step'); el.classList.remove('shown'); });
     screen.dataset.reveal='1';
@@ -272,11 +293,12 @@ class Game {
     const btn = $('#generator-btn');
     // [2026-09-17] 툴팁도 CONFIG에서 만든다 — 마크업에 수치를 박아 두면 밸런스 변경 때 낡는다.
     if(btn)btn.title=t('battle.generator.tooltip',{points:CONFIG.scoring.pointsPerGrant,energy:CONFIG.scoring.energyPerGrant});
-    if(btn){btn.disabled=!!this.ending||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?t('battle.generator.full'):t('battle.generator.label',{cost:CONFIG.generator.costPerPiece});}
+    if(btn){btn.disabled=!this.inputAllowed('generate')||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?t('battle.generator.full'):t('battle.generator.label',{cost:CONFIG.generator.costPerPiece});}
     this.renderSkillBar();
     this.batchMergeSystem.render();
+    GamePresentation.boardHint(this);
   }
-  // 로비에서 장착한 스킬 2개를 그린다. 에너지 비용은 없고 개별 쿨타임만 표시한다.
+  // 장착 스킬의 개별 쿨타임과 누적 사용 비용을 함께 표시한다.
   buildSkillBar(){
     const row = $('#skill-row');
     if(!row) return;
@@ -286,7 +308,7 @@ class Game {
       const entry=this.skillSystem.entry(key);
       return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${t(def.nameKey)} ${t('common.level',{n:entry?.level||1})}">
         <span class="sk-cd"></span>
-        <span class="sk-icon">${meta.icon}</span>
+        <span class="sk-icon">${GameArt.skill(key)}</span><span class="sk-time" aria-hidden="true"></span>
         <span class="sk-name">${t(def.nameKey)}</span>
         <span class="sk-level">${t('common.level',{n:entry?.level||1})}</span>
         <span class="sk-cost"></span>
@@ -294,7 +316,7 @@ class Game {
     }).join('');
     $$('.skill-btn',row).forEach(btn=>{
       btn.onclick = ()=>{
-        if(this.skillSystem.activate(btn.dataset.skill)){ GameAudio.play('skill_use'); restartCssAnimation(btn,'fx-use'); }
+        if(this.skillSystem.activate(btn.dataset.skill)){ GameAudio.play('skill_use'); GamePresentation.skillCast(btn.dataset.skill); restartCssAnimation(btn,'fx-use'); }
       };
     });
     this.renderSkillBar();
@@ -311,9 +333,9 @@ class Game {
       btn.dataset.state=state;
       if(ready && !this.skillReadyState[key]) restartCssAnimation(btn,'fx-ready');
       this.skillReadyState[key]=ready;
+      const timeLabel=btn.querySelector('.sk-time');if(timeLabel)timeLabel.textContent=left>0?Math.ceil(left):'';
       const fill = btn.querySelector('.sk-cd');
-      // [2026-09-16] 스킬 버튼이 전장 우하단 정사각 오버레이가 되면서 가로 바 대신
-      // 세로로 줄어드는 가림막을 쓴다. 남은 쿨타임 비율이 그대로 높이다.
+      // The cooldown shade recedes vertically; the number shows whole seconds remaining.
       if(fill) fill.style.height = (clamp(left/(this.skillSystem.entry(key)?.cooldownSec||def.cooldownSec||1),0,1)*100).toFixed(0)+'%';
       // 비용은 쓸수록 오르므로 매 렌더마다 다시 읽는다.
       const costEl = btn.querySelector('.sk-cost');
@@ -401,6 +423,9 @@ class Game {
     this.running = true;
     syncToolButtons();          // 위쪽 GameState.set('playing') 시점에는 아직 running이 false다.
     this.tutorial.start();
+    GamePresentation.start(this);
+    this.orderSheetSystem.updateInputState();
+    this.updateEnergyUi();
     // 첫 rAF 타임스탬프를 기준으로 삼는다. performance.now()와 섞으면 첫 dt가 음수가 될 수 있다.
     this.lastTime = null;
     requestAnimationFrame(this.loop.bind(this));
@@ -418,13 +443,20 @@ class Game {
   }
   frameScale(){
     if(this.ending) return this.timeScale;
-    return performance.now()<this.hitStopUntil ? CONFIG.presentation.hitStopTimeScale : 1;
+    const guideScale=this.tutorial.active&&this.tutorial.step==='skill'?CONFIG.onboarding.skillTimeScale:1;
+    return performance.now()<this.hitStopUntil ? Math.min(guideScale,CONFIG.presentation.hitStopTimeScale) : guideScale;
   }
   loop(now){
     if(!this.running) return;
+    if(this.paused){this.lastTime=null;requestAnimationFrame(this.loop.bind(this));return;}
     // 첫 프레임은 dt=0으로 스폰·렌더한다. 이후에도 시간 역행과 긴 프레임을 제한한다.
     const realDt = this.lastTime === null ? 0 : Math.max(0, Math.min(0.05, (now-this.lastTime)/1000));
     this.lastTime = Math.max(this.lastTime ?? now, now);
+    if(this.tutorial.holdsCombat()){
+      this.effects.update(realDt);this.render();
+      requestAnimationFrame(this.loop.bind(this));return;
+    }
+    this.tutorial.update();
     if(!this.ending) this.elapsedTime += realDt;
     this.renderRunMetrics();
     // [2026-09-09] dt를 시스템 사이마다 다시 계산하는 것은 중복이 아니다. waveSystem.update가
@@ -451,7 +483,7 @@ class Game {
   render(){
     const ctx = this.ctx;
     ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
-    GameArt.drawField(ctx,this.canvas.width,this.canvas.height);
+    GameArt.drawField(ctx,this.canvas.width,this.canvas.height,this.elapsedTime,this.prefersReducedMotion());
     // 초기 기본 공격과 방어·회복 효과는 핵에서 발생한다. 영웅은 핵 뒤에서 사격한다.
     this.effects.drawPlayerAura(ctx);
     GameArt.drawCore(ctx,this);
@@ -490,5 +522,3 @@ class Game {
     el.innerHTML=rows.slice(0,6).map(renderRow).join('')+`<details class="result-details"><summary>${t('result.details')}</summary><div>${rows.slice(6).map(renderRow).join('')}</div></details>`;
   }
 }
-
-

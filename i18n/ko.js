@@ -4,6 +4,39 @@
    i18n/README.md 참고. */
 I18N.register("ko", "한국어", {
 
+  /* ── 2026-09-24 forge presentation and guided first run ── */
+  "polish.loading": "대장간을 준비하고 있습니다…",
+  "polish.tagline": "합치고, 소환하고, 지켜내세요",
+  "polish.waveProgress": "현재 웨이브 진행",
+  "polish.pause.title": "일시정지",
+  "polish.pause.eyebrow": "용광로의 수호자",
+  "polish.pause.body": "준비되면 전투를 이어가세요.\n기다리는 동안 적도 움직이지 않습니다.",
+  "polish.pause.resume": "전투 계속하기",
+  "polish.pause.key": "P 키로 일시정지 · 1 / 2 키로 스킬 사용",
+  "polish.audio.sfx": "효과음",
+  "polish.audio.music": "배경음악",
+  "polish.audio.sfxVolume": "효과음 크기",
+  "polish.audio.musicVolume": "음악 크기",
+  "polish.on": "켜짐",
+  "polish.off": "꺼짐",
+  "polish.result.upgrade": "부대를 강화하러 가기",
+  "polish.board.hint": "같은 색·등급의 보석을 합치면 주문서 강화량이 커집니다",
+  "polish.board.full": "보드가 가득 찼습니다 · 같은 보석을 합쳐 공간을 만드세요",
+  "polish.board.spend": "보드가 가득 찼습니다 · 준비된 주문서를 사용하세요",
+  "polish.board.energy": "처치 점수를 모으면 에너지가 충전됩니다",
+  "polish.board.ready": "주문서 준비 완료 · 더 합치면 강화량이 커집니다",
+  "polish.order.collect": "보석 필요",
+  "polish.order.materials": "필요 재료",
+  "polish.tutorial.energy.title": "먼저 보석을 만드세요",
+  "polish.tutorial.energy.body": "생성 버튼으로 보석 {n}개를 만드세요. 보석은 에너지를 사용합니다. 준비하는 동안 적은 기다립니다.",
+  "polish.tutorial.merge.title": "같은 보석을 합쳐보세요",
+  "polish.tutorial.merge.body": "같은 보석 위로 끌어 놓으세요. 두 보석을 차례로 눌러도 됩니다. 등급이 높을수록 주문서가 강해집니다.",
+  "polish.tutorial.order.title": "첫 수호자를 소환하세요",
+  "polish.tutorial.order.body": "빛나는 첫 주문서를 누르세요. 보석을 사용해 수호자를 소환합니다. 같은 수호자의 주문서는 능력을 강화합니다.",
+  "polish.tutorial.skill.title": "위기의 순간에는 스킬!",
+  "polish.tutorial.skill.body": "전투가 시작됩니다. 오른쪽 아래 스킬이 켜지면 눌러보세요. 수호자는 용광로를 자동으로 지킵니다.",
+
+
   /* ── app ── */
   "app.title": "슬래그마 · 용광로의 수호자",
 
@@ -20,7 +53,7 @@ I18N.register("ko", "한국어", {
   "lobby.stamina.timer": "+1 회복 {time}",
   "lobby.stamina.chargeCount": "충전 {n}회",
   "lobby.prepare.waiting": "행동력 회복 중 <small>{current} / {need}</small>",
-  "lobby.prepare.ready": "{sword} 전투 준비 <small>{energy} {cost}</small>",
+  "lobby.prepare.ready": "{sword} 전투 시작 <small>{energy} {cost}</small>",
   "lobby.stage.eyebrow": "모험 · {id}",
   "lobby.stage.meta": "{waves} 웨이브 · 클리어 <b>+{gold}</b> 골드",
   "lobby.party.title": "출전 부대",

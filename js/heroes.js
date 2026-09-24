@@ -45,8 +45,9 @@ class HeroFieldSystem {
       ctx.fillStyle=unit?'#06151899':'#0b181766';
       ctx.beginPath();ctx.ellipse(p.x,p.y+4,28,8,0,0,Math.PI*2);ctx.fill();
       if(!unit){
-        ctx.strokeStyle='#3D4A4F88';ctx.lineWidth=1;ctx.stroke();
-        ctx.fillStyle='#747A78';ctx.font='11px system-ui';ctx.textAlign='center';
+        ctx.strokeStyle='#7898a24d';ctx.lineWidth=1;ctx.stroke();
+        ctx.globalAlpha=.32;GameArt.drawSprite(ctx,12+CONFIG.moduleKeys.indexOf(key),p.x,p.y-7,31);ctx.globalAlpha=1;
+        ctx.fillStyle='#a0b2b7';ctx.font='10px system-ui';ctx.textAlign='center';
         ctx.fillText(t(CONFIG.attackModules[key].labelKey),p.x,p.y+22);ctx.restore();continue;
       }
       const ratio=reduced?1:clamp((now-unit.summonedAt)/450,0,1);
@@ -56,16 +57,23 @@ class HeroFieldSystem {
       const pulse=Math.max(0,1-(now-unit.upgradedAt)/900);
       ctx.strokeStyle=color;ctx.globalAlpha=.5;ctx.lineWidth=1.5;ctx.stroke();ctx.globalAlpha=ratio;
       if(pulse>0){ctx.shadowColor=color;ctx.shadowBlur=12*pulse;}
-      const bob=reduced?0:Math.sin(g.elapsedTime*2.6+CONFIG.moduleKeys.indexOf(key))*1.2;
+      const breath=reduced?0:Math.sin(g.elapsedTime*2.6+CONFIG.moduleKeys.indexOf(key));
+      const bob=breath*1.2;
       const size=104,spriteTop=p.y-size*.88+(1-ratio)*18+bob+shot*4;
+      // Breathing and recoil move the illustration only. origin() remains the aiming source.
+      ctx.save();ctx.translate(p.x,p.y-10);ctx.rotate(-shot*.055);
+      ctx.scale(1-breath*.006+shot*.035,1+breath*.009-shot*.025);ctx.translate(-p.x,-p.y+10);
       const ok=GameArt.drawFighter(ctx,unit.id,p.x-size/2,spriteTop,size);
       if(!ok){ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x,p.y-25,14,0,Math.PI*2);ctx.fill();}
+      ctx.restore();
       ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.textAlign='center';
-      ctx.font='600 11px system-ui';ctx.fillStyle='#F2E9D8';
-      const name=t(CharacterTable[unit.id]?.nameKey||MISSILE_DEFS[key].labelKey);
-      ctx.fillText(`${MISSILE_DEFS[key].icon} ${name} Lv.${unit.level}`,p.x,spriteTop-6);
+      // Compact level plaques keep four guardians readable on a narrow iframe.
+      const label=`Lv.${unit.level}`;ctx.font='700 10px system-ui';
+      const labelWidth=Math.max(32,ctx.measureText(label).width+12);
+      ctx.fillStyle='#101f2ad9';ctx.fillRect(p.x-labelWidth/2,spriteTop-16,labelWidth,15);
+      ctx.fillStyle=color;ctx.fillRect(p.x-labelWidth/2,spriteTop-16,2,15);
+      ctx.fillStyle='#f6e7c7';ctx.fillText(label,p.x+1,spriteTop-5);
       ctx.restore();
     }
   }
 }
-
