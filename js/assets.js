@@ -13,7 +13,7 @@ const ASSET_URLS={
   "heroes_01":"assets/heroes_01.webp",
   "heroes_02":"assets/heroes_02.webp",
   "heroes_03":"assets/heroes_03.webp",
-  "battlefield":"assets/battlefield.webp",
+  "battlefield":"assets/battlefield-v0924.webp",
   "battle_sprites":"assets/battle_sprites.webp",
   "fighters_01":"assets/fighters_01.webp",
   "fighters_02":"assets/fighters_02.webp",

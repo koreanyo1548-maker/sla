@@ -214,7 +214,7 @@ const MISSILE_DEFS = {
     designatedColors:{damage:'red',speed:'green',radius:'yellow'},
     fire:{mode:'projectile',option:'radius',motion:'homing'},
     hit:'splash',
-    render:{shape:'orb',radius:6},
+    render:{shape:'fire',radius:6},
   },
   scatter:{
     labelKey:'missile.scatter.label', icon:'✣', color:'#48C986',
@@ -222,7 +222,7 @@ const MISSILE_DEFS = {
     designatedColors:{damage:'green',speed:'blue',projectiles:'purple'},
     fire:{mode:'method',method:'fireScatter',motion:'linear'},
     hit:'single',
-    render:{shape:'orb',radius:4},
+    render:{shape:'shard',radius:4},
   },
   laser:{
     labelKey:'missile.laser.label', icon:'━', color:'#A876E8',
@@ -268,6 +268,8 @@ const SKILL_DAMAGE_EFFECTS = ['projectile','damageAll'];
 function skillDealsDamage(key){ return SKILL_DAMAGE_EFFECTS.includes(SKILL_DEFS[key]?.effect); }
 
 const DEFAULT_CONFIG = {
+  // [2026-09-24] 최초 1스테이지에서만 두 피스로 머지를 연습한다. 안내 후 일반 생성 규칙으로 돌아간다.
+  onboarding: { practicePieces:2, skillTimeScale:0.5 },
   player: {
     // hp·atk·def는 편성 스냅샷이 없을 때만 쓰는 기본값이다. 전투에서는 RunConfig.battle.player
     // (4인 체력·방어 합산, 공격 평균 + 장착 스킬 능력치)를 읽는다.
@@ -748,4 +750,3 @@ const VISUAL_CONFIG = {
   skillParticles: 28,
   shakeOnPlayerHit: true,
 };
-

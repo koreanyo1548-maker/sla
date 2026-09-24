@@ -55,14 +55,26 @@ const GameArt = {
     const tile=index%8,w=img.naturalWidth/4,h=img.naturalHeight/2;
     ctx.drawImage(img,tile%4*w,Math.floor(tile/4)*h,w,h,x,y,size,size);return true;
   },
-  drawField(ctx,width,height){
+  drawField(ctx,width,height,time=0,reduced=false){
     const img=this.images.battlefield;
     if(!img?.complete||!img.naturalWidth){
       ctx.fillStyle='#263b3c';ctx.fillRect(0,0,width,height);return false;
     }
-    // 성벽이 없는 연속 바닥을 전체 전장에 매핑한다. 핵은 별도 오브젝트다.
+    // The forge court keeps the center quiet; embers remain at the lava edges.
     ctx.drawImage(img,0,0,img.naturalWidth,img.naturalHeight,0,0,width,height);
-    ctx.fillStyle='#171C2030';ctx.fillRect(0,0,width,height);return true;
+    ctx.fillStyle='#0b172b35';ctx.fillRect(0,0,width,height);
+    if(!reduced){
+      ctx.save();ctx.fillStyle='#ffd698';
+      for(let i=0;i<12;i++){
+        const phase=(time*(.09+i%3*.025)+i*.137)%1;
+        const side=i%2===0?1:-1;
+        const x=(side===1?19:width-19)+Math.sin(time*.6+i*2.2)*9;
+        ctx.globalAlpha=Math.sin(phase*Math.PI)*.65;
+        ctx.beginPath();ctx.arc(x,height*(1-phase),i%3===0?1.6:1,0,Math.PI*2);ctx.fill();
+      }
+      ctx.restore();
+    }
+    return true;
   },
   // [2026-09-18 연출 세션 A] 핵이 맞으면 반응하고, 남은 HP에 따라 외형이 바뀐다.
   // 판정은 전부 Game 쪽에 있고 여기서는 game이 찍어 둔 표시용 필드만 읽는다.
@@ -76,6 +88,14 @@ const GameArt = {
     const amt=pr.squashAmount*sq;
     const stage=game.coreStage||0;                 // 0=건강, 1~3=단계
     ctx.save();
+    // A ground seal identifies the shared objective without changing its hitbox.
+    const pulse=game.prefersReducedMotion()?1:1+Math.sin(game.elapsedTime*2)*.045;
+    const aura=ctx.createRadialGradient(p.x,p.y+10,5,p.x,p.y+10,r*2.1);
+    aura.addColorStop(0,stage>=2?'#ff86412e':'#7ed5ea30');aura.addColorStop(1,'#5edbf400');
+    ctx.fillStyle=aura;ctx.fillRect(p.x-r*2.1,p.y-r*1.7,r*4.2,r*4.2);
+    ctx.strokeStyle=stage>=2?'#e9a0787a':'#8ac6cf7a';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.ellipse(p.x,p.y+12,r*1.5*pulse,r*.65*pulse,0,0,Math.PI*2);ctx.stroke();
+    ctx.setLineDash([3,7]);ctx.beginPath();ctx.ellipse(p.x,p.y+12,r*1.8,r*.8,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='#171C2099';ctx.beginPath();
     ctx.ellipse(p.x,p.y+r*.72,r*.9,r*.28,0,0,Math.PI*2);ctx.fill();
     if(amt>0){ ctx.translate(p.x,p.y); ctx.scale(1+amt,1-amt); ctx.translate(-p.x,-p.y); }
@@ -117,52 +137,6 @@ const GameArt = {
       ctx.stroke();
     });
     ctx.restore();
-  },
-};
-
-/* Short interface sounds only after a user gesture; preference is device-local.
-   저장 키는 진행 데이터(slagma.campaign.v4)와 별도라 데이터 초기화에 영향받지 않는다. */
-const SOUND_PREF_KEY='slagma.sound';
-const GameAudio={
-  enabled:false,context:null,
-  init(){try{this.enabled=SaveStorage.load(SOUND_PREF_KEY)==='on';}catch(_){}this.render();},
-  render(){
-    const b=document.getElementById('sound-toggle'); if(!b) return;
-    const actionKey=this.enabled?'tools.soundOff':'tools.soundOn';
-    b.setAttribute('aria-pressed',String(this.enabled));
-    b.setAttribute('aria-label',t(actionKey));
-    b.title=t(actionKey);
-    b.innerHTML=`<span class="sound-option-label">${GameArt.icon('sound')}<span>${t('options.sound.title')}</span></span><strong>${this.enabled?'ON':'OFF'}</strong>`;
-    b.classList.toggle('muted',!this.enabled);
-  },
-  toggle(){this.enabled=!this.enabled;try{SaveStorage.save(SOUND_PREF_KEY,this.enabled?'on':'off');}catch(_){}this.render();this.play('up');},
-  /* [2026-09-18 연출 세션 A] 호출 지점을 먼저 심는다.
-     아래 MELODIES에 있는 kind만 소리가 나고, 없는 kind는 조용히 통과한다. 연출
-     코드가 hit_chain·core_hit 같은 이름으로 미리 부르되 실제 소리는 로드맵 6단계
-     (아트·사운드)에서 이 표를 채우면 그때부터 난다. 호출부는 그때 손대지 않는다.
-     지금 정의된 셋(tap·up·reveal)은 기존 동작 그대로다. */
-  MELODIES:{
-    tap:[440],
-    up:[440,660,880],
-    reveal:[392,523,659,784],
-    // 로드맵 6단계에서 채운다 — 인플레이
-    hit_chain:null, hit_explosion:null, hit_scatter:null, hit_laser:null,
-    kill:null, kill_boss:null, merge:null, generate:null,
-    order_complete:null, skill_use:null,
-    // 로드맵 6단계에서 채운다 — 로비·성장 (연출 세션 B)
-    level_up:null, star_up:null, passive_unlock:null, new_best:null, stage_unlock:null,
-    core_hit:null, core_low:null,
-    wave_clear:null, boss_alert:null, clear:null, defeat:null,
-  },
-  play(kind='tap'){
-    if(!this.enabled)return;
-    const melody=this.MELODIES[kind];
-    if(!melody?.length)return;          // 미정의·미구현 kind는 무음
-    try{
-      const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
-      const ctx=this.context??=new C();if(ctx.state==='suspended')ctx.resume();
-      melody.forEach((freq,i)=>{const osc=ctx.createOscillator(),gain=ctx.createGain(),startAt=ctx.currentTime+i*.075;osc.type='sine';osc.frequency.value=freq;gain.gain.setValueAtTime(0,startAt);gain.gain.linearRampToValueAtTime(.04,startAt+.01);gain.gain.exponentialRampToValueAtTime(.001,startAt+.17);osc.connect(gain);gain.connect(ctx.destination);osc.start(startAt);osc.stop(startAt+.18);});
-    }catch(_){}
   },
 };
 
@@ -280,4 +254,3 @@ const GameFeedback={
     },this.TOAST_MS);
   },
 };
-

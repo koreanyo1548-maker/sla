@@ -10,7 +10,7 @@ lobby.stamina.full,행동력 충전 완료,Stamina full
 lobby.stamina.timer,+1 회복 {time},+1 in {time}
 lobby.stamina.chargeCount,충전 {n}회,{n} recharges
 lobby.prepare.waiting,행동력 회복 중 <small>{current} / {need}</small>,Stamina recovering <small>{current} / {need}</small>
-lobby.prepare.ready,{sword} 전투 준비 <small>{energy} {cost}</small>,{sword} Prepare <small>{energy} {cost}</small>
+lobby.prepare.ready,{sword} 전투 시작 <small>{energy} {cost}</small>,{sword} Prepare <small>{energy} {cost}</small>
 lobby.stage.eyebrow,모험 · {id},Journey · {id}
 lobby.stage.meta,{waves} 웨이브 · 클리어 <b>+{gold}</b> 골드,{waves} waves · Clear <b>+{gold}</b> gold
 lobby.party.title,출전 부대,Squad
@@ -149,7 +149,7 @@ milestone.tier,{n}단계,Tier {n}
 milestone.group,{currency} 보상,{currency} rewards
 milestone.card.progress,{description} · {current} / {need},{description} · {current} / {need}
 milestone.card.reward,{currency} +{amount},{currency} +{amount}
-milestone.card.bulk," · {n}단계 한꺼번에"," · {n} tiers at once"
+milestone.card.bulk, · {n}단계 한꺼번에, · {n} tiers at once
 milestone.card.claim,받기,Claim
 milestone.card.inProgress,진행 중,In progress
 milestone.toast.claimed,{currency} +{amount} 획득,{currency} +{amount} received
@@ -226,7 +226,7 @@ battle.coreHp,용광로 핵 · {current} / {max},Forge core · {current} / {max}
 battle.energyAria,보유 에너지,Energy held
 battle.energyLabel,에너지,Energy
 battle.skillRowAria,전투 스킬,Combat skills
-battle.critPrefix,"CRIT ","CRIT "
+battle.critPrefix,CRIT ,CRIT 
 battle.pierce,관통 {damage},pierce {damage}
 battle.generator.initial,피스 생성,Make piece
 battle.generator.label,생성 <small>−{cost}</small>,Make <small>−{cost}</small>
@@ -488,3 +488,35 @@ growth.passiveUnlocked,패시브 해금,PASSIVE UNLOCKED
 growth.newBest,NEW BEST,NEW BEST
 rotate.title,화면을 세로로 돌려주세요,Please turn your screen upright
 rotate.body,이 게임은 세로 화면에 맞춰져 있습니다.,This game is built for a portrait screen.
+polish.loading,대장간을 준비하고 있습니다…,Preparing the forge…
+polish.tagline,"합치고, 소환하고, 지켜내세요",Merge. Summon. Defend.
+polish.waveProgress,현재 웨이브 진행,Wave progress
+polish.pause.title,일시정지,Paused
+polish.pause.eyebrow,용광로의 수호자,GUARDIANS OF THE FORGE
+polish.pause.body,"준비되면 전투를 이어가세요.
+기다리는 동안 적도 움직이지 않습니다.","Take a breath. The battle is waiting.
+Continue when you are ready."
+polish.pause.resume,전투 계속하기,Continue battle
+polish.pause.key,P 키로 일시정지 · 1 / 2 키로 스킬 사용,P to pause · 1 / 2 to cast skills
+polish.audio.sfx,효과음,Sound effects
+polish.audio.music,배경음악,Music
+polish.audio.sfxVolume,효과음 크기,Effects volume
+polish.audio.musicVolume,음악 크기,Music volume
+polish.on,켜짐,On
+polish.off,꺼짐,Off
+polish.result.upgrade,부대를 강화하러 가기,Upgrade your party
+polish.board.hint,같은 색·등급의 보석을 합치면 주문서 강화량이 커집니다,Merge matching gems for stronger orders
+polish.board.full,보드가 가득 찼습니다 · 같은 보석을 합쳐 공간을 만드세요,Board full · Merge matching gems to make space
+polish.board.spend,보드가 가득 찼습니다 · 준비된 주문서를 사용하세요,Board full · Use a ready order to make space
+polish.board.energy,처치 점수를 모으면 에너지가 충전됩니다,Defeat enemies to earn more energy
+polish.board.ready,주문서 준비 완료 · 더 합치면 강화량이 커집니다,Order ready · Merge more for a stronger upgrade
+polish.order.collect,보석 필요,Gems needed
+polish.order.materials,필요 재료,Materials
+polish.tutorial.energy.title,먼저 보석을 만드세요,Forge your first gems
+polish.tutorial.energy.body,생성 버튼으로 보석 {n}개를 만드세요. 보석은 에너지를 사용합니다. 준비하는 동안 적은 기다립니다.,Use Generate to make {n} gems. Each gem costs energy. Enemies wait while you learn.
+polish.tutorial.merge.title,같은 보석을 합쳐보세요,Make a stronger gem
+polish.tutorial.merge.body,같은 보석 위로 끌어 놓으세요. 두 보석을 차례로 눌러도 됩니다. 등급이 높을수록 주문서가 강해집니다.,"Drag one gem onto its match, or tap both in turn. Higher tiers make stronger orders."
+polish.tutorial.order.title,첫 수호자를 소환하세요,Summon your first guardian
+polish.tutorial.order.body,빛나는 첫 주문서를 누르세요. 보석을 사용해 수호자를 소환합니다. 같은 수호자의 주문서는 능력을 강화합니다.,Tap the highlighted order. It uses your gem to summon a guardian. Further orders upgrade that guardian.
+polish.tutorial.skill.title,위기의 순간에는 스킬!,Turn the tide with a skill
+polish.tutorial.skill.body,전투가 시작됩니다. 오른쪽 아래 스킬이 켜지면 눌러보세요. 수호자는 용광로를 자동으로 지킵니다.,Battle begins. Tap a skill at the bottom right when it lights up. Your guardians attack automatically.

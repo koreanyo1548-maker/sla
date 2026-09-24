@@ -4,7 +4,7 @@
    ===================================================================== */
 class VisualEffects {
   // 공격 종류 → 사운드 kind. 기본 공격·스킬은 여기 없으므로 소리가 나지 않는다.
-  static HIT_SOUNDS={chain:'hit_chain',explosion:'hit_explosion',scatter:'hit_scatter',laser:'hit_laser'};
+  static HIT_SOUNDS={basic:'hit',chain:'hit_chain',explosion:'hit_explosion',scatter:'hit_scatter',laser:'hit_laser'};
   constructor(game){
     this.game = game;
     this.particles = [];
@@ -583,7 +583,7 @@ class SkillSystem {
   blockReason(skillKey){
     const def=SKILL_DEFS[skillKey],entry=this.entry(skillKey);
     if(!def||!CONFIG.skills[skillKey]||!entry) return 'notEquipped';
-    if(this.game.ending) return 'ended';
+    if(!this.game.inputAllowed('skill')) return 'ended';
     if(this.cooldownLeft(skillKey) > 0) return 'cooldown';
     if(this.game.energy < this.energyCost(skillKey)) return 'noEnergy';
     return def.requires ? SkillSystem.REQUIRES[def.requires](this) : null;
@@ -996,6 +996,18 @@ class CombatSystem {
     orb(ctx,p,spec){
       ctx.beginPath(); ctx.arc(p.x,p.y,spec?.radius??4,0,Math.PI*2); ctx.fill();
     },
+    fire(ctx,p,spec){
+      const r=spec.radius,glow=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*1.7);
+      glow.addColorStop(0,'#fff2c9');glow.addColorStop(.35,'#ffc165');glow.addColorStop(.7,'#f77a3d');glow.addColorStop(1,'#f77a3d00');
+      ctx.fillStyle=glow;ctx.beginPath();ctx.arc(p.x,p.y,r*1.7,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#fff5d9';ctx.beginPath();ctx.arc(p.x-1,p.y-1,r*.32,0,Math.PI*2);ctx.fill();
+    },
+    shard(ctx,p,spec){
+      const r=spec.radius,angle=Math.atan2(p.vy??-1,p.vx??0);
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
+      ctx.beginPath();ctx.moveTo(r*2,0);ctx.lineTo(-r,r*.65);ctx.lineTo(-r*.4,0);ctx.lineTo(-r,-r*.65);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#dcffe8';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-r*.4,0);ctx.lineTo(r*1.6,0);ctx.stroke();ctx.restore();
+    },
   };
   // 미사일이 아닌 플레이어 투사체(스킬 탄)의 모양.
   static NON_MISSILE_RENDER = { strong_single:{shape:'lance'} };
@@ -1026,7 +1038,10 @@ class CombatSystem {
       const spec = (p.owner==='player'
         ? (MISSILE_DEFS[p.kind]?.render ?? CombatSystem.NON_MISSILE_RENDER[p.kind])
         : null) || CombatSystem.DEFAULT_RENDER;
-      (CombatSystem.RENDER[spec.shape] || CombatSystem.RENDER.orb)(ctx,p,spec);
+      // Visual growth only; collision and damage still use the original projectile.
+      const scale=1+Math.min(24,this.game.heroField.units[p.kind]?.level||0)*.012;
+      ctx.save();ctx.translate(p.x,p.y);ctx.scale(scale,scale);ctx.translate(-p.x,-p.y);
+      (CombatSystem.RENDER[spec.shape] || CombatSystem.RENDER.orb)(ctx,p,spec);ctx.restore();
     });
     ctx.restore();
   }
@@ -1272,7 +1287,9 @@ class EnemySystem {
       ctx.save();
       const sprite=e.isBoss?(e.bossKind==='final'?9:8):(e.type==='melee'?5:e.type==='ranged'?6:7);
       e.fxSprite=sprite; e.fxSize=visualSize;   // 처치 잔상이 같은 그림·크기를 쓰게 한다
-      const bob=e.stopped?0:Math.sin(performance.now()/130+e.id)*1.1;
+      const reduced=this.game.prefersReducedMotion();
+      const stride=e.stopped||reduced||e.stunLeft>0?0:Math.sin(this.game.elapsedTime*8+e.id);
+      const bob=Math.abs(stride)*1.5;
       // [2026-09-15] 밀림과 압축은 표시 좌표에만 얹는다. e.x/e.y는 그대로라 히트박스·조준은 불변이다.
       const kt=e.fxOffsetMax?clamp(e.fxOffsetLife/e.fxOffsetMax,0,1):0, ease=kt*kt;
       const ox=(e.fxOffsetX||0)*ease, oy=(e.fxOffsetY||0)*ease;
@@ -1287,17 +1304,25 @@ class EnemySystem {
       }
       const dx0=e.x+ox+lx, dy0=e.y+oy+bob+ly;
       ctx.fillStyle='#171C2066';ctx.beginPath();ctx.ellipse(e.x,e.y+r*.65,r*.9,r*.35,0,0,Math.PI*2);ctx.fill();
+      // The winding attack arc warns of an incoming core hit before the sprite leans.
+      if(wu>0){
+        ctx.strokeStyle='#f7b16f';ctx.globalAlpha=.35+wu*.5;ctx.lineWidth=e.isBoss?2.5:1.7;
+        ctx.beginPath();ctx.ellipse(e.x,e.y+r*.65,r*1.05,r*.42,0,-Math.PI/2,-Math.PI/2+Math.PI*2*wu);ctx.stroke();ctx.globalAlpha=1;
+      }
+      if(stride){ctx.translate(dx0,dy0+visualSize*.3);ctx.rotate(stride*(e.isBoss ? .018 : .035));ctx.translate(-dx0,-dy0-visualSize*.3);}
       if(performance.now()<e.hitFlashUntil){ctx.shadowBlur=8;ctx.shadowColor='#ffffff';}
       if(amt>0){ ctx.translate(dx0,dy0); ctx.scale(1+amt,1-amt); ctx.translate(-dx0,-dy0); }
       const wuScale=1+CONFIG.presentation.windupScale*wu;
       if(wu>0){ ctx.translate(dx0,dy0); ctx.scale(wuScale,wuScale); ctx.translate(-dx0,-dy0); }
       if(!GameArt.drawSprite(ctx,sprite,dx0,dy0,visualSize)){ctx.fillStyle=color;ctx.beginPath();ctx.arc(dx0,dy0,r,0,Math.PI*2);ctx.fill();}
       ctx.restore();
-      // hp bar — 스프라이트와 같이 밀려야 떨어져 보이지 않는다
+      // Normal enemies reveal their health when hit; bosses keep a persistent bar.
       const w = e.isBoss ? 58 : 30;
       const hpPct = clamp(e.hp/e.maxHp,0,1);
-      ctx.fillStyle = '#171C20CC'; ctx.fillRect(e.x+ox-w/2, e.y+oy-visualSize*.42, w, 4);
-      ctx.fillStyle = '#5CCB8A'; ctx.fillRect(e.x+ox-w/2, e.y+oy-visualSize*.42, w*hpPct, 4);
+      if(e.isBoss||hpPct<1){
+        ctx.fillStyle = '#101d28e6'; ctx.fillRect(e.x+ox-w/2-1, e.y+oy-visualSize*.42-1, w+2, 5);
+        ctx.fillStyle = e.isBoss?'#e8ba6a':'#83cfac'; ctx.fillRect(e.x+ox-w/2, e.y+oy-visualSize*.42, w*hpPct, 3);
+      }
       const statuses=Object.keys(e.statuses||{}).filter(id=>StatusEffectTable[id]);
       // [2026-09-18 연출 세션 A] 글자만으로는 물량전에서 안 보인다. 글자는 그대로 두고
       // 스프라이트 위에 시각 신호를 더한다. 융해는 주황 틴트, 감전은 스파크 점.
@@ -1374,6 +1399,7 @@ class WaveSystem {
     // [2026-09-17] WAVE 시작 float 텍스트는 없애고 전장 좌상단 배지에 상시 표기한다.
     const label = waveTypeName(cfg,'label');
     this.renderWaveTypeBadge(cfg, idx>0);
+    GamePresentation.wave(this.game);
     if(this.game.effects){
       this.game.effects.ring(this.game.playerPos.x,this.game.playerPos.y-55,PALETTE.accent,95,.6,3);
     }
@@ -1473,4 +1499,3 @@ class WaveSystem {
     }
   }
 }
-

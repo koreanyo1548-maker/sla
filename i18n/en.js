@@ -4,6 +4,39 @@
    빈 값은 ko 로 대신 나온다 — 번역이 끝날 때까지 화면이 비지 않는다.
    키가 늘거나 줄면  node tools/i18n.mjs sync en  로 맞춘다. */
 I18N.register("en", "English", {
+
+  /* ── 2026-09-24 forge presentation and guided first run ── */
+  "polish.loading": "Preparing the forge…",
+  "polish.tagline": "Merge. Summon. Defend.",
+  "polish.waveProgress": "Wave progress",
+  "polish.pause.title": "Paused",
+  "polish.pause.eyebrow": "GUARDIANS OF THE FORGE",
+  "polish.pause.body": "Take a breath. The battle is waiting.\nContinue when you are ready.",
+  "polish.pause.resume": "Continue battle",
+  "polish.pause.key": "P to pause · 1 / 2 to cast skills",
+  "polish.audio.sfx": "Sound effects",
+  "polish.audio.music": "Music",
+  "polish.audio.sfxVolume": "Effects volume",
+  "polish.audio.musicVolume": "Music volume",
+  "polish.on": "On",
+  "polish.off": "Off",
+  "polish.result.upgrade": "Upgrade your party",
+  "polish.board.hint": "Merge matching gems for stronger orders",
+  "polish.board.full": "Board full · Merge matching gems to make space",
+  "polish.board.spend": "Board full · Use a ready order to make space",
+  "polish.board.energy": "Defeat enemies to earn more energy",
+  "polish.board.ready": "Order ready · Merge more for a stronger upgrade",
+  "polish.order.collect": "Gems needed",
+  "polish.order.materials": "Materials",
+  "polish.tutorial.energy.title": "Forge your first gems",
+  "polish.tutorial.energy.body": "Use Generate to make {n} gems. Each gem costs energy. Enemies wait while you learn.",
+  "polish.tutorial.merge.title": "Make a stronger gem",
+  "polish.tutorial.merge.body": "Drag one gem onto its match, or tap both in turn. Higher tiers make stronger orders.",
+  "polish.tutorial.order.title": "Summon your first guardian",
+  "polish.tutorial.order.body": "Tap the highlighted order. It uses your gem to summon a guardian. Further orders upgrade that guardian.",
+  "polish.tutorial.skill.title": "Turn the tide with a skill",
+  "polish.tutorial.skill.body": "Battle begins. Tap a skill at the bottom right when it lights up. Your guardians attack automatically.",
+
   /* ── app ── */
   // 슬래그마 · 용광로의 수호자
   "app.title": "Slagma · Guardians of the Forge",

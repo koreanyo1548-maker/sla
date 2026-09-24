@@ -79,8 +79,8 @@ class MergeBoard {
       if(!piece) return;
       const div = document.createElement('div');
       div.className = 'piece color-' + piece.color + (piece.golden ? ' golden' : '') + (piece.fx ? ` fx-${piece.fx}` : '');
-      div.innerHTML = `${GameArt.sprite(CONFIG.colors.names.indexOf(piece.color))}<div class="tier">${piece.tier+1}</div>`;
-      div.dataset.idx = i;
+      div.innerHTML = GameArt.piece(piece);
+      div.dataset.idx = i;div.dataset.tier=String(piece.tier+1);
       this.attachPieceEvents(div, i);
       cellEl.appendChild(div);
       delete piece.fx;
@@ -99,7 +99,7 @@ class MergeBoard {
   }
   attachPieceEvents(div, idx){
     div.addEventListener('pointerdown', (ev)=>{
-      if(!this.game.running||this.game.ending)return;
+      if(!this.game.inputAllowed('board'))return;
       ev.preventDefault();
       this.endDrag();
       this.dragState = { fromIdx: idx, el: div, startX: ev.clientX, startY: ev.clientY,
@@ -139,7 +139,7 @@ class MergeBoard {
     });
   }
   tap(index){
-    if(!this.game.running||this.game.ending)return;
+    if(!this.game.inputAllowed('board'))return;
     if(this.selectedIndex===null){if(this.cells[index])this.selectedIndex=index;}
     else if(this.selectedIndex===index)this.selectedIndex=null;
     else{const from=this.selectedIndex;this.selectedIndex=null;this.handleDrop(from,index);}
@@ -166,7 +166,7 @@ class MergeBoard {
       b.golden = false; // 크리티컬 머지 결과물은 골든 표시와 별개(중복 강조 방지)
       b.fx = crit ? 'critical' : 'merge';
       this.cells[fromIdx] = null;
-      this.game.stats.merges++;GameAudio.play(crit?'reveal':'merge');
+      this.game.stats.merges++;GameAudio.play(crit?'reveal':'merge',{tier:b.tier+1});
       this.game.orderGaugeSystem.addMerge();
       if(crit){
         logAction(`크리티컬 머지! ${this.pieceLabel(b)} T${b.tier+1}`);
@@ -270,10 +270,10 @@ class Generator {
   }
   resetOpeningGuarantee(){ this.policy.reset(); }
   activeColors(){ return this.policy.activeColors(); }
-  rollPiece(){ return this.policy.rollPiece(); }
+  rollPiece(){ return this.game.tutorial?.practicePiece()||this.policy.rollPiece(); }
   generateOne(){
     const g = this.game;
-    if(!g.running||g.ending) return false;
+    if(!g.inputAllowed('generate')) return false;
     if(g.energy < CONFIG.generator.costPerPiece) return false;
     if(g.mergeBoard.emptyIndices().length===0) return false;
     g.energy -= CONFIG.generator.costPerPiece;
@@ -292,7 +292,7 @@ class Generator {
     return true;
   }
   startHold(){
-    if(!this.game.running||this.game.ending)return;
+    if(!this.game.inputAllowed('generate'))return;
     this.stopHold();
     if(!this.generateOne())return;
     this.holdTimer = setInterval(()=>{
@@ -320,7 +320,7 @@ class BatchMergeSystem {
   // 발동이 같은 조건을 본다 — 화면에 그대로 나가는 값은 아니다.
   blockReason(){
     const g=this.game;
-    if(!g.running||g.ending) return 'ended';
+    if(!g.inputAllowed('batch')) return 'ended';
     if(this.cooldownLeft()>0) return 'cooldown';
     if(!g.mergeBoard.hasMergePair()) return 'noPair';
     return null;
@@ -471,10 +471,20 @@ class OrderSheetSystem {
     const moduleKey=meta?.labelKey||CONFIG.attackModules[slot.module]?.labelKey;
     return t('order.kindLabel',{module:moduleKey?t(moduleKey):slot.module,stat:statLabel});
   }
+  // Show the exact increment from the same level tables used by applyUpgrade.
+  effectLabel(slot,level){
+    if(!level)return t('polish.order.collect');
+    const percent=slot.stat==='damage'||slot.stat==='speed';
+    const table=slot.stat==='damage'?CONFIG.attackModules.damageBonusByLevel
+      :slot.stat==='speed'?CONFIG.attackModules.speedBonusByLevel
+      :CONFIG.attackModules[slot.module][AttackModuleSystem.SPECIAL[slot.module].table];
+    const value=table[clamp(level-1,0,table.length-1)];
+    return percent?`+${Math.round(value*100)}%`:`+${Number(value.toFixed(2))}`;
+  }
   resolveSlot(slotIdx){
     const slot = this.slots[slotIdx];
     const preview=this.preview(slot);
-    if(!this.game.running||this.game.ending)return false;
+    if(!this.game.inputAllowed('order')||slot?.resolving)return false;
     if(!slot || !preview.ready){
       if(slot) slot.fx='invalid';
       this.render();
@@ -482,6 +492,7 @@ class OrderSheetSystem {
       return false;
     }
     const g = this.game;
+    slot.resolving=true; // Remains locked if the tutorial redraws this card during its animation.
     preview.selected.forEach(x=>{ g.mergeBoard.cells[x.index]=null; });
     const kindLabel=this.enhancementLabel(slot);
     g.attackModuleSystem.applyUpgrade(slot.module,slot.stat,preview.level);
@@ -551,8 +562,8 @@ class OrderSheetSystem {
     }
   }
   discard(slotIdx){
-    if(!this.game.running||this.game.ending)return;
-    if(!this.slots[slotIdx]) return;
+    if(!this.game.inputAllowed('discard'))return;
+    if(!this.slots[slotIdx]||this.slots[slotIdx].resolving) return;
     this.slots[slotIdx]=null;
     logAction('주문서를 폐기했습니다.');
     this.game.orderGaugeSystem.refillCompletedSlot(slotIdx);
@@ -566,11 +577,12 @@ class OrderSheetSystem {
   }
   closeDetail(){
     const modal=$('#order-detail');if(modal)modal.hidden=true;
+    this.game.setPause('order-detail',false);
     if(this.detailReturn?.isConnected)this.detailReturn.focus();
     this.detailSlot=null;this.detailReturn=null;
   }
   openDetail(index,trigger){
-    const slot=this.slots[index];if(!slot||this.game.ending)return;
+    const slot=this.slots[index];if(!slot||slot.resolving||!this.game.inputAllowed('inspect'))return;
     this.detailSlot=slot;this.detailReturn=trigger;
     const p=this.preview(slot),progress=this.rewardProgress(slot,p);
     $('#order-detail-content').innerHTML=`<h3>${this.enhancementLabel(slot)}</h3>`
@@ -579,6 +591,7 @@ class OrderSheetSystem {
       +`<p>${t(this.game.attackModuleSystem.modules[slot.module].active?'order.detail.enhance':'order.detail.summon')}</p>`
       +`<small>${t('order.detail.note')}</small>`;
     const modal=$('#order-detail');modal.hidden=false;
+    this.game.setPause('order-detail',true);
     $('#order-detail-close').onclick=()=>this.closeDetail();
     $('#order-detail-discard').onclick=()=>{if(this.slots[index]===slot)this.discard(index);this.closeDetail();};
     modal.onclick=ev=>{if(ev.target===modal)this.closeDetail();};
@@ -602,19 +615,24 @@ class OrderSheetSystem {
       }).join('');
       const label=t(active?'order.action.enhance':'order.action.summon');
       const fx=slot.fx?` fx-${slot.fx}`:'';delete slot.fx;
-      return `<div class="order-card grade-${slot.grade}${preview.ready?' ready':''}${fx}" data-slot="${i}">
-        <button class="oc-apply" data-slot="${i}" aria-label="${t('order.applyAria',{kind:kindLabel,state:preview.ready?t('order.applyReady',{level:preview.level,action:label}):t('order.applyShort')})}" ${preview.ready?'':'disabled'}>
-          <span class="oc-title">${kindLabel}${preview.ready?`<b class="oc-level">${t('common.level',{n:preview.level})}</b>`:''}</span>
+      const allowed=preview.ready&&!slot.resolving&&this.game.inputAllowed('order');
+      return `<div class="order-card grade-${slot.grade}${preview.ready?' ready':''}${slot.resolving?' is-resolving':''}${fx}" data-slot="${i}" style="--order-color:${CONFIG.attackModules[slot.module].color}">
+        <button class="oc-apply" data-slot="${i}" aria-label="${t('order.applyAria',{kind:kindLabel,state:preview.ready?t('order.applyReady',{level:preview.level,action:label}):t('order.applyShort')})}" ${allowed?'':'disabled'}>
+          <span class="oc-title">${GameArt.module(slot.module)}<span class="oc-kind">${kindLabel}</span>${preview.ready?`<b class="oc-level">${t('common.level',{n:preview.level})}</b>`:''}</span>
           <span class="oc-reqs">${chips}</span>
+          <span class="oc-action"><span>${preview.ready?label:t('polish.order.materials')}</span><b class="oc-effect">${this.effectLabel(slot,preview.level)}</b></span>
         </button>
-        <button class="oc-info" data-slot="${i}" aria-label="${t('order.infoAria',{kind:kindLabel})}">×</button>
+        <button class="oc-info" data-slot="${i}" aria-label="${t('order.infoAria',{kind:kindLabel})}" ${!slot.resolving&&this.game.inputAllowed('inspect')?'':'disabled'}>${GameArt.icon('info')}</button>
       </div>`;
     }).join('');
     $$('.oc-apply',el).forEach(btn=>btn.onclick=()=>this.resolveSlot(Number(btn.dataset.slot)));
     $$('.oc-info',el).forEach(btn=>btn.onclick=()=>this.openDetail(Number(btn.dataset.slot),btn));
     this.syncBoardHighlights();
   }
-
+  updateInputState(){
+    $$('.oc-apply').forEach(button=>{const slot=this.slots[Number(button.dataset.slot)];button.disabled=!slot||slot.resolving||!this.preview(slot).ready||!this.game.inputAllowed('order');});
+    $$('.oc-info').forEach(button=>{const slot=this.slots[Number(button.dataset.slot)];button.disabled=!slot||slot.resolving||!this.game.inputAllowed('inspect');});
+  }
 }
 
 /* =====================================================================
@@ -716,4 +734,3 @@ class OrderGaugeSystem {
     if(stock) stock.textContent=String(this.stock);
   }
 }
-

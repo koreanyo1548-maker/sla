@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title data-i18n="app.title"></title>
 <meta name="theme-color" content="#12282b">
-<meta name="slagma-build" content="v0921_2">
+<meta name="slagma-build" content="v0924_1">
 
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/base.css">
@@ -14,18 +14,20 @@
 <link rel="stylesheet" href="css/battle.css">
 <link rel="stylesheet" href="css/finish.css">
 <link rel="stylesheet" href="css/overrides.css">
+<link rel="stylesheet" href="css/polish.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317393c%22%2F%3E%3Cpath%20d%3D%22M38%206%2013%2035h17l-4%2023%2026-34H34z%22%20fill%3D%22%23f7cd7e%22%2F%3E%3C%2Fsvg%3E">
 </head>
 <body>
-<div id="app">
+<div id="boot-screen" role="status" aria-live="polite"><div class="boot-sigil" data-ui-icon="forge"></div><strong>SLAGMA</strong><span data-i18n="polish.loading"></span><div class="boot-track"><i id="boot-progress"></i></div></div>
+<div id="app" aria-busy="true">
   <div id="save-status" role="alert"></div>
   <div id="screen-lobby" class="screen">
     <div class="wallet"><div class="wallet-energy"><span data-ui-icon="energy"></span><strong id="stamina-value"></strong><small id="stamina-timer"></small></div><div class="wallet-gold"><span data-ui-icon="gold"></span><strong id="gold-value"></strong></div><div class="wallet-starfire"><span data-ui-icon="starfire"></span><strong id="starfire-value">0</strong></div></div>
     <div id="lobby-notice" role="status" aria-live="polite"></div>
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
-        <div class="journey-scene"><div class="journey-caption"><span id="stage-eyebrow"></span><h2 id="stage-name"></h2><p id="stage-meta" class="journey-meta"></p></div><div class="forge-beacon" aria-hidden="true"></div><div class="lobby-pills"><button id="open-milestones" class="milestone-pill" data-i18n-aria="milestone.title"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button><button id="open-codex" class="milestone-pill codex-pill" data-i18n-aria="codex.title"><span data-ui-icon="codex"></span><span id="codex-strip-body" class="ms-body"></span><i id="codex-home-dot" class="notify-dot" hidden></i></button></div></div>
-        <div class="home-controls"><div class="section-label"><h3 data-i18n="lobby.party.title"></h3><button class="text-button" data-open-characters data-i18n="lobby.party.change"></button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label" data-i18n="lobby.skills.equipped"></span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span><span data-i18n="lobby.party.avgAtk"></span> <b id="home-party-atk">0</b></span><span><span data-i18n="lobby.party.totalHp"></span> <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span data-i18n="lobby.footnote"></span><span>v0921_2</span></div></div>
+        <div class="journey-scene"><div class="forge-brand"><span data-ui-icon="forge"></span><div><strong>SLAGMA</strong><small data-i18n="polish.tagline"></small></div></div><div class="forge-motes" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="journey-caption"><span id="stage-eyebrow"></span><h2 id="stage-name"></h2><p id="stage-meta" class="journey-meta"></p></div><div class="forge-beacon" aria-hidden="true"></div><div class="lobby-pills"><button id="open-milestones" class="milestone-pill" data-i18n-aria="milestone.title"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button><button id="open-codex" class="milestone-pill codex-pill" data-i18n-aria="codex.title"><span data-ui-icon="codex"></span><span id="codex-strip-body" class="ms-body"></span><i id="codex-home-dot" class="notify-dot" hidden></i></button></div></div>
+        <div class="home-controls"><div class="section-label"><h3 data-i18n="lobby.party.title"></h3><button class="text-button" data-open-characters data-i18n="lobby.party.change"></button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label" data-i18n="lobby.skills.equipped"></span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span><span data-i18n="lobby.party.avgAtk"></span> <b id="home-party-atk">0</b></span><span><span data-i18n="lobby.party.totalHp"></span> <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span data-i18n="lobby.footnote"></span><span>v0924_1</span></div></div>
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow" data-i18n="character.eyebrow"></span><h2 data-i18n="character.title"></h2></div><span class="character-count" id="character-count"></span></div><div id="growth-list"></div></section>
       <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow" data-i18n="skill.eyebrow"></span><h2 data-i18n="skill.title"></h2></div><span class="character-count" id="skill-count"></span></div><div id="skill-lobby-content"></div></section>
@@ -39,7 +41,7 @@
         <div class="relic-coming-soon"><span data-ui-icon="relic"></span><strong data-i18n="relic.comingSoon"></strong></div>
       </section>
     </div>
-    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-upgrade" data-lobby-nav="upgrade"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.upgrade"></b><i id="upgrade-nav-dot" hidden></i></button><button id="nav-relics" data-lobby-nav="relics"><span data-ui-icon="relic"></span><b data-i18n="lobby.nav.relics"></b></button></nav>
+    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-upgrade" data-lobby-nav="upgrade"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.upgrade"></b><i id="upgrade-nav-dot" hidden></i></button><button hidden id="nav-relics" data-lobby-nav="relics"><span data-ui-icon="relic"></span><b data-i18n="lobby.nav.relics"></b></button></nav>
   </div>
 
   <div id="character-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-character-close></div><section class="character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-modal-title"><button class="character-modal-close" data-character-close data-i18n-aria="character.modal.closeAria">×</button><div id="character-modal-content"></div></section></div>
@@ -55,6 +57,8 @@
   <!-- ===================== GAME SCREEN ===================== -->
   <div id="screen-game" class="screen">
     <div id="hud">
+      <div id="wave-track" role="progressbar" data-i18n-aria="polish.waveProgress" aria-valuemin="1" aria-valuenow="1" aria-valuemax="30"></div>
+      <button id="pause-button" data-i18n-aria="polish.pause.title"><span data-ui-icon="pause"></span></button>
       <span class="wave-label" id="wave-label"></span>
       <div class="player-status">
         <div class="run-metrics" data-i18n-aria="battle.metricsAria">
@@ -67,6 +71,7 @@
     </div>
     <div id="combat-wrap">
       <canvas id="combat-canvas" width="440" height="480"></canvas>
+      <div id="skill-flash" aria-hidden="true"></div><div id="skill-announcement" aria-hidden="true"></div>
       <!-- [2026-09-18 연출 세션 A] 저HP 경고 테두리와 보스 HP바. #combat-wrap의 ::before·::after는
            이미 배경 그라디언트와 피격 비네트가 쓰고 있어 별도 요소로 둔다. -->
       <div id="core-alert" aria-hidden="true"></div>
@@ -85,6 +90,7 @@
       </div>
       <div id="order-sheet-panel"></div>
       <div id="board"></div>
+      <div id="forge-hint" aria-live="polite"></div>
       <div id="generator-row">
         <button id="batch-merge-btn" type="button">
           <span class="bm-cd"></span>
@@ -98,8 +104,9 @@
     </div>
     <div id="order-detail" hidden role="dialog" aria-modal="true" data-i18n-aria="order.detailAria"><div class="order-detail-card"><div id="order-detail-content"></div><div class="order-detail-actions"><button id="order-detail-discard" data-i18n="order.discard"></button><button id="order-detail-close" data-i18n="common.close"></button></div></div></div>
     <div id="tutorial-layer" hidden aria-live="polite">
+      <div id="tutorial-guide" aria-hidden="true"></div>
       <div id="tutorial-card" role="dialog" aria-modal="false" aria-labelledby="tutorial-title">
-        <div class="tutorial-step" id="tutorial-step"></div>
+        <div class="tutorial-step" id="tutorial-step"></div><div id="tutorial-dots" aria-hidden="true"></div>
         <strong id="tutorial-title"></strong>
         <p id="tutorial-body"></p>
         <button id="tutorial-skip" type="button" data-i18n="tutorial.skip"></button>
@@ -114,6 +121,8 @@
     </div>
   </div>
 
+  <div id="pause-layer" hidden><section class="pause-card" role="dialog" aria-modal="true" aria-labelledby="pause-title"><div class="pause-emblem" data-ui-icon="forge"></div><span class="eyebrow" data-i18n="polish.pause.eyebrow"></span><h2 id="pause-title" data-i18n="polish.pause.title"></h2><p data-i18n="polish.pause.body"></p><button id="resume-button" class="primary" data-i18n="polish.pause.resume"></button><button id="pause-options" class="secondary" data-i18n="options.title"></button><small data-i18n="polish.pause.key"></small></section></div>
+
   <!-- ===================== RESULT SCREEN ===================== -->
   <div id="screen-result" class="screen"><div class="result-emblem" data-sprite="11"></div>
     <div id="result-title"></div>
@@ -121,9 +130,10 @@
     <div id="result-stats"></div><div id="result-reward" aria-live="polite"></div>
     <p id="result-milestone-hint"></p>
     <button id="retry-btn" data-i18n="result.retry"></button>
+    <button id="result-upgrade" class="secondary" data-i18n="polish.result.upgrade"></button>
   </div>
 
-  <button id="tools-toggle" data-i18n-title="options.title" data-i18n-aria="options.title">⚙</button>
+  <button id="tools-toggle" data-i18n-title="options.title" data-i18n-aria="options.title"><span data-ui-icon="settings"></span></button>
 
   <!-- [2026-09-23] 톱니 버튼이 이 옵션 팝업을 직접 연다. 언어 · 효과음 · 전투 종료를 제공하고,
        데이터 초기화는 DEV_ONLY 구간이라 출시 빌드에서 마크업과 동작을 함께 제거한다.
@@ -142,7 +152,10 @@
       </section>
       <section class="options-section">
         <h3 data-i18n="options.sound.title"></h3>
-        <button id="sound-toggle" class="options-item sound-option" data-i18n-aria="tools.soundAria" aria-pressed="false"></button>
+        <button id="sound-toggle" class="options-item sound-option" data-i18n-aria="tools.soundAria" aria-pressed="true"></button>
+        <label class="volume-control"><span data-i18n="polish.audio.sfxVolume"></span><input id="sfx-volume" type="range" min="0" max="100" value="65"><output id="sfx-volume-value">65%</output></label>
+        <button id="music-toggle" class="options-item sound-option" aria-pressed="true"></button>
+        <label class="volume-control"><span data-i18n="polish.audio.musicVolume"></span><input id="music-volume" type="range" min="0" max="100" value="32"><output id="music-volume-value">32%</output></label>
       </section>
       <section id="run-options-section" class="options-section" hidden>
         <button id="options-quit-run" class="options-item danger" data-i18n="tools.quitTitle"></button>
@@ -186,6 +199,8 @@
 <script src="js/config.js"></script>
 <script src="js/art.js"></script>
 <script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/presentation.js"></script>
 <script src="js/heroes.js"></script>
 <script src="js/combat.js"></script>
 <script src="js/board.js"></script>
@@ -233,8 +248,8 @@
 
 <!-- [2026-09-18 세션 4] 폰 가로 회전 안내.
      #app 바깥에 둔다 — #app 안의 fixed 자식은 앱 열만 덮으므로 여기서는 뷰포트 전체를 덮는다.
-     표시 판정은 css/overrides.css의 미디어쿼리 하나뿐이고 JS는 관여하지 않는다. 게임 루프도
-     멈추지 않으므로 세로로 되돌리면 진행 중이던 전투가 그대로 이어진다.
+     표시 판정은 css/overrides.css의 미디어쿼리와 presentation.js가 함께 읽는다.
+     회전 중에는 전투를 멈추고, 세로로 돌아온 뒤 재개 버튼으로 이어간다.
      문구는 i18n 키로 들어갔다(세션 3). -->
 <div id="rotate-notice">
   <div class="rotate-card">
