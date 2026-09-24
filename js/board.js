@@ -615,12 +615,13 @@ class OrderSheetSystem {
       }).join('');
       const label=t(active?'order.action.enhance':'order.action.summon');
       const fx=slot.fx?` fx-${slot.fx}`:'';delete slot.fx;
+      // Keep the name on its own two-line row; the applied level belongs beside the action.
       const allowed=preview.ready&&!slot.resolving&&this.game.inputAllowed('order');
       return `<div class="order-card grade-${slot.grade}${preview.ready?' ready':''}${slot.resolving?' is-resolving':''}${fx}" data-slot="${i}" style="--order-color:${CONFIG.attackModules[slot.module].color}">
         <button class="oc-apply" data-slot="${i}" aria-label="${t('order.applyAria',{kind:kindLabel,state:preview.ready?t('order.applyReady',{level:preview.level,action:label}):t('order.applyShort')})}" ${allowed?'':'disabled'}>
-          <span class="oc-title">${GameArt.module(slot.module)}<span class="oc-kind">${kindLabel}</span>${preview.ready?`<b class="oc-level">${t('common.level',{n:preview.level})}</b>`:''}</span>
+          <span class="oc-title">${GameArt.module(slot.module)}<span class="oc-kind">${kindLabel}</span></span>
           <span class="oc-reqs">${chips}</span>
-          <span class="oc-action"><span>${preview.ready?label:t('polish.order.materials')}</span><b class="oc-effect">${this.effectLabel(slot,preview.level)}</b></span>
+          <span class="oc-action"><span>${preview.ready?label:t('polish.order.materials')}${preview.ready?`<b class="oc-level">${t('common.level',{n:preview.level})}</b>`:''}</span><b class="oc-effect">${this.effectLabel(slot,preview.level)}</b></span>
         </button>
         <button class="oc-info" data-slot="${i}" aria-label="${t('order.infoAria',{kind:kindLabel})}" ${!slot.resolving&&this.game.inputAllowed('inspect')?'':'disabled'}>${GameArt.icon('info')}</button>
       </div>`;
