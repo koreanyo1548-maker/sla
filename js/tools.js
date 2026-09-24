@@ -61,6 +61,7 @@ class TutorialSystem {
     $('#tutorial-step').textContent=t('tutorial.step',{index:d.index});
     $('#tutorial-title').textContent=t(d.titleKey);
     $('#tutorial-body').textContent=t(d.bodyKey,d.params);
+    QualityUI.tutorial(this.step);
     layer.hidden=false;
     requestAnimationFrame(()=>this.placeCard(document.querySelector(d.anchor)));
   }
@@ -107,4 +108,3 @@ class TutorialSystem {
     if(!skipped) logAction('튜토리얼 완료!');
   }
 }
-

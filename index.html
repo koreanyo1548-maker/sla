@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title data-i18n="app.title"></title>
-<meta name="theme-color" content="#12282b">
-<meta name="slagma-build" content="v0921_2">
+<meta name="theme-color" content="#121619">
+<meta name="slagma-build" content="v0924_1">
 
 <link rel="stylesheet" href="css/fonts.css">
 <link rel="stylesheet" href="css/base.css">
@@ -14,18 +14,27 @@
 <link rel="stylesheet" href="css/battle.css">
 <link rel="stylesheet" href="css/finish.css">
 <link rel="stylesheet" href="css/overrides.css">
+<link rel="stylesheet" href="css/quality.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%2317393c%22%2F%3E%3Cpath%20d%3D%22M38%206%2013%2035h17l-4%2023%2026-34H34z%22%20fill%3D%22%23f7cd7e%22%2F%3E%3C%2Fsvg%3E">
 </head>
 <body>
 <div id="app">
+  <div id="asset-loader" role="status" aria-live="polite">
+    <div class="loading-mark" data-ui-icon="forge"></div><strong class="wordmark">SLAGMA</strong>
+    <p id="loading-message" data-i18n="quality.loading">Lighting the forge…</p>
+    <div class="loading-track"><span id="loading-progress"></span></div>
+    <button id="loading-retry" class="secondary" hidden data-i18n="quality.reload"></button>
+  </div>
   <div id="save-status" role="alert"></div>
   <div id="screen-lobby" class="screen">
+    <header class="forge-brand"><span data-ui-icon="forge"></span><div><h1>SLAGMA</h1><small data-i18n="quality.tagline"></small></div></header>
     <div class="wallet"><div class="wallet-energy"><span data-ui-icon="energy"></span><strong id="stamina-value"></strong><small id="stamina-timer"></small></div><div class="wallet-gold"><span data-ui-icon="gold"></span><strong id="gold-value"></strong></div><div class="wallet-starfire"><span data-ui-icon="starfire"></span><strong id="starfire-value">0</strong></div></div>
     <div id="lobby-notice" role="status" aria-live="polite"></div>
     <div id="lobby-scroll">
       <section id="lobby-home" class="lobby-page" aria-labelledby="nav-home">
-        <div class="journey-scene"><div class="journey-caption"><span id="stage-eyebrow"></span><h2 id="stage-name"></h2><p id="stage-meta" class="journey-meta"></p></div><div class="forge-beacon" aria-hidden="true"></div><div class="lobby-pills"><button id="open-milestones" class="milestone-pill" data-i18n-aria="milestone.title"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button><button id="open-codex" class="milestone-pill codex-pill" data-i18n-aria="codex.title"><span data-ui-icon="codex"></span><span id="codex-strip-body" class="ms-body"></span><i id="codex-home-dot" class="notify-dot" hidden></i></button></div></div>
-        <div class="home-controls"><div class="section-label"><h3 data-i18n="lobby.party.title"></h3><button class="text-button" data-open-characters data-i18n="lobby.party.change"></button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label" data-i18n="lobby.skills.equipped"></span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span><span data-i18n="lobby.party.avgAtk"></span> <b id="home-party-atk">0</b></span><span><span data-i18n="lobby.party.totalHp"></span> <b id="home-party-hp">0</b></span></span></button></div><button id="prepare-btn" class="primary"></button><div class="home-footnote"><span data-i18n="lobby.footnote"></span><span>v0921_2</span></div></div>
+        <div class="journey-scene"><div class="journey-caption"><span id="stage-eyebrow"></span><h2 id="stage-name"></h2><p class="journey-story" data-i18n="quality.story"></p><p id="stage-meta" class="journey-meta"></p><div id="journey-progress" class="journey-progress"></div></div><div class="forge-beacon" aria-hidden="true"></div><div class="lobby-pills"><button id="open-milestones" class="milestone-pill" data-i18n-aria="milestone.title"><span data-ui-icon="milestone"></span><span id="milestone-strip-body" class="ms-body"></span><i id="milestone-home-dot" class="notify-dot" hidden></i></button><button id="open-codex" class="milestone-pill codex-pill" data-i18n-aria="codex.title"><span data-ui-icon="codex"></span><span id="codex-strip-body" class="ms-body"></span><i id="codex-home-dot" class="notify-dot" hidden></i></button></div></div>
+        <div class="home-controls"><div class="home-heading"><span class="eyebrow" data-i18n="quality.command"></span><h2 data-i18n="quality.partyHeading"></h2><p data-i18n="quality.partyHint"></p></div><div class="section-label"><h3 data-i18n="lobby.party.title"></h3><button class="text-button" data-open-characters data-i18n="lobby.party.change"></button></div><div id="lobby-party-summary" class="lobby-party-summary"></div><div class="home-shortcuts"><button data-open-skills><span class="hs-row"><span class="hs-label" data-i18n="lobby.skills.equipped"></span><span id="home-skill-summary" class="hs-skill-icons"></span></span><span class="hs-row hs-stats"><span><span data-i18n="lobby.party.avgAtk"></span> <b id="home-party-atk">0</b></span><span><span data-i18n="lobby.party.totalHp"></span> <b id="home-party-hp">0</b></span></span></button></div><button id="growth-objective" class="growth-objective" data-open-upgrade></button>
+        <button id="prepare-btn" class="primary"></button><p class="play-promise" data-i18n="quality.playHint"></p><div class="home-footnote"><span data-i18n="lobby.footnote"></span><span>v0924_1</span></div></div>
       </section>
       <section id="lobby-characters" class="lobby-page" hidden aria-labelledby="nav-characters"><div class="character-page-head"><div><span class="eyebrow" data-i18n="character.eyebrow"></span><h2 data-i18n="character.title"></h2></div><span class="character-count" id="character-count"></span></div><div id="growth-list"></div></section>
       <section id="lobby-skills" class="lobby-page" hidden aria-labelledby="nav-skills"><div class="character-page-head"><div><span class="eyebrow" data-i18n="skill.eyebrow"></span><h2 data-i18n="skill.title"></h2></div><span class="character-count" id="skill-count"></span></div><div id="skill-lobby-content"></div></section>
@@ -34,12 +43,9 @@
         <div id="upgrade-list" class="upgrade-list"></div>
         <details class="recruit-details"><summary><span data-i18n="upgrade.details"></span> <span>⌄</span></summary><div class="character-modal-section"><strong data-i18n="upgrade.progress.title"></strong><div id="upgrade-progress" class="gacha-odds"></div></div></details>
       </section>
-      <section id="lobby-relics" class="lobby-page relic-page" hidden aria-labelledby="nav-relics">
-        <div class="character-page-head"><div><span class="eyebrow" data-i18n="relic.eyebrow"></span><h2 data-i18n="relic.title"></h2></div></div>
-        <div class="relic-coming-soon"><span data-ui-icon="relic"></span><strong data-i18n="relic.comingSoon"></strong></div>
-      </section>
+
     </div>
-    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-upgrade" data-lobby-nav="upgrade"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.upgrade"></b><i id="upgrade-nav-dot" hidden></i></button><button id="nav-relics" data-lobby-nav="relics"><span data-ui-icon="relic"></span><b data-i18n="lobby.nav.relics"></b></button></nav>
+    <nav id="lobby-nav" data-i18n-aria="lobby.nav.aria"><button id="nav-home" data-lobby-nav="home" aria-current="page"><span data-ui-icon="home"></span><b data-i18n="lobby.nav.home"></b></button><button id="nav-characters" data-lobby-nav="characters"><span data-ui-icon="heroes"></span><b data-i18n="lobby.nav.characters"></b><i id="growth-nav-dot" hidden></i></button><button id="nav-skills" data-lobby-nav="skills"><span data-ui-icon="skill"></span><b data-i18n="lobby.nav.skills"></b><i id="skill-nav-dot" hidden></i></button><button id="nav-upgrade" data-lobby-nav="upgrade"><span data-ui-icon="recruit"></span><b data-i18n="lobby.nav.upgrade"></b><i id="upgrade-nav-dot" hidden></i></button></nav>
   </div>
 
   <div id="character-modal" hidden aria-hidden="true"><div class="character-modal-backdrop" data-character-close></div><section class="character-dialog" role="dialog" aria-modal="true" aria-labelledby="character-modal-title"><button class="character-modal-close" data-character-close data-i18n-aria="character.modal.closeAria">×</button><div id="character-modal-content"></div></section></div>
@@ -72,10 +78,12 @@
       <div id="core-alert" aria-hidden="true"></div>
       <div id="boss-hp" aria-hidden="true"><div id="boss-hp-fill"></div></div>
       <div id="wave-type-badge" data-i18n-aria="battle.waveTypeAria"><span class="wave-type-caption" data-i18n="battle.waveCaption"></span><strong id="wave-type-name"></strong></div>
-      <div id="energy-status-row" data-i18n-aria="battle.energyAria"><span class="energy-status-label" data-i18n="battle.energyLabel"></span><strong id="energy-display">0</strong></div>
-      <div id="skill-row" data-i18n-aria="battle.skillRowAria"></div>
+      
+      
     </div>
     <div id="board-wrap">
+      <div class="forge-panel-head"><div><span data-ui-icon="forge"></span><strong data-i18n="quality.forge"></strong></div><div id="energy-status-row" data-i18n-aria="battle.energyAria"><span class="energy-status-label" data-i18n="battle.energyLabel"></span><strong id="energy-display">0</strong></div></div>
+      <div class="forge-orders-label"><span data-i18n="quality.orders"></span><span data-i18n="quality.ordersHint"></span></div>
       <div id="order-status-row" data-i18n-aria="order.statusAria">
         <div id="order-gauge-wrap" class="order-gauge-wrap" data-i18n-title="order.gaugeTitle">
           <div class="order-gauge-track"><div class="order-gauge-fill" id="order-gauge-bar"></div></div>
@@ -84,7 +92,7 @@
         <div id="order-stock" class="order-stock" data-i18n-title="order.stockTitle"><span data-i18n="order.stockLabel"></span> <span id="order-stock-count">0</span></div>
       </div>
       <div id="order-sheet-panel"></div>
-      <div id="board"></div>
+      <div class="board-caption"><span data-i18n="quality.board"></span><span data-i18n="quality.mergeHint"></span></div><div id="board"></div>
       <div id="generator-row">
         <button id="batch-merge-btn" type="button">
           <span class="bm-cd"></span>
@@ -95,11 +103,14 @@
           <span class="gen-label"><b data-i18n="battle.generator.initial"></b><span class="gen-score" id="gen-score"></span></span>
         </button>
       </div>
+      <div class="forge-skills-label"><span data-i18n="quality.skills"></span><span data-i18n="quality.skillsHint"></span></div><div id="skill-row" data-i18n-aria="battle.skillRowAria"></div>
+      <p id="forge-hint" role="status" aria-live="polite"></p>
+      <div class="keyboard-hints" aria-hidden="true"><span><kbd>Space</kbd> <i data-i18n="quality.keyGenerate"></i></span><span><kbd>M</kbd> <i data-i18n="quality.keyMerge"></i></span><span><kbd>Q</kbd><kbd>E</kbd> <i data-i18n="quality.skills"></i></span></div>
     </div>
     <div id="order-detail" hidden role="dialog" aria-modal="true" data-i18n-aria="order.detailAria"><div class="order-detail-card"><div id="order-detail-content"></div><div class="order-detail-actions"><button id="order-detail-discard" data-i18n="order.discard"></button><button id="order-detail-close" data-i18n="common.close"></button></div></div></div>
     <div id="tutorial-layer" hidden aria-live="polite">
       <div id="tutorial-card" role="dialog" aria-modal="false" aria-labelledby="tutorial-title">
-        <div class="tutorial-step" id="tutorial-step"></div>
+        <div class="tutorial-step" id="tutorial-step"></div><div id="tutorial-visual" aria-hidden="true"></div>
         <strong id="tutorial-title"></strong>
         <p id="tutorial-body"></p>
         <button id="tutorial-skip" type="button" data-i18n="tutorial.skip"></button>
@@ -123,7 +134,7 @@
     <button id="retry-btn" data-i18n="result.retry"></button>
   </div>
 
-  <button id="tools-toggle" data-i18n-title="options.title" data-i18n-aria="options.title">⚙</button>
+  <button id="tools-toggle" data-i18n-title="options.title" data-i18n-aria="options.title"><span data-ui-icon="settings"></span></button>
 
   <!-- [2026-09-23] 톱니 버튼이 이 옵션 팝업을 직접 연다. 언어 · 효과음 · 전투 종료를 제공하고,
        데이터 초기화는 DEV_ONLY 구간이라 출시 빌드에서 마크업과 동작을 함께 제거한다.
@@ -197,6 +208,7 @@
 <script src="js/character-ui.js"></script>
 <script src="js/codex-ui.js"></script>
 <script src="js/campaign-ui.js"></script>
+<script src="js/quality.js"></script>
 <script src="js/campaign.js"></script>
 
 <!-- DEV_ONLY_START -->
@@ -231,18 +243,6 @@
   });
 </script>
 
-<!-- [2026-09-18 세션 4] 폰 가로 회전 안내.
-     #app 바깥에 둔다 — #app 안의 fixed 자식은 앱 열만 덮으므로 여기서는 뷰포트 전체를 덮는다.
-     표시 판정은 css/overrides.css의 미디어쿼리 하나뿐이고 JS는 관여하지 않는다. 게임 루프도
-     멈추지 않으므로 세로로 되돌리면 진행 중이던 전투가 그대로 이어진다.
-     문구는 i18n 키로 들어갔다(세션 3). -->
-<div id="rotate-notice">
-  <div class="rotate-card">
-    <span class="rotate-icon" aria-hidden="true">📱</span>
-    <strong data-i18n="rotate.title"></strong>
-    <p data-i18n="rotate.body"></p>
-  </div>
-</div>
-
+<!-- [2026-09-24] 가로 화면은 quality.css의 전장·대장간 2열 배치를 사용한다. -->
 </body>
 </html>

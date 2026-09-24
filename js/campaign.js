@@ -19,6 +19,7 @@ const RunHost = {
     if(!game) return;
     game.running=false;
     game.generator.stopHold();
+    game.pauseReasons.clear();$('#app').dataset.paused='false';
   },
   // 다른 창에서 진행이 바뀐 경우 — 연출까지 되돌린 뒤 멈춘다.
   abort(){
@@ -207,9 +208,10 @@ const Campaign = {
     const quit=$('#options-quit-run');
     if(quit)quit.onclick=()=>{
       if(!RunHost.running)return;
-      OptionsUI.close();
       RunHost.holdStop();
-      if(confirm(t('notice.quit.confirm')))RunHost.defeat();
+      const quit=confirm(t('notice.quit.confirm'));
+      OptionsUI.close();
+      if(quit)RunHost.defeat();
     };
     this.showLobby();
     setInterval(()=>{if(GameState.current==='lobby')this.renderWallet();},1000);
@@ -223,7 +225,7 @@ const Campaign = {
     });
   },
   navigate(name){
-    if(!['home','characters','skills','upgrade','relics'].includes(name))name='home';
+    if(!['home','characters','skills','upgrade'].includes(name))name='home';
     this.currentLobbyPage=name;
     $('#app').dataset.lobbyPage=name;
     if(name!=='characters')CharacterLobbyUI.close();
@@ -233,7 +235,7 @@ const Campaign = {
   },
   showLobby(){
     RunHost.halt();
-    this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();CodexLobbyUI.close();RevealUI.close();GameState.set('lobby');this.render();
+    this.read();this.selectedStage=this.state.unlocked;this.currentLobbyPage='home';$('#app').dataset.lobbyPage='home';RunConfig.clear();CharacterLobbyUI.close();SkillLobbyUI.close();MilestoneUI.close();CodexLobbyUI.close();RevealUI.close();GameState.set('lobby');this.render();
     if(this.pendingUnlockFx){ this.pendingUnlockFx=false; restartCssAnimation($('.journey-scene'),'fx-unlock'); GameAudio.play('stage_unlock'); }
   },
   renderWallet(){
@@ -250,17 +252,18 @@ const Campaign = {
     this.selectedStage=this.state.unlocked;
     CampaignView.stageHeader(this.stage());
     CampaignView.partySummary(PartyCombatAdapter.snapshot(this.state));
+    QualityUI.lobby(this);
     CharacterLobbyUI.render(this);
     CodexLobbyUI.render(this);
     SkillLobbyUI.render(this);
     MilestoneUI.render(this);
     UpgradeLobbyUI.render(this);
-    CampaignView.lobbyPage(['characters','skills','upgrade','relics'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
+    CampaignView.lobbyPage(['characters','skills','upgrade'].includes(this.currentLobbyPage)?this.currentLobbyPage:'home');
   },
   // [2026-09-19 세션 7] 출전 준비 화면을 없애면서 prepare()가 하던 검사를 여기로
   // 합쳤다. 로비의 출전 버튼이 부르는 유일한 입장 경로다.
   enter(){
-    if(GameState.current!=='lobby'||!this.read()||this.state.active||this.selectedStage!==this.state.unlocked||!SkillInventorySystem.validate(this.state.skillInventory))return false;
+    if(!GameArt.ready||GameState.current!=='lobby'||!this.read()||this.state.active||this.selectedStage!==this.state.unlocked||!SkillInventorySystem.validate(this.state.skillInventory))return false;
     const s=this.recovered();
     // 행동력이 모자라면 로비에 머문다 — 버튼 문구가 남은 양을 다시 보여 준다.
     if(s.stamina<CAMPAIGN_CONFIG.entryCost){this.render();return false;}
@@ -401,11 +404,13 @@ const OptionsUI = {
   open(){
     this.lastFocus=document.activeElement;
     this.render();
+    RunHost.current?.setPaused('options',true);
     $('#options-panel').hidden=false;
     $('#options-close').focus();
   },
   close(){
     $('#options-panel').hidden=true;
+    RunHost.current?.setPaused('options',false);
     if(this.lastFocus?.isConnected) this.lastFocus.focus();
     this.lastFocus=null;
   },
@@ -444,15 +449,17 @@ window.addEventListener('DOMContentLoaded', ()=>{
   // Platform.languageHint()를 읽으므로 Platform.init() 뒤여야 한다.
   I18N.boot();
   // 저장이 있는지는 Campaign.init()이 새 진행을 만들기 전에 봐야 한다.
-  // orientation은 이 판정이 최종이다 — 레이아웃이 세로 하나뿐이라(개발계획서 세션 4) 별도
-  // 판정 함수를 두지 않는다. 지표용 값이라 뷰포트 비율만 보면 충분하다.
+  // 지표의 orientation은 뷰포트 비율이다. 가로 배치는 quality.css에서 처리한다.
   let isNew=1; try{ isNew=SaveStorage.load(CAMPAIGN_CONFIG.saveKey)?0:1; }catch(_){}
   Analytics.track('session_start',{
     lang:I18N.current,
     orientation:window.innerWidth>window.innerHeight?'landscape':'portrait',
     isNew,
   });
-  GameArt.init();GameAudio.init();Campaign.init();
+  Platform.loadingStart();
+  const artwork=GameArt.init();
+  GameAudio.init();Campaign.init();QualityUI.init();
+  artwork.then(ok=>{QualityUI.assetsLoaded(ok);Platform.loadingStop();Campaign.renderWallet();});
   $('#sound-toggle').onclick=()=>GameAudio.toggle();
   $$('[data-open-characters]').forEach(b=>b.onclick=()=>Campaign.navigate('characters'));
   $$('[data-lobby-nav]').forEach(b=>b.addEventListener('click',()=>GameAudio.play()));
@@ -462,7 +469,11 @@ window.addEventListener('DOMContentLoaded', ()=>{
   // ResizeObserver를 쓰는 이유: 기존 resizeCanvas는 start() 안에서 주문서 카드가 렌더되기 전에
   // 한 번만 호출돼 컨테이너를 실제보다 높게 측정하고 이후 갱신되지 않았다. 옵저버는 등록 직후와
   // 레이아웃이 실제로 바뀔 때마다 불리므로 그 타이밍 문제가 구조적으로 사라진다.
-  const relayoutField=()=>RunHost.relayout();
+  const relayoutField=()=>{
+    RunHost.relayout();
+    const game=RunHost.current;
+    if(game?.running&&game.tutorial.active&&!game.paused)game.tutorial.render();
+  };
   if(window.ResizeObserver){
     new ResizeObserver(relayoutField).observe($('#combat-wrap'));
   } else {

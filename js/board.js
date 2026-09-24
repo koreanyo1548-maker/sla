@@ -99,7 +99,7 @@ class MergeBoard {
   }
   attachPieceEvents(div, idx){
     div.addEventListener('pointerdown', (ev)=>{
-      if(!this.game.running||this.game.ending)return;
+      if(!this.game.running||this.game.ending||this.game.paused)return;
       ev.preventDefault();
       this.endDrag();
       this.dragState = { fromIdx: idx, el: div, startX: ev.clientX, startY: ev.clientY,
@@ -139,7 +139,7 @@ class MergeBoard {
     });
   }
   tap(index){
-    if(!this.game.running||this.game.ending)return;
+    if(!this.game.running||this.game.ending||this.game.paused)return;
     if(this.selectedIndex===null){if(this.cells[index])this.selectedIndex=index;}
     else if(this.selectedIndex===index)this.selectedIndex=null;
     else{const from=this.selectedIndex;this.selectedIndex=null;this.handleDrop(from,index);}
@@ -273,7 +273,7 @@ class Generator {
   rollPiece(){ return this.policy.rollPiece(); }
   generateOne(){
     const g = this.game;
-    if(!g.running||g.ending) return false;
+    if(!g.running||g.ending||g.paused) return false;
     if(g.energy < CONFIG.generator.costPerPiece) return false;
     if(g.mergeBoard.emptyIndices().length===0) return false;
     g.energy -= CONFIG.generator.costPerPiece;
@@ -292,7 +292,7 @@ class Generator {
     return true;
   }
   startHold(){
-    if(!this.game.running||this.game.ending)return;
+    if(!this.game.running||this.game.ending||this.game.paused)return;
     this.stopHold();
     if(!this.generateOne())return;
     this.holdTimer = setInterval(()=>{
@@ -320,7 +320,7 @@ class BatchMergeSystem {
   // 발동이 같은 조건을 본다 — 화면에 그대로 나가는 값은 아니다.
   blockReason(){
     const g=this.game;
-    if(!g.running||g.ending) return 'ended';
+    if(!g.running||g.ending||g.paused) return 'ended';
     if(this.cooldownLeft()>0) return 'cooldown';
     if(!g.mergeBoard.hasMergePair()) return 'noPair';
     return null;
@@ -474,7 +474,7 @@ class OrderSheetSystem {
   resolveSlot(slotIdx){
     const slot = this.slots[slotIdx];
     const preview=this.preview(slot);
-    if(!this.game.running||this.game.ending)return false;
+    if(!this.game.running||this.game.ending||this.game.paused)return false;
     if(!slot || !preview.ready){
       if(slot) slot.fx='invalid';
       this.render();
@@ -551,7 +551,7 @@ class OrderSheetSystem {
     }
   }
   discard(slotIdx){
-    if(!this.game.running||this.game.ending)return;
+    if(!this.game.running||this.game.ending||this.game.paused)return;
     if(!this.slots[slotIdx]) return;
     this.slots[slotIdx]=null;
     logAction('주문서를 폐기했습니다.');
@@ -568,10 +568,12 @@ class OrderSheetSystem {
     const modal=$('#order-detail');if(modal)modal.hidden=true;
     if(this.detailReturn?.isConnected)this.detailReturn.focus();
     this.detailSlot=null;this.detailReturn=null;
+    this.game.setPaused('detail',false);
   }
   openDetail(index,trigger){
     const slot=this.slots[index];if(!slot||this.game.ending)return;
     this.detailSlot=slot;this.detailReturn=trigger;
+    this.game.setPaused('detail',true);
     const p=this.preview(slot),progress=this.rewardProgress(slot,p);
     $('#order-detail-content').innerHTML=`<h3>${this.enhancementLabel(slot)}</h3>`
       +`<p>${t('order.detail.requirements',{colors:slot.requirements.map(r=>t(CONFIG.colors.labelKeys[r.color])).join(' + ')})}</p>`
@@ -580,7 +582,7 @@ class OrderSheetSystem {
       +`<small>${t('order.detail.note')}</small>`;
     const modal=$('#order-detail');modal.hidden=false;
     $('#order-detail-close').onclick=()=>this.closeDetail();
-    $('#order-detail-discard').onclick=()=>{if(this.slots[index]===slot)this.discard(index);this.closeDetail();};
+    $('#order-detail-discard').onclick=()=>{const current=this.slots[index]===slot;this.closeDetail();if(current)this.discard(index);};
     modal.onclick=ev=>{if(ev.target===modal)this.closeDetail();};
     modal.onkeydown=ev=>{
       if(ev.key==='Escape'){ev.preventDefault();this.closeDetail();}
@@ -601,18 +603,21 @@ class OrderSheetSystem {
         return `<span class="oc-chip${tier?' available':''}">${GameArt.sprite(CONFIG.colors.names.indexOf(r.color))}<b>${tier}</b><span class="sr-only">${t('order.chipAria',{color:t(CONFIG.colors.labelKeys[r.color])})}</span></span>`;
       }).join('');
       const label=t(active?'order.action.enhance':'order.action.summon');
+      const action=preview.ready?`<b>${label} ${t('common.level',{n:preview.level})}</b><span class="oc-stars" aria-hidden="true">${'★'.repeat(this.rewardProgress(slot,preview).stars)}</span>`:t('quality.needed');
       const fx=slot.fx?` fx-${slot.fx}`:'';delete slot.fx;
-      return `<div class="order-card grade-${slot.grade}${preview.ready?' ready':''}${fx}" data-slot="${i}">
+      return `<div class="order-card grade-${slot.grade}${preview.ready?' ready':''}${fx}" data-slot="${i}" style="--module-color:${MISSILE_DEFS[slot.module].color}">
         <button class="oc-apply" data-slot="${i}" aria-label="${t('order.applyAria',{kind:kindLabel,state:preview.ready?t('order.applyReady',{level:preview.level,action:label}):t('order.applyShort')})}" ${preview.ready?'':'disabled'}>
-          <span class="oc-title">${kindLabel}${preview.ready?`<b class="oc-level">${t('common.level',{n:preview.level})}</b>`:''}</span>
+          <span class="oc-title">${GameArt.module(slot.module)}<span>${kindLabel}</span></span>
           <span class="oc-reqs">${chips}</span>
+          <span class="oc-action">${action}</span>
         </button>
-        <button class="oc-info" data-slot="${i}" aria-label="${t('order.infoAria',{kind:kindLabel})}">×</button>
+        <button class="oc-info" data-slot="${i}" aria-label="${t('order.infoAria',{kind:kindLabel})}">${GameArt.icon('info')}</button>
       </div>`;
     }).join('');
     $$('.oc-apply',el).forEach(btn=>btn.onclick=()=>this.resolveSlot(Number(btn.dataset.slot)));
     $$('.oc-info',el).forEach(btn=>btn.onclick=()=>this.openDetail(Number(btn.dataset.slot),btn));
     this.syncBoardHighlights();
+    QualityUI.battle(this.game);
   }
 
 }
@@ -716,4 +721,3 @@ class OrderGaugeSystem {
     if(stock) stock.textContent=String(this.stock);
   }
 }
-

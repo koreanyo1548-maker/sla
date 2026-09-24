@@ -11,7 +11,7 @@ const CampaignView={
   warn(message){$('#save-status').textContent=message;},
   notice(message){GameFeedback.toast(message);},
   lobbyPage(page){
-    ['home','characters','skills','upgrade','relics'].forEach(p=>$('#lobby-'+p).hidden=p!==page);
+    ['home','characters','skills','upgrade'].forEach(p=>$('#lobby-'+p).hidden=p!==page);
     $$('[data-lobby-nav]').forEach(b=>{if(b.dataset.lobbyNav===page)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
   },
   scrollLobbyTop(){$('#lobby-scroll').scrollTop=0;},
@@ -23,7 +23,7 @@ const CampaignView={
     GameFeedback.countUp($('#gold-value'),gold);
     GameFeedback.countUp($('#starfire-value'),starfire);
     $('#stamina-timer').textContent=recovered.stamina>=max?t('lobby.stamina.full'):t('lobby.stamina.timer',{time:`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`});
-    $('#prepare-btn').disabled=locked||recovered.stamina<entry;
+    $('#prepare-btn').disabled=!GameArt.ready||locked||recovered.stamina<entry;
     $('#prepare-btn').innerHTML=recovered.stamina<entry
       ?t('lobby.prepare.waiting',{current:recovered.stamina,need:entry})
       :t('lobby.prepare.ready',{sword:GameArt.icon('sword'),energy:GameArt.icon('energy'),cost:entry});
@@ -83,7 +83,7 @@ const UpgradeLobbyUI={
   trackIcon(state,track){
     if(track.kind==='module')return GameArt.module(track.moduleId,'module-mini');
     const key=state.skillInventory.equipped[track.slot];
-    return `<span class="uc-skill-icon" style="--icon-color:${SKILL_DEFS[key]?.color||PALETTE.skill}">${SKILL_DEFS[key]?.icon||'◆'}</span>`;
+    return `<span class="uc-skill-icon" style="--icon-color:${SKILL_DEFS[key]?.color||PALETTE.skill}">${GameArt.skill(key)}</span>`;
   },
   trackName(state,track){
     if(track.kind==='module')return t(MISSILE_DEFS[track.moduleId].labelKey);
@@ -184,7 +184,7 @@ const RevealUI={
   },
   tierOf(r){return r.type==='skill'?'skill':r.rarityId;},
   hintColor(r){return r.type==='skill'?PALETTE.skill:RarityTable[r.rarityId].color;},
-  art(r){return r.type==='skill'?`<span class="pull-icon" style="--icon-color:${this.hintColor(r)}">${SKILL_DEFS[r.skillKey]?.icon||'◆'}</span>`:GameArt.portrait(r.characterId);},
+  art(r){return r.type==='skill'?`<span class="pull-icon" style="--icon-color:${this.hintColor(r)}">${GameArt.skill(r.skillKey)}</span>`:GameArt.portrait(r.characterId);},
   label(r){return r.type==='skill'?t('reveal.label.skill'):t('reveal.label.character',{rarity:t(RarityTable[r.rarityId].nameKey),module:t(MISSILE_DEFS[r.moduleId].labelKey)});},
   reducedMotion(){try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}},
   show(list,campaign){
