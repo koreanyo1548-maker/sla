@@ -18,6 +18,7 @@ class Game {
     this.energy = 0;
     this.lastTime = 0;
     this.running = false;
+    this.pauseReasons = new Set();
     this.ending = null;
     this.timeScale = 1;
     this.hitStopUntil = 0;
@@ -101,6 +102,26 @@ class Game {
   }
   prefersReducedMotion(){
     return !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  }
+  get paused(){ return this.pauseReasons.size>0; }
+  // 팝업·탭 숨김·창 포커스는 서로 독립적인 정지 사유다. 하나를 닫아도
+  // 다른 사유가 남아 있으면 전투 시간과 입력을 계속 멈춘다.
+  setPaused(reason,value){
+    if(!this.running||this.ending)return;
+    const before=this.paused;
+    if(value)this.pauseReasons.add(reason);else this.pauseReasons.delete(reason);
+    if(before===this.paused)return;
+    this.lastTime=null;
+    $('#app').dataset.paused=String(this.paused);
+    if(this.paused){
+      this.generator.stopHold();this.mergeBoard.endDrag();
+      $('#tutorial-layer').hidden=true;
+      Platform.gameplayStop();
+    }else{
+      if(this.tutorial.active)this.tutorial.render();
+      Platform.gameplayStart();
+    }
+    this.updateEnergyUi();
   }
   hideCinematic(force=false){
     if(this.ending && !force) return;
@@ -247,6 +268,8 @@ class Game {
     $('#result-sub').textContent=clear
       ? t('result.subClear',{stage:this.stageId,waves:RunConfig.waves().length})
       : t('result.subDefeat',{stage:this.stageId,wave:this.currentWaveCfg?.wave||'?'});
+    $('.result-emblem').innerHTML=GameArt.sprite(clear?11:10);
+    $('#retry-btn').textContent=t(clear?'quality.resultClear':'quality.resultDefeat');
     this.renderResultStats();
   }
   // wave·score는 마일스톤이 아니라 최고 기록(NEW BEST) 판정에 쓴다 — 정산이
@@ -272,11 +295,12 @@ class Game {
     const btn = $('#generator-btn');
     // [2026-09-17] 툴팁도 CONFIG에서 만든다 — 마크업에 수치를 박아 두면 밸런스 변경 때 낡는다.
     if(btn)btn.title=t('battle.generator.tooltip',{points:CONFIG.scoring.pointsPerGrant,energy:CONFIG.scoring.energyPerGrant});
-    if(btn){btn.disabled=!!this.ending||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?t('battle.generator.full'):t('battle.generator.label',{cost:CONFIG.generator.costPerPiece});}
+    if(btn){btn.disabled=!!this.ending||this.paused||this.energy<CONFIG.generator.costPerPiece||this.mergeBoard.emptyIndices().length===0;const label=btn.querySelector('.gen-label b');if(label)label.innerHTML=this.mergeBoard.emptyIndices().length===0?t('battle.generator.full'):t('battle.generator.label',{cost:CONFIG.generator.costPerPiece});}
     this.renderSkillBar();
     this.batchMergeSystem.render();
+    QualityUI.battle(this);
   }
-  // 로비에서 장착한 스킬 2개를 그린다. 에너지 비용은 없고 개별 쿨타임만 표시한다.
+  // 장착한 스킬의 현재 에너지 비용·개별 쿨타임·사용 조건을 함께 표시한다.
   buildSkillBar(){
     const row = $('#skill-row');
     if(!row) return;
@@ -286,10 +310,11 @@ class Game {
       const entry=this.skillSystem.entry(key);
       return `<button class="skill-btn" data-skill="${key}" data-state="target" style="--skill-accent:${meta.color}" title="${t(def.nameKey)} ${t('common.level',{n:entry?.level||1})}">
         <span class="sk-cd"></span>
-        <span class="sk-icon">${meta.icon}</span>
+        <span class="sk-icon">${GameArt.skill(key)}</span>
         <span class="sk-name">${t(def.nameKey)}</span>
         <span class="sk-level">${t('common.level',{n:entry?.level||1})}</span>
         <span class="sk-cost"></span>
+        <span class="sk-status"></span>
       </button>`;
     }).join('');
     $$('.skill-btn',row).forEach(btn=>{
@@ -312,9 +337,11 @@ class Game {
       if(ready && !this.skillReadyState[key]) restartCssAnimation(btn,'fx-ready');
       this.skillReadyState[key]=ready;
       const fill = btn.querySelector('.sk-cd');
-      // [2026-09-16] 스킬 버튼이 전장 우하단 정사각 오버레이가 되면서 가로 바 대신
-      // 세로로 줄어드는 가림막을 쓴다. 남은 쿨타임 비율이 그대로 높이다.
+      // 가림막은 남은 시간 비율, 문자 상태는 실제 대기시간과 사용 불가 이유를 표시한다.
       if(fill) fill.style.height = (clamp(left/(this.skillSystem.entry(key)?.cooldownSec||def.cooldownSec||1),0,1)*100).toFixed(0)+'%';
+      const status=btn.querySelector('.sk-status');
+      const statusText=reason==='cooldown'?`${Math.ceil(left)}s`:t(ready?'quality.ready':reason==='paused'?'quality.paused':reason==='noEnergy'?'quality.noEnergy':reason==='fullHp'?'quality.fullHp':'quality.noTarget');
+      if(status&&status.textContent!==statusText)status.textContent=statusText;
       // 비용은 쓸수록 오르므로 매 렌더마다 다시 읽는다.
       const costEl = btn.querySelector('.sk-cost');
       if(costEl){
@@ -324,7 +351,7 @@ class Game {
       }
       const titleCost=this.skillSystem.energyCost(key);
       btn.title=t('battle.skill.tooltip',{name:t(def.nameKey),level:this.skillSystem.entry(key)?.level||1,
-        cost:titleCost>0?t('battle.skill.costEnergy',{n:titleCost}):t('battle.skill.costFree')});
+        cost:titleCost>0?t('battle.skill.costEnergy',{n:titleCost}):t('battle.skill.costFree')})+' · '+statusText;
     });
   }
 
@@ -367,6 +394,7 @@ class Game {
   }
   start(){
     this.resetCinematic();
+    this.pauseReasons.clear();$('#app').dataset.paused='false';QualityUI.lastHint='';
     GameState.set('playing');
     this.applyFieldResolution();
     this.playerHpCurrent = RunConfig.playerStat('hp');
@@ -399,6 +427,7 @@ class Game {
     this.hitStopUntil = 0;
     this.hitStopCooldownUntil = 0;
     this.running = true;
+    this.updateEnergyUi();
     syncToolButtons();          // 위쪽 GameState.set('playing') 시점에는 아직 running이 false다.
     this.tutorial.start();
     // 첫 rAF 타임스탬프를 기준으로 삼는다. performance.now()와 섞으면 첫 dt가 음수가 될 수 있다.
@@ -425,6 +454,11 @@ class Game {
     // 첫 프레임은 dt=0으로 스폰·렌더한다. 이후에도 시간 역행과 긴 프레임을 제한한다.
     const realDt = this.lastTime === null ? 0 : Math.max(0, Math.min(0.05, (now-this.lastTime)/1000));
     this.lastTime = Math.max(this.lastTime ?? now, now);
+    // 첫 생성 안내를 읽는 동안에는 적과 쿨타임을 진행하지 않는다. 생성·건너뛰기가
+    // 정상적으로 첫 전투 시간을 시작한다. 팝업 정지는 입력까지 함께 막는다.
+    if(this.paused||(this.tutorial.active&&this.tutorial.step==='energy'&&!this.ending)){
+      this.render();requestAnimationFrame(this.loop.bind(this));return;
+    }
     if(!this.ending) this.elapsedTime += realDt;
     this.renderRunMetrics();
     // [2026-09-09] dt를 시스템 사이마다 다시 계산하는 것은 중복이 아니다. waveSystem.update가
@@ -490,5 +524,4 @@ class Game {
     el.innerHTML=rows.slice(0,6).map(renderRow).join('')+`<details class="result-details"><summary>${t('result.details')}</summary><div>${rows.slice(6).map(renderRow).join('')}</div></details>`;
   }
 }
-
 

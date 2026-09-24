@@ -4,6 +4,47 @@
    빈 값은 ko 로 대신 나온다 — 번역이 끝날 때까지 화면이 비지 않는다.
    키가 늘거나 줄면  node tools/i18n.mjs sync en  로 맞춘다. */
 I18N.register("en", "English", {
+  /* 2026-09-24 · 완성도 개편 */
+  "quality.tagline": "MERGE & DEFENSE",
+  "quality.loading": "Lighting the forge…",
+  "quality.loadError": "The artwork could not load. Please try again.",
+  "quality.reload": "Reload",
+  "quality.story": "Merge gems. Awaken your guardians. Defend the last forge.",
+  "quality.command": "THE GUARDIAN FORGE",
+  "quality.partyHeading": "Make your stand",
+  "quality.partyHint": "Four guardians. Two spells. Your defense.",
+  "quality.playHint": "Merge gems and fulfill orders during battle",
+  "quality.forge": "BATTLE FORGE",
+  "quality.orders": "GUARDIAN ORDERS",
+  "quality.ordersHint": "Complete to summon or upgrade",
+  "quality.board": "GEM BOARD",
+  "quality.mergeHint": "Same gem + same level = merge",
+  "quality.skills": "SPELLS",
+  "quality.skillsHint": "Energy & cooldowns",
+  "quality.keyGenerate": "Forge",
+  "quality.keyMerge": "Merge",
+  "quality.readyOrders": "An order is ready. Tap it to power up your guardian.",
+  "quality.fullMerge": "Board full. Merge matching gems to make room.",
+  "quality.fullOrder": "Board full. Open an order to check its required gems.",
+  "quality.waitEnergy": "Defeating enemies restores energy. Merge gems while you wait.",
+  "quality.holdHint": "Hold Forge to create gems continuously.",
+  "quality.ready": "Ready",
+  "quality.noEnergy": "Need energy",
+  "quality.fullHp": "HP full",
+  "quality.noTarget": "Waiting",
+  "quality.paused": "Paused",
+  "quality.growth": "NEXT UPGRADE",
+  "quality.growthReady": "{name} can level up",
+  "quality.growthNeed": "{gold} more gold to level up",
+  "quality.growthMax": "All shared tracks are mastered",
+  "quality.openGrowth": "Open upgrades",
+  "quality.rewardSaved": "Your earned gold is saved automatically",
+  "quality.resultClear": "Prepare for the next battle",
+  "quality.resultDefeat": "Upgrade and try again",
+  "quality.grade": "{n}-star order",
+  "quality.needed": "Required gems",
+  "quality.chapterAria": "Current stage {n}",
+
   /* ── app ── */
   // 슬래그마 · 용광로의 수호자
   "app.title": "Slagma · Guardians of the Forge",
@@ -32,7 +73,7 @@ I18N.register("en", "English", {
   // 행동력 회복 중 <small>{current} / {need}</small>
   "lobby.prepare.waiting": "Stamina recovering <small>{current} / {need}</small>",
   // {sword} 전투 준비 <small>{energy} {cost}</small>
-  "lobby.prepare.ready": "{sword} Prepare <small>{energy} {cost}</small>",
+  "lobby.prepare.ready": "{sword} Defend the forge <small>{energy} {cost}</small>",
   // 모험 · {id}
   "lobby.stage.eyebrow": "Journey · {id}",
   // {waves} 웨이브 · 클리어 <b>+{gold}</b> 골드

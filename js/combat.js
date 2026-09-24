@@ -579,11 +579,12 @@ class SkillSystem {
     }
   }
   // 발동할 수 없는 사유를 코드로 돌려준다(null이면 쓸 수 있다). 화면에 그대로 나가는
-  // 값이 아니다 — 버튼 상태 판정(game.js renderSkillBar)과 디버그 로그가 이 코드를 본다.
+  // 값이 아니다 — 버튼 상태와 안내 문구(game.js renderSkillBar)가 이 코드를 사용한다.
   blockReason(skillKey){
     const def=SKILL_DEFS[skillKey],entry=this.entry(skillKey);
     if(!def||!CONFIG.skills[skillKey]||!entry) return 'notEquipped';
-    if(this.game.ending) return 'ended';
+    if(!this.game.running||this.game.ending) return 'ended';
+    if(this.game.paused) return 'paused';
     if(this.cooldownLeft(skillKey) > 0) return 'cooldown';
     if(this.game.energy < this.energyCost(skillKey)) return 'noEnergy';
     return def.requires ? SkillSystem.REQUIRES[def.requires](this) : null;
@@ -1473,4 +1474,3 @@ class WaveSystem {
     }
   }
 }
-
