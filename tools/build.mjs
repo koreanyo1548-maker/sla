@@ -29,7 +29,8 @@ const INCLUDE = [
   { path:'css',    ext:['.css'] },
   { path:'js',     ext:['.js'] },
   { path:'i18n',   ext:['.js'] },
-  { path:'assets', ext:['.webp'] },
+  // 교체 전 전장 배경은 저장소에 보존하고 출시 번들에서는 제외한다.
+  { path:'assets', ext:['.webp'], exclude:['battlefield.webp'] },
   { path:'fonts',  ext:['.woff2'], recurse:true },
 ];
 
@@ -79,6 +80,7 @@ function collect(entry){
       const full = path.join(dir, name);
       if(fs.statSync(full).isDirectory()){ if(entry.recurse) walk(full); continue; }
       if(entry.ext && !entry.ext.includes(path.extname(name).toLowerCase())) continue;
+      if(entry.exclude?.includes(name)) continue;
       out.push(path.relative(ROOT, full).split(path.sep).join('/'));
     }
   };

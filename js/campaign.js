@@ -13,12 +13,12 @@ const RunHost = {
     game.start();
     return game;
   },
-  // 판정은 멈추고 인스턴스는 남긴다(결과 화면이 통계를 읽는다).
+  // 판정은 멈추고 인스턴스는 남긴다(결과 화면이 통계를 읽는다). 보드의 문서 리스너는 해제한다.
   halt(){
     const game=this.current;
     if(!game) return;
     game.running=false;
-    game.generator.stopHold();game.tutorial.stop();game.pauseReasons.clear();GamePresentation.resetPause();
+    game.generator.stopHold();game.mergeBoard.dispose();game.tutorial.stop();game.pauseReasons.clear();GamePresentation.resetPause();
   },
   // 다른 창에서 진행이 바뀐 경우 — 연출까지 되돌린 뒤 멈춘다.
   abort(){
