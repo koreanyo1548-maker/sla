@@ -12,10 +12,15 @@ class MergeBoard {
     this.cellEls = [];
     this.dragState = null;this.selectedIndex=null;this.dragGhost=null;
     this.buildDom();
-    // 안전망: 피스 div가 사라져 pointerup을 못 받는 경우에도 손을 떼면 반드시 정리한다.
-    ['pointerup','pointercancel'].forEach(evt=>document.addEventListener(evt,()=>{
+    // 피스 div가 사라져 pointerup을 못 받아도 정리한다. 런 종료 시 문서 리스너를 해제한다.
+    this.onPointerEnd=()=>{
       if(this.dragState||this.dragGhost) requestAnimationFrame(()=>this.endDrag());
-    }));
+    };
+    ['pointerup','pointercancel'].forEach(evt=>document.addEventListener(evt,this.onPointerEnd));
+  }
+  dispose(){
+    ['pointerup','pointercancel'].forEach(evt=>document.removeEventListener(evt,this.onPointerEnd));
+    this.endDrag();
   }
   buildDom(){
     this.el.innerHTML = '';
